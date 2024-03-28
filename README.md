@@ -78,6 +78,28 @@ Set either the **first line** or the **last line** to affect the entire image in
 2girls, frills swimsuit, sitting, chair, knees up, smile, blush
 ```
 
+<p align="center">
+<img src="example/07.jpg" width=384><br>
+</p>
+
+```
+a cinematic photo of 2 men arguing, indoors, court room
+2 men, jesus christ, white robe, looking at each other, shouting
+2 men, santa claus, looking at each other, shouting
+```
+
+<p align="center">
+<img src="example/08.jpg" width=384><br>
+</p>
+
+```
+a pencil drawing of scenery
+mountains
+river
+tree
+forest
+```
+
 - <ins>**LoRA Support**</ins>
 
 Using multiple LoRAs also works to a degree, depending on how well each LoRA works together...
