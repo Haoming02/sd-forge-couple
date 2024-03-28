@@ -1,5 +1,9 @@
+### v1.2.0 - 2024 Mar.28
+- Improved **Prompt** Processing
+- Support **Wildcards**
+
 ### v1.1.0 - 2024 Mar.28
-- Improved **Infotext** Processing
+- Improved **Prompt** Processing
 - Support **Batch** Count & Size
 
 ### v1.0.0 - 2024 Mar.28

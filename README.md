@@ -30,9 +30,7 @@ This Extension works by dividing the image into multiple tiles, each correspondi
 
 ```
 [high quality, best quality], 3girls, blonde twintails, cyan eyes, white dress, looking at viewer, smile, blush
-
 3girls, white long hair, red eyes, black dress, looking at viewer, frown
-
 3girls, black ponytail, closed eyes, t-shirt, jeans, looking at viewer, sleepy
 ```
 
@@ -68,7 +66,7 @@ pavement, road
 
 - <ins>**Global Effect**</ins>
 
-Set either the **first line** or the **last line** to affect the entire image instead of also being divided. Useful for specifying style, quality, or background, etc.
+Set either the **first line** or the **last line** of the **Positive** prompts to affect the entire image instead of also being divided. Useful for specifying style, quality, or background, etc. (**Negative** prompt is always global regardless of settings.)
 
 <p align="center">
 <img src="example/04.jpg" width=384><br>
@@ -127,6 +125,19 @@ LoRA with multiple subjects works better in my experience.
 2girls, miyama suzune, pink idol costume, feather hair ornament, holding hands, looking at viewer, smile, blush
 2girls, hanaoi rena, blue idol costume, feather hair ornament, holding hands, looking at viewer, shy, blush
 ```
+
+<hr>
+
+## Compatibility Table
+
+<table>
+    <tr><th>Feature</th><th>Example</th><th>Support</th></tr>
+    <tr><td>Control Net</td><td>OpenPose</td><td>Yes</td></tr>
+    <tr><td>Wildcards</td><td>__colors__</td><td>Yes</td></tr>
+    <tr><td>Single LoRA</td><td>Style</td><td>Yes</td></tr>
+    <tr><td>Multi-LoRA</td><td>Characters</td><td>Limited</td></tr>
+    <tr><td>Prompt Scheduling</td><td>[from:to:steps]</td><td>No</td></tr>
+</table>
 
 <hr>
 

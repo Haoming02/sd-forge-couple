@@ -7,7 +7,7 @@ import re
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = 1.1
+VERSION = 1.2
 
 
 class ForgeCouple(scripts.Script):
@@ -59,19 +59,29 @@ class ForgeCouple(scripts.Script):
 
         return cleaned
 
-    def before_process(self, p, enable: bool, direction: str, background: str):
+    def after_extra_networks_activate(
+        self,
+        p,
+        enable: bool,
+        direction: str,
+        background: str,
+        *args,
+        **kwargs,
+    ):
         if not enable:
             return
 
         couples = []
 
-        chunks = p.prompt.split("\n")
+        chunks = kwargs["prompts"][0].split("\n")
         for chunk in chunks:
-            if not chunk.strip():
+            prompt = self.parse_networks(chunk).strip()
+
+            if not prompt.strip():
                 # Skip Empty Lines
                 continue
 
-            couples.append(self.parse_networks(chunk).strip())
+            couples.append(prompt)
 
         if len(couples) < (3 if background != "None" else 2):
             print("\n[Couple] Not Enough Lines in Prompt...\n")
@@ -79,14 +89,6 @@ class ForgeCouple(scripts.Script):
             return
 
         self.couples = couples
-
-    def postprocess_batch(
-        self, p, enable: bool, direction: str, background: str, *args, **kwargs
-    ):
-        if enable and self.couples:
-            p.extra_generation_params["forge_couple"] = True
-            p.extra_generation_params["forge_couple_direction"] = direction
-            p.extra_generation_params["forge_couple_background"] = background
 
     def process_before_every_sampling(
         self,
@@ -100,6 +102,10 @@ class ForgeCouple(scripts.Script):
 
         if not enable or not self.couples:
             return
+
+        p.extra_generation_params["forge_couple"] = True
+        p.extra_generation_params["forge_couple_direction"] = direction
+        p.extra_generation_params["forge_couple_background"] = background
 
         # ===== Init =====
         unet = p.sd_model.forge_objects.unet
