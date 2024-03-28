@@ -50,6 +50,8 @@ This Extension works by dividing the image into multiple tiles, each correspondi
 - <ins>**Tile Direction**</ins>
 
 Choose between dividing the image into columns or rows
+- **Horizontal:** Tiles from left to right
+- **Vertical:** Tiles from top to bottom
 
 <p align="center">
 <img src="example/03.jpg" width=384><br>
@@ -130,4 +132,4 @@ LoRA with multiple subjects works better in my experience.
 
 ## Special Thanks
 - Credits to the original author, **[laksjdjf](https://github.com/laksjdjf)**, whose original [ComfyUI Node](https://github.com/laksjdjf/cgem156-ComfyUI/tree/main/scripts/attention_couple) I used to port into Forge
-- Example images were generated with [Animagine XL V3.1](https://civitai.com/models/260267)
+- Example images were generated with [Animagine XL V3.1](https://civitai.com/models/260267) and [juggernautXL v7](https://civitai.com/models/133005)
