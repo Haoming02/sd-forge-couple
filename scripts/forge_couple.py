@@ -7,13 +7,12 @@ import re
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = 1.0
+VERSION = 1.1
 
 
 class ForgeCouple(scripts.Script):
 
     def __init__(self):
-        self.original_prompt: str = None
         self.couples: list = None
 
     def title(self):
@@ -53,49 +52,38 @@ class ForgeCouple(scripts.Script):
 
         return [enable, direction, background]
 
-    def parse_networks(self, prompt: str) -> tuple:
-        """Only LoRAs in the 1st Line are Loaded"""
+    def parse_networks(self, prompt: str) -> str:
+        """LoRAs are already parsed"""
         pattern = re.compile(r"<.*?>")
-        matches = pattern.findall(prompt)
         cleaned = re.sub(pattern, "", prompt)
 
-        return (cleaned, matches)
+        return cleaned
 
     def before_process(self, p, enable: bool, direction: str, background: str):
         if not enable:
             return
 
+        couples = []
+
         chunks = p.prompt.split("\n")
-
-        couples = ["placeholder"]
-        networks = []
-
-        for chunk in chunks[1:]:
+        for chunk in chunks:
             if not chunk.strip():
                 # Skip Empty Lines
                 continue
 
-            c, n = self.parse_networks(chunk)
-            couples.append(c.strip())
-            networks += n
+            couples.append(self.parse_networks(chunk).strip())
 
         if len(couples) < (3 if background != "None" else 2):
             print("\n[Couple] Not Enough Lines in Prompt...\n")
-            self.original_prompt = None
             self.couples = None
             return
 
-        self.original_prompt = p.prompt
-        p.prompt = f"{chunks[0].strip()}, {' '.join(networks)}"
         self.couples = couples
 
     def postprocess_batch(
         self, p, enable: bool, direction: str, background: str, *args, **kwargs
     ):
-        if enable and self.original_prompt:
-            p.prompt = self.original_prompt
-            p.prompt_for_display = self.original_prompt
-            p.all_prompts = [self.original_prompt]
+        if enable and self.couples:
             p.extra_generation_params["forge_couple"] = True
             p.extra_generation_params["forge_couple_direction"] = direction
             p.extra_generation_params["forge_couple_background"] = background
@@ -137,10 +125,9 @@ class ForgeCouple(scripts.Script):
             pos_cond = None
 
             # ===== Cond =====
-            if T > 0:
-                texts = SdConditioning([self.couples[T]], False, WIDTH, HEIGHT, None)
-                cond = shared.sd_model.get_learned_conditioning(texts)
-                pos_cond = [[cond["crossattn"]]] if IS_SDXL else [[cond]]
+            texts = SdConditioning([self.couples[T]], False, WIDTH, HEIGHT, None)
+            cond = shared.sd_model.get_learned_conditioning(texts)
+            pos_cond = [[cond["crossattn"]]] if IS_SDXL else [[cond]]
             # ===== Cond =====
 
             # ===== Mask =====
@@ -159,18 +146,17 @@ class ForgeCouple(scripts.Script):
                     mask[T * TILE_SIZE : (T + 1) * TILE_SIZE, :] = TILE_WEIGHT
             # ===== Mask =====
 
-            ARGs[f"cond_{T}"] = pos_cond
-            ARGs[f"mask_{T}"] = mask.unsqueeze(0)
+            ARGs[f"cond_{T + 1}"] = pos_cond
+            ARGs[f"mask_{T + 1}"] = mask.unsqueeze(0)
 
         if background == "Last Line":
-            ARGs[f"mask_{TILE_COUNT}"] = (
+            ARGs[f"mask_{LINE_COUNT}"] = (
                 torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
             ).unsqueeze(0)
 
         assert len(ARGs.keys()) // 2 == LINE_COUNT
 
-        base_mask = ARGs.pop("mask_0")
-        del ARGs["cond_0"]
+        base_mask = torch.zeros((HEIGHT, WIDTH)).unsqueeze(0)
 
         patched_unet = forgeAttentionCouple.patch_unet(unet, base_mask, ARGs)
         p.sd_model.forge_objects.unet = patched_unet
