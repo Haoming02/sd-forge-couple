@@ -158,6 +158,25 @@ LoRA with multiple subjects works better in my experience.
 
 <hr>
 
+## TypeError: 'NoneType'
+
+For people that get the following error:
+```py
+RuntimeError: shape '[X, Y, 1]' is invalid for input of size Z
+shape '[X, Y, 1]' is invalid for input of size Z
+*** Error completing request
+    ...
+    Traceback (most recent call last):
+        ...
+        res = list(func(*args, **kwargs))
+    TypeError: 'NoneType' object is not iterable
+```
+
+1. Go to **Settings** -> **Optimizations**, and enable `Pad prompt/negative prompt`
+2. Set the `Width` and `Height` to multiple of **64**
+
+<hr>
+
 ## Special Thanks
 - Credits to the original author, **[laksjdjf](https://github.com/laksjdjf)**, whose original [ComfyUI Node](https://github.com/laksjdjf/cgem156-ComfyUI/tree/main/scripts/attention_couple) I used to port into Forge
 - Example images were generated with [Animagine XL V3.1](https://civitai.com/models/260267) and [juggernautXL v7](https://civitai.com/models/133005)
