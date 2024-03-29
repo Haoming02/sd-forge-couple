@@ -1,11 +1,10 @@
-from modules.prompt_parser import SdConditioning
-from modules import scripts, shared
-import torch
+from modules import scripts
 import re
 
-from scripts.attention_couple import AttentionCouple
+from scripts.couple_mapping import empty_tensor, basic_mapping
 from scripts.couple_ui import couple_UI, validata_mapping
 
+from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
 VERSION = "1.2.1"
@@ -108,7 +107,6 @@ class ForgeCouple(scripts.Script):
 
         # ===== Init =====
         unet = p.sd_model.forge_objects.unet
-        IS_SDXL: bool = hasattr(unet.model.diffusion_model, "label_emb")
 
         WIDTH: int = p.width
         HEIGHT: int = p.height
@@ -121,48 +119,25 @@ class ForgeCouple(scripts.Script):
         BG_WEIGHT: float = 0.0 if background == "None" else 0.5
 
         TILE_SIZE: int = ((WIDTH if IS_HORIZONTAL else HEIGHT) - 1) // TILE_COUNT + 1
-
-        ARGs: dict = {}
         # ===== Init =====
 
         # ===== Tiles =====
-        for T in range(LINE_COUNT):
-            mask = torch.zeros((HEIGHT, WIDTH))
-            pos_cond = None
-
-            # ===== Cond =====
-            texts = SdConditioning([self.couples[T]], False, WIDTH, HEIGHT, None)
-            cond = shared.sd_model.get_learned_conditioning(texts)
-            pos_cond = [[cond["crossattn"]]] if IS_SDXL else [[cond]]
-            # ===== Cond =====
-
-            # ===== Mask =====
-            if background == "First Line":
-                if T == 0:
-                    mask = torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
-                else:
-                    if IS_HORIZONTAL:
-                        mask[:, (T - 1) * TILE_SIZE : T * TILE_SIZE] = TILE_WEIGHT
-                    else:
-                        mask[(T - 1) * TILE_SIZE : T * TILE_SIZE, :] = TILE_WEIGHT
-            else:
-                if IS_HORIZONTAL:
-                    mask[:, T * TILE_SIZE : (T + 1) * TILE_SIZE] = TILE_WEIGHT
-                else:
-                    mask[T * TILE_SIZE : (T + 1) * TILE_SIZE, :] = TILE_WEIGHT
-            # ===== Mask =====
-
-            ARGs[f"cond_{T + 1}"] = pos_cond
-            ARGs[f"mask_{T + 1}"] = mask.unsqueeze(0)
-
-        if background == "Last Line":
-            ARGs[f"mask_{LINE_COUNT}"] = (
-                torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
-            ).unsqueeze(0)
+        ARGs = basic_mapping(
+            p.sd_model,
+            self.couples,
+            WIDTH,
+            HEIGHT,
+            LINE_COUNT,
+            IS_HORIZONTAL,
+            background,
+            TILE_SIZE,
+            TILE_WEIGHT,
+            BG_WEIGHT,
+        )
         # ===== Tiles =====
 
         assert len(ARGs.keys()) // 2 == LINE_COUNT
 
-        base_mask = torch.zeros((HEIGHT, WIDTH)).unsqueeze(0)
+        base_mask = empty_tensor(HEIGHT, WIDTH)
         patched_unet = forgeAttentionCouple.patch_unet(unet, base_mask, ARGs)
         p.sd_model.forge_objects.unet = patched_unet
