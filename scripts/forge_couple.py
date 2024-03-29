@@ -39,18 +39,25 @@ class ForgeCouple(scripts.Script):
                     value="None",
                 )
 
+            with gr.Row():
+                separator = gr.Textbox(
+                    label="Couple Separator",
+                    placeholder="Leave empty to use newline as couple separator",
+                )
+
         self.paste_field_names = []
         self.infotext_fields = [
             (enable, "forge_couple"),
             (direction, "forge_couple_direction"),
             (background, "forge_couple_background"),
+            (separator, "forge_couple_separator"),
         ]
 
         for comp, name in self.infotext_fields:
             comp.do_not_save_to_config = True
             self.paste_field_names.append(name)
 
-        return [enable, direction, background]
+        return [enable, direction, background, separator]
 
     def parse_networks(self, prompt: str) -> str:
         """LoRAs are already parsed"""
@@ -65,15 +72,19 @@ class ForgeCouple(scripts.Script):
         enable: bool,
         direction: str,
         background: str,
+        separator: str,
         *args,
         **kwargs,
     ):
         if not enable:
             return
 
+        if separator == "":
+            separator = "\n"
+
         couples = []
 
-        chunks = kwargs["prompts"][0].split("\n")
+        chunks = kwargs["prompts"][0].split(separator)
         for chunk in chunks:
             prompt = self.parse_networks(chunk).strip()
 
@@ -96,6 +107,7 @@ class ForgeCouple(scripts.Script):
         enable: bool,
         direction: str,
         background: str,
+        separator: str,
         *args,
         **kwargs,
     ):
@@ -106,6 +118,7 @@ class ForgeCouple(scripts.Script):
         p.extra_generation_params["forge_couple"] = True
         p.extra_generation_params["forge_couple_direction"] = direction
         p.extra_generation_params["forge_couple_background"] = background
+        p.extra_generation_params["forge_couple_separator"] = separator
 
         # ===== Init =====
         unet = p.sd_model.forge_objects.unet
