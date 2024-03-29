@@ -1,4 +1,7 @@
-﻿# SD Forge Attention Couple
+﻿# W.I.P
+Adding a way to manually specify regions...
+
+# SD Forge Attention Couple
 This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-diffusion-webui-forge), which allows you to ~~generate couples~~ target conditioning at different regions. No more color bleeds or mixed features!
 
 > This does **not** work with [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)

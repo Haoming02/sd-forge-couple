@@ -1,10 +1,11 @@
 from modules.prompt_parser import SdConditioning
 from modules import scripts, shared
-import gradio as gr
 import torch
 import re
 
 from scripts.attention_couple import AttentionCouple
+from scripts.couple_ui import couple_UI, validata_mapping
+
 forgeAttentionCouple = AttentionCouple()
 
 VERSION = "1.2.1"
@@ -22,43 +23,7 @@ class ForgeCouple(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, *args, **kwargs):
-        with gr.Accordion(label=f"{self.title()} v{VERSION}", open=False):
-            with gr.Row():
-                enable = gr.Checkbox(label="Enable")
-
-                separator = gr.Textbox(
-                    label="Couple Separator",
-                    lines=1,
-                    max_lines=1,
-                    placeholder="Leave empty to use newline as couple separator",
-                )
-
-            with gr.Row():
-                direction = gr.Radio(
-                    ["Horizontal", "Vertical"],
-                    label="Tile Direction",
-                    value="Horizontal",
-                )
-
-                background = gr.Radio(
-                    ["None", "First Line", "Last Line"],
-                    label="Global Effect",
-                    value="None",
-                )
-
-        self.paste_field_names = []
-        self.infotext_fields = [
-            (enable, "forge_couple"),
-            (direction, "forge_couple_direction"),
-            (background, "forge_couple_background"),
-            (separator, "forge_couple_separator"),
-        ]
-
-        for comp, name in self.infotext_fields:
-            comp.do_not_save_to_config = True
-            self.paste_field_names.append(name)
-
-        return [enable, direction, background, separator]
+        return couple_UI(self, f"{self.title()} {VERSION}")
 
     def parse_networks(self, prompt: str) -> str:
         """LoRAs are already parsed"""
@@ -74,6 +39,8 @@ class ForgeCouple(scripts.Script):
         direction: str,
         background: str,
         separator: str,
+        mode: str,
+        mapping: list,
         *args,
         **kwargs,
     ):
@@ -96,7 +63,16 @@ class ForgeCouple(scripts.Script):
             couples.append(prompt)
 
         if len(couples) < (3 if background != "None" else 2):
-            print("\n[Couple] Not Enough Lines in Prompt...\n")
+            print("\n\n[Couple] Not Enough Lines in Prompt...\n")
+            self.couples = None
+            return
+
+        if (mode == "Advanced") and (len(couples) != len(mapping)):
+            print("\n\n[Couple] Number of Couples and Mapping is not the same...\n")
+            self.couples = None
+            return
+
+        if (mode == "Advanced") and not validata_mapping(mapping):
             self.couples = None
             return
 
@@ -109,6 +85,8 @@ class ForgeCouple(scripts.Script):
         direction: str,
         background: str,
         separator: str,
+        mode: str,
+        mapping: list,
         *args,
         **kwargs,
     ):
@@ -116,10 +94,17 @@ class ForgeCouple(scripts.Script):
         if not enable or not self.couples:
             return
 
+        # ===== Infotext =====
         p.extra_generation_params["forge_couple"] = True
-        p.extra_generation_params["forge_couple_direction"] = direction
-        p.extra_generation_params["forge_couple_background"] = background
-        p.extra_generation_params["forge_couple_separator"] = separator
+        if not separator.strip():
+            p.extra_generation_params["forge_couple_separator"] = "\n"
+        p.extra_generation_params["forge_couple_mode"] = mode
+        if mode == "Basic":
+            p.extra_generation_params["forge_couple_direction"] = direction
+            p.extra_generation_params["forge_couple_background"] = background
+        else:
+            p.extra_generation_params["forge_couple_mapping"] = mapping
+        # ===== Infotext =====
 
         # ===== Init =====
         unet = p.sd_model.forge_objects.unet
@@ -138,6 +123,7 @@ class ForgeCouple(scripts.Script):
         TILE_SIZE: int = ((WIDTH if IS_HORIZONTAL else HEIGHT) - 1) // TILE_COUNT + 1
 
         ARGs: dict = {}
+        # ===== Init =====
 
         # ===== Tiles =====
         for T in range(LINE_COUNT):
@@ -173,10 +159,10 @@ class ForgeCouple(scripts.Script):
             ARGs[f"mask_{LINE_COUNT}"] = (
                 torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
             ).unsqueeze(0)
+        # ===== Tiles =====
 
         assert len(ARGs.keys()) // 2 == LINE_COUNT
 
         base_mask = torch.zeros((HEIGHT, WIDTH)).unsqueeze(0)
-
         patched_unet = forgeAttentionCouple.patch_unet(unet, base_mask, ARGs)
         p.sd_model.forge_objects.unet = patched_unet
