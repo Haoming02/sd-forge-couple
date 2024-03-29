@@ -7,7 +7,7 @@ import re
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = 1.2
+VERSION = "1.2.1"
 
 
 class ForgeCouple(scripts.Script):
@@ -26,23 +26,24 @@ class ForgeCouple(scripts.Script):
             with gr.Row():
                 enable = gr.Checkbox(label="Enable")
 
+                separator = gr.Textbox(
+                    label="Couple Separator",
+                    lines=1,
+                    max_lines=1,
+                    placeholder="Leave empty to use newline as couple separator",
+                )
+
+            with gr.Row():
                 direction = gr.Radio(
                     ["Horizontal", "Vertical"],
                     label="Tile Direction",
                     value="Horizontal",
                 )
 
-            with gr.Row():
                 background = gr.Radio(
                     ["None", "First Line", "Last Line"],
                     label="Global Effect",
                     value="None",
-                )
-
-            with gr.Row():
-                separator = gr.Textbox(
-                    label="Couple Separator",
-                    placeholder="Leave empty to use newline as couple separator",
                 )
 
         self.paste_field_names = []
@@ -79,7 +80,7 @@ class ForgeCouple(scripts.Script):
         if not enable:
             return
 
-        if separator == "":
+        if not separator.strip():
             separator = "\n"
 
         couples = []

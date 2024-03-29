@@ -16,7 +16,7 @@ This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-
 This Extension works by dividing the image into multiple tiles, each corresponding to one line in the prompt. So if you want more characters, just prompt more lines! Empty lines are skipped.
 
 <p align="center">
-<img src="example/00.jpg" width=384><br>
+<img src="example/00.jpg" width=384>
 </p>
 
 ```
@@ -25,7 +25,7 @@ This Extension works by dividing the image into multiple tiles, each correspondi
 ```
 
 <p align="center">
-<img src="example/01.jpg" width=384><br>
+<img src="example/01.jpg" width=384>
 </p>
 
 ```
@@ -35,7 +35,7 @@ This Extension works by dividing the image into multiple tiles, each correspondi
 ```
 
 <p align="center">
-<img src="example/02.jpg" width=384><br>
+<img src="example/02.jpg" width=384>
 </p>
 
 ```
@@ -52,7 +52,7 @@ Choose between dividing the image into columns or rows
 - **Vertical:** Tiles from top to bottom
 
 <p align="center">
-<img src="example/03.jpg" width=384><br>
+<img src="example/03.jpg" width=384>
 </p>
 
 ```
@@ -69,7 +69,7 @@ pavement, road
 Set either the **first line** or the **last line** of the **Positive** prompts to affect the entire image instead of also being divided. Useful for specifying style, quality, or background, etc. (**Negative** prompt is always global regardless of settings.)
 
 <p align="center">
-<img src="example/04.jpg" width=384><br>
+<img src="example/04.jpg" width=384>
 </p>
 
 ```
@@ -79,7 +79,7 @@ Set either the **first line** or the **last line** of the **Positive** prompts t
 ```
 
 <p align="center">
-<img src="example/07.jpg" width=384><br>
+<img src="example/07.jpg" width=384>
 </p>
 
 ```
@@ -89,7 +89,7 @@ a cinematic photo of 2 men arguing, indoors, court room
 ```
 
 <p align="center">
-<img src="example/08.jpg" width=384><br>
+<img src="example/08.jpg" width=384>
 </p>
 
 ```
@@ -100,6 +100,23 @@ tree
 forest
 ```
 
+- <ins>**Couple Separator**</ins>
+
+By default, this Extension uses newline (`\n`) as the separator between tiles. You can also specify any keyword as the separator instead.
+
+<p align="center">
+<img src="example/09.jpg" width=384><br>
+<b>Separator:</b><code>{SEP}</code>
+</p>
+
+```
+a high quality photo of a man and a woman
+side-by-side,
+blonde hair, hair bow, smile, blush {SEP}
+a man and a woman,
+white hair, angry, frown
+```
+
 - <ins>**LoRA Support**</ins>
 
 Using multiple LoRAs also works to a degree, depending on how well each LoRA works together...
@@ -107,7 +124,7 @@ Using multiple LoRAs also works to a degree, depending on how well each LoRA wor
 LoRA with multiple subjects works better in my experience.
 
 <p align="center">
-<img src="example/05.jpg" width=384><br>
+<img src="example/05.jpg" width=384>
 </p>
 
 ```
@@ -117,7 +134,7 @@ LoRA with multiple subjects works better in my experience.
 ```
 
 <p align="center">
-<img src="example/06.jpg" width=384><br>
+<img src="example/06.jpg" width=384>
 </p>
 
 ```

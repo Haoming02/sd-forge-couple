@@ -1,3 +1,6 @@
+### v1.2.1 - 2024 Mar.29
+- Add **Couple Separator** Option by. <ins>pamparamm</ins>
+
 ### v1.2.0 - 2024 Mar.28
 - Improved **Prompt** Processing
 - Support **Wildcards**
