@@ -2,7 +2,7 @@ from modules import scripts
 import re
 
 from scripts.couple_mapping import empty_tensor, basic_mapping, advanced_mapping
-from scripts.couple_ui import couple_UI, validata_mapping
+from scripts.couple_ui import couple_UI, validata_mapping, parse_mapping
 
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
@@ -66,7 +66,7 @@ class ForgeCouple(scripts.Script):
             self.couples = None
             return
 
-        if (mode == "Advanced") and (len(couples) != len(mapping)):
+        if (mode == "Advanced") and (len(couples) != len(parse_mapping(mapping))):
             print("\n\n[Couple] Number of Couples and Mapping is not the same...\n\n")
             self.couples = None
             return

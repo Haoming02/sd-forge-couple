@@ -5,13 +5,11 @@ This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-
 
 > One advantage over **Latent Couple** is that, since the conditioning only needs to be calculated once at the beginning, the actual generation speed is not affected!
 
-> Right now all regions are automated. Manually defined regions may be added in the future...
-
-> As shown in the examples below, even if a region only contains 1 subject, it's usually still better to prompt for the total amount of subjects first...
+> As shown in the examples below, even if a region only contains 1 subject, it's usually still better to prompt for the total amount of subjects first.
 
 ## How to Use
 
-- <ins>**Lines Parsing**</ins>
+### Lines Parsing
 
 This Extension works by dividing the image into multiple tiles, each corresponding to one line in the prompt. So if you want more characters, just prompt more lines! Empty lines are skipped.
 
@@ -34,18 +32,7 @@ This Extension works by dividing the image into multiple tiles, each correspondi
 3girls, black ponytail, closed eyes, t-shirt, jeans, looking at viewer, sleepy
 ```
 
-<p align="center">
-<img src="example/02.jpg" width=384>
-</p>
-
-```
-[high quality, best quality], 4girls, blonde twintails, cyan eyes, white dress, looking at viewer, smile, blush
-4girls, white long hair, red eyes, black dress, looking at viewer, frown
-4girls, black ponytail, closed eyes, white t-shirt, jeans, looking at viewer, sleepy
-4girls, red bob cut, green eyes, one eye closed, wink crop tops, shorts, looking at viewer, tongue, :q
-```
-
-- <ins>**Tile Direction**</ins>
+### Tile Direction
 
 Choose between dividing the image into columns or rows
 - **Horizontal:** Tiles from left to right
@@ -64,7 +51,7 @@ beach, sand
 pavement, road
 ```
 
-- <ins>**Global Effect**</ins>
+### Global Effect
 
 Set either the **first line** or the **last line** of the **Positive** prompts to affect the entire image instead of also being divided. Useful for specifying style, quality, or background, etc. (**Negative** prompt is always global regardless of settings.)
 
@@ -100,7 +87,7 @@ tree
 forest
 ```
 
-- <ins>**Couple Separator**</ins>
+### Couple Separator
 
 By default, this Extension uses newline (`\n`) as the separator between tiles. You can also specify any keyword as the separator instead.
 
@@ -117,7 +104,7 @@ a man and a woman,
 white hair, angry, frown
 ```
 
-- <ins>**LoRA Support**</ins>
+### LoRA Support
 
 Using multiple LoRAs also works to a degree, depending on how well each LoRA works together...
 

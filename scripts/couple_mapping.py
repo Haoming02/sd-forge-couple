@@ -1,4 +1,5 @@
 from modules.prompt_parser import SdConditioning
+from scripts.couple_ui import parse_mapping
 import torch
 
 
@@ -6,7 +7,8 @@ def empty_tensor(H: int, W: int):
     return torch.zeros((H, W)).unsqueeze(0)
 
 
-def advanced_mapping(sd_model, couples: list, WIDTH: int, HEIGHT: int, data: list):
+def advanced_mapping(sd_model, couples: list, WIDTH: int, HEIGHT: int, mapping: list):
+    data = parse_mapping(mapping)
     assert len(couples) == len(data)
 
     ARGs: dict = {}
@@ -17,12 +19,12 @@ def advanced_mapping(sd_model, couples: list, WIDTH: int, HEIGHT: int, data: lis
     for tile_index in range(len(data)):
         mask = torch.zeros((HEIGHT, WIDTH))
 
-        [X, Y, W] = data[tile_index]
-        x_from = int(WIDTH * float(X.split(":")[0]))
-        x_to = int(WIDTH * float(X.split(":")[1]))
-        y_from = int(HEIGHT * float(Y.split(":")[0]))
-        y_to = int(HEIGHT * float(Y.split(":")[1]))
-        weight = float(W)
+        (X, Y, W) = data[tile_index]
+        x_from = int(WIDTH * X[0])
+        x_to = int(WIDTH * X[1])
+        y_from = int(HEIGHT * Y[0])
+        y_to = int(HEIGHT * Y[1])
+        weight = W
 
         # ===== Cond =====
         texts = SdConditioning([couples[tile_index]], False, WIDTH, HEIGHT, None)

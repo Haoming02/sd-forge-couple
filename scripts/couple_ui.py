@@ -2,11 +2,30 @@ from PIL import Image, ImageDraw
 import gradio as gr
 
 
+def parse_mapping(data: list) -> list:
+    mapping = []
+
+    for [X, Y, W] in data:
+        if not X.strip():
+            continue
+
+        mapping.append(
+            (
+                (float(X.split(":")[0]), float(X.split(":")[1])),
+                (float(Y.split(":")[0]), float(Y.split(":")[1])),
+                float(W),
+            )
+        )
+
+    return mapping
+
+
 def validata_mapping(data: list) -> bool:
     try:
         for [X, Y, W] in data:
-            assert len(X.split(":")) == 2
-            assert len(Y.split(":")) == 2
+            if not X.strip():
+                continue
+
             float(X.split(":")[0])
             float(X.split(":")[1])
             float(Y.split(":")[0])
@@ -32,16 +51,18 @@ def visualize_mapping(p_WIDTH: int, p_HEIGHT: int, data: list) -> Image:
     matt = Image.new("RGB", (p_WIDTH, p_HEIGHT), "black")
     draw = ImageDraw.Draw(matt)
 
+    mapping = parse_mapping(data)
+
     print("\nAdv. Preview:")
-    for tile_index in range(len(data)):
+    for tile_index in range(len(mapping)):
         color_index = tile_index % len(COLORS)
 
-        [X, Y, W] = data[tile_index]
-        x_from = int(p_WIDTH * float(X.split(":")[0]))
-        x_to = int(p_WIDTH * float(X.split(":")[1]))
-        y_from = int(p_HEIGHT * float(Y.split(":")[0]))
-        y_to = int(p_HEIGHT * float(Y.split(":")[1]))
-        weight = float(W)
+        (X, Y, W) = mapping[tile_index]
+        x_from = int(p_WIDTH * X[0])
+        x_to = int(p_WIDTH * X[1])
+        y_from = int(p_HEIGHT * Y[0])
+        y_to = int(p_HEIGHT * Y[1])
+        weight = W
 
         print(f"  [{y_from:4d}:{y_to:4d}, {x_from:4d}:{x_to:4d}] = {weight:.2f}")
         draw.rectangle(
