@@ -24,8 +24,6 @@ def advanced_mapping(sd_model, couples: list, WIDTH: int, HEIGHT: int, data: lis
         y_to = int(HEIGHT * float(Y.split(":")[1]))
         weight = float(W)
 
-        # print(f"  [{y_from:4d}:{y_to:4d}, {x_from:4d}:{x_to:4d}] = {weight:.2f}")
-
         # ===== Cond =====
         texts = SdConditioning([couples[tile_index]], False, WIDTH, HEIGHT, None)
         cond = sd_model.get_learned_conditioning(texts)

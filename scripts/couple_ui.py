@@ -1,3 +1,4 @@
+from PIL import Image, ImageDraw
 import gradio as gr
 
 
@@ -15,17 +16,45 @@ def validata_mapping(data: list) -> bool:
         return True
 
     except AssertionError:
-        print("\n\n[Couple] Incorrect number of : in Mapping...\n")
+        print("\n\n[Couple] Incorrect number of : in Mapping...\n\n")
         return False
     except ValueError:
-        print("\n\n[Couple] Non-Number in Mapping...\n")
+        print("\n\n[Couple] Non-Number in Mapping...\n\n")
         return False
+
+
+def visualize_mapping(p_WIDTH: int, p_HEIGHT: int, data: list) -> Image:
+    if not (validata_mapping(data)):
+        return None
+
+    COLORS = ("red", "orange", "yellow", "green", "blue", "violet", "purple", "white")
+
+    matt = Image.new("RGB", (p_WIDTH, p_HEIGHT), "black")
+    draw = ImageDraw.Draw(matt)
+
+    print("\nAdv. Preview:")
+    for tile_index in range(len(data)):
+        color_index = tile_index % len(COLORS)
+
+        [X, Y, W] = data[tile_index]
+        x_from = int(p_WIDTH * float(X.split(":")[0]))
+        x_to = int(p_WIDTH * float(X.split(":")[1]))
+        y_from = int(p_HEIGHT * float(Y.split(":")[0]))
+        y_to = int(p_HEIGHT * float(Y.split(":")[1]))
+        weight = float(W)
+
+        print(f"  [{y_from:4d}:{y_to:4d}, {x_from:4d}:{x_to:4d}] = {weight:.2f}")
+        draw.rectangle(
+            [(x_from, y_from), (x_to, y_to)], outline=COLORS[color_index], width=2
+        )
+
+    return matt
 
 
 def couple_UI(script, title: str):
     with gr.Accordion(label=title, open=False):
         with gr.Row():
-            enable = gr.Checkbox(label="Enable")
+            enable = gr.Checkbox(label="Enable", elem_id="fc_enable")
 
             mode = gr.Radio(
                 ["Basic", "Advanced"],
@@ -54,7 +83,7 @@ def couple_UI(script, title: str):
                     value="None",
                 )
 
-        with gr.Group(visible=False) as adv_settings:
+        with gr.Group(visible=False, elem_id="fc_adv") as adv_settings:
             mapping = gr.Dataframe(
                 label="Mapping",
                 headers=["x", "y", "weight"],
@@ -64,6 +93,26 @@ def couple_UI(script, title: str):
                 interactive=True,
                 type="array",
                 value=[["0:0.5", "0.0:1.0", "1.0"], ["0.5:1.0", "0.0:1.0", "1.0"]],
+            )
+
+            preview_img = gr.Image(
+                image_mode="RGB",
+                label="Mapping Preview",
+                type="pil",
+                interactive=False,
+                height=512,
+            )
+
+            with gr.Row():
+                preview_width = gr.Number(value=1024, label="Width", precision=0)
+                preview_height = gr.Number(value=1024, label="Height", precision=0)
+
+            preview_btn = gr.Button("Preview Mapping", elem_id="fc_preview")
+
+            preview_btn.click(
+                visualize_mapping,
+                [preview_width, preview_height, mapping],
+                preview_img,
             )
 
         def on_radio_change(choice):

@@ -1,0 +1,22 @@
+#fc_adv {
+    flex-direction: row;
+    justify-content: center;
+}
+
+#fc_adv>div {
+    gap: 2em;
+    width: 100%;
+}
+
+#fc_adv .gradio-image {
+    width: 100%;
+}
+
+#fc_enable label {
+    height: 100%;
+}
+
+#fc_preview {
+    margin: 0.25em 1em;
+    border-radius: 0.5em;
+}

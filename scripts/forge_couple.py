@@ -62,12 +62,12 @@ class ForgeCouple(scripts.Script):
             couples.append(prompt)
 
         if len(couples) < (3 if background != "None" else 2):
-            print("\n\n[Couple] Not Enough Lines in Prompt...\n")
+            print("\n\n[Couple] Not Enough Lines in Prompt...\n\n")
             self.couples = None
             return
 
         if (mode == "Advanced") and (len(couples) != len(mapping)):
-            print("\n\n[Couple] Number of Couples and Mapping is not the same...\n")
+            print("\n\n[Couple] Number of Couples and Mapping is not the same...\n\n")
             self.couples = None
             return
 
