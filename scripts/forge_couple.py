@@ -1,7 +1,7 @@
 from modules import scripts
 import re
 
-from scripts.couple_mapping import empty_tensor, basic_mapping
+from scripts.couple_mapping import empty_tensor, basic_mapping, advanced_mapping
 from scripts.couple_ui import couple_UI, validata_mapping
 
 from scripts.attention_couple import AttentionCouple
@@ -115,25 +115,32 @@ class ForgeCouple(scripts.Script):
         LINE_COUNT: int = len(self.couples)
         TILE_COUNT: int = LINE_COUNT - (background != "None")
 
-        TILE_WEIGHT: float = 1.25 if background == "None" else 1.0
-        BG_WEIGHT: float = 0.0 if background == "None" else 0.5
+        if mode == "Basic":
+            TILE_WEIGHT: float = 1.25 if background == "None" else 1.0
+            BG_WEIGHT: float = 0.0 if background == "None" else 0.5
 
-        TILE_SIZE: int = ((WIDTH if IS_HORIZONTAL else HEIGHT) - 1) // TILE_COUNT + 1
+            TILE_SIZE: int = (
+                (WIDTH if IS_HORIZONTAL else HEIGHT) - 1
+            ) // TILE_COUNT + 1
         # ===== Init =====
 
         # ===== Tiles =====
-        ARGs = basic_mapping(
-            p.sd_model,
-            self.couples,
-            WIDTH,
-            HEIGHT,
-            LINE_COUNT,
-            IS_HORIZONTAL,
-            background,
-            TILE_SIZE,
-            TILE_WEIGHT,
-            BG_WEIGHT,
-        )
+        if mode == "Basic":
+            ARGs = basic_mapping(
+                p.sd_model,
+                self.couples,
+                WIDTH,
+                HEIGHT,
+                LINE_COUNT,
+                IS_HORIZONTAL,
+                background,
+                TILE_SIZE,
+                TILE_WEIGHT,
+                BG_WEIGHT,
+            )
+
+        else:
+            ARGs = advanced_mapping(p.sd_model, self.couples, WIDTH, HEIGHT, mapping)
         # ===== Tiles =====
 
         assert len(ARGs.keys()) // 2 == LINE_COUNT

@@ -6,6 +6,42 @@ def empty_tensor(H: int, W: int):
     return torch.zeros((H, W)).unsqueeze(0)
 
 
+def advanced_mapping(sd_model, couples: list, WIDTH: int, HEIGHT: int, data: list):
+    assert len(couples) == len(data)
+
+    ARGs: dict = {}
+    IS_SDXL: bool = hasattr(
+        sd_model.forge_objects.unet.model.diffusion_model, "label_emb"
+    )
+
+    for tile_index in range(len(data)):
+        mask = torch.zeros((HEIGHT, WIDTH))
+
+        [X, Y, W] = data[tile_index]
+        x_from = int(WIDTH * float(X.split(":")[0]))
+        x_to = int(WIDTH * float(X.split(":")[1]))
+        y_from = int(HEIGHT * float(Y.split(":")[0]))
+        y_to = int(HEIGHT * float(Y.split(":")[1]))
+        weight = float(W)
+
+        # print(f"  [{y_from:4d}:{y_to:4d}, {x_from:4d}:{x_to:4d}] = {weight:.2f}")
+
+        # ===== Cond =====
+        texts = SdConditioning([couples[tile_index]], False, WIDTH, HEIGHT, None)
+        cond = sd_model.get_learned_conditioning(texts)
+        pos_cond = [[cond["crossattn"]]] if IS_SDXL else [[cond]]
+        # ===== Cond =====
+
+        # ===== Mask =====
+        mask[y_from:y_to, x_from:x_to] = weight
+        # ===== Mask =====
+
+        ARGs[f"cond_{tile_index + 1}"] = pos_cond
+        ARGs[f"mask_{tile_index + 1}"] = mask.unsqueeze(0)
+
+    return ARGs
+
+
 def basic_mapping(
     sd_model,
     couples: list,
@@ -26,7 +62,6 @@ def basic_mapping(
 
     for tile in range(LINE_COUNT):
         mask = torch.zeros((HEIGHT, WIDTH))
-        pos_cond = None
 
         # ===== Cond =====
         texts = SdConditioning([couples[tile]], False, WIDTH, HEIGHT, None)
