@@ -130,6 +130,39 @@ LoRA with multiple subjects works better in my experience.
 2girls, hanaoi rena, blue idol costume, feather hair ornament, holding hands, looking at viewer, shy, blush
 ```
 
+## Advanced Mapping
+Were these automated equally-sized tiles not sufficient for your needs? Now you can manually specify each regions! The mapping logic is the same: one line corresponds to one entry.
+
+- **Notes:**
+    - You **must** have values in the entire mask. Simplest way would be adding a global entry.
+    - Entries with empty **x** column are skipped
+        - Right now, there's no way to delete a row, so just leave the **x** column empty...
+
+- **Regions:**
+    - Each region contains a (**x**, **y**) range and a **weight**
+    - The **x** and **y** are in the syntax of `from : to`
+    - **x** is from left to right; **y** is from top to bottom
+    - The values should be `0.0 ~ 1.0`, representing the **percentage** of the full width/height
+        - **eg.** `0.0:1.0` would span across the entire axis
+
+- **Preview:**
+    - Specify a width and height for the preivew
+    - Click the **Preview Mapping** button to see each region
+    - Colors are mapped in the sequence of a rainbow
+
+<p align="center">
+<img src="example/10.jpg" height=384>
+<img src="example/10s.jpg" height=384>
+</p>
+
+```
+a cinematic photo of a couple, from side, outdoors
+couple photo, man, black tuxedo
+couple photo, woman, white dress
+wedding photo, holding flower bouquet together
+sunset, golden hour, lens flare
+```
+
 <hr>
 
 ## Compatibility Table
