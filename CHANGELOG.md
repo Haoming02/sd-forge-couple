@@ -1,3 +1,6 @@
+### v1.3.0 - 2024 Mar.30
+- Add **Advanced Mapping** *(manual regions)*
+
 ### v1.2.1 - 2024 Mar.29
 - Add **Couple Separator** Option by. <ins>pamparamm</ins>
 

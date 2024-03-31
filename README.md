@@ -5,13 +5,11 @@ This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-
 
 > One advantage over **Latent Couple** is that, since the conditioning only needs to be calculated once at the beginning, the actual generation speed is not affected!
 
-> Right now all regions are automated. Manually defined regions may be added in the future...
-
-> As shown in the examples below, even if a region only contains 1 subject, it's usually still better to prompt for the total amount of subjects first...
+> As shown in the examples below, even if a region only contains 1 subject, it's usually still better to prompt for the total amount of subjects first.
 
 ## How to Use
 
-- <ins>**Lines Parsing**</ins>
+### Lines Parsing
 
 This Extension works by dividing the image into multiple tiles, each corresponding to one line in the prompt. So if you want more characters, just prompt more lines! Empty lines are skipped.
 
@@ -34,18 +32,7 @@ This Extension works by dividing the image into multiple tiles, each correspondi
 3girls, black ponytail, closed eyes, t-shirt, jeans, looking at viewer, sleepy
 ```
 
-<p align="center">
-<img src="example/02.jpg" width=384>
-</p>
-
-```
-[high quality, best quality], 4girls, blonde twintails, cyan eyes, white dress, looking at viewer, smile, blush
-4girls, white long hair, red eyes, black dress, looking at viewer, frown
-4girls, black ponytail, closed eyes, white t-shirt, jeans, looking at viewer, sleepy
-4girls, red bob cut, green eyes, one eye closed, wink crop tops, shorts, looking at viewer, tongue, :q
-```
-
-- <ins>**Tile Direction**</ins>
+### Tile Direction
 
 Choose between dividing the image into columns or rows
 - **Horizontal:** Tiles from left to right
@@ -64,7 +51,7 @@ beach, sand
 pavement, road
 ```
 
-- <ins>**Global Effect**</ins>
+### Global Effect
 
 Set either the **first line** or the **last line** of the **Positive** prompts to affect the entire image instead of also being divided. Useful for specifying style, quality, or background, etc. (**Negative** prompt is always global regardless of settings.)
 
@@ -100,7 +87,7 @@ tree
 forest
 ```
 
-- <ins>**Couple Separator**</ins>
+### Couple Separator
 
 By default, this Extension uses newline (`\n`) as the separator between tiles. You can also specify any keyword as the separator instead.
 
@@ -117,7 +104,7 @@ a man and a woman,
 white hair, angry, frown
 ```
 
-- <ins>**LoRA Support**</ins>
+### LoRA Support
 
 Using multiple LoRAs also works to a degree, depending on how well each LoRA works together...
 
@@ -141,6 +128,41 @@ LoRA with multiple subjects works better in my experience.
 [high quality, best quality], 2girls, on stage, backlighting, [bloom, hdr], <lora:suzurena:0.72>
 2girls, miyama suzune, pink idol costume, feather hair ornament, holding hands, looking at viewer, smile, blush
 2girls, hanaoi rena, blue idol costume, feather hair ornament, holding hands, looking at viewer, shy, blush
+```
+
+## Advanced Mapping
+Were these automated equally-sized tiles not sufficient for your needs? Now you can manually specify each regions! The mapping logic is the same: one line corresponds to one entry.
+
+> **UI/UX** to be improved...
+
+- **Notes:**
+    - You **must** have values in the entire mask. Simplest way would be adding a global entry.
+    - Entries with empty **x** column are skipped
+        - Right now, there's no way to delete a row, so just leave the **x** column empty...
+
+- **Regions:**
+    - Each region contains a (**x**, **y**) range and a **weight**
+    - The **x** and **y** are in the syntax of `from : to`
+    - **x** is from left to right; **y** is from top to bottom
+    - The values should be `0.0 ~ 1.0`, representing the **percentage** of the full width/height
+        - **eg.** `0.0:1.0` would span across the entire axis
+
+- **Preview:**
+    - Specify a width and height for the preivew
+    - Click the **Preview Mapping** button to see each region
+    - Colors are mapped in the sequence of a rainbow
+
+<p align="center">
+<img src="example/10.jpg" height=384>
+<img src="example/10s.jpg" height=384>
+</p>
+
+```
+a cinematic photo of a couple, from side, outdoors
+couple photo, man, black tuxedo
+couple photo, woman, white dress
+wedding photo, holding flower bouquet together
+sunset, golden hour, lens flare
 ```
 
 <hr>
