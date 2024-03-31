@@ -95,8 +95,7 @@ class ForgeCouple(scripts.Script):
 
         # ===== Infotext =====
         p.extra_generation_params["forge_couple"] = True
-        if not separator.strip():
-            p.extra_generation_params["forge_couple_separator"] = "\n"
+        p.extra_generation_params["forge_couple_separator"] = "\n" if not separator.strip() else separator
         p.extra_generation_params["forge_couple_mode"] = mode
         if mode == "Basic":
             p.extra_generation_params["forge_couple_direction"] = direction
