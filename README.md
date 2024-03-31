@@ -133,6 +133,8 @@ LoRA with multiple subjects works better in my experience.
 ## Advanced Mapping
 Were these automated equally-sized tiles not sufficient for your needs? Now you can manually specify each regions! The mapping logic is the same: one line corresponds to one entry.
 
+> **UI/UX** to be improved...
+
 - **Notes:**
     - You **must** have values in the entire mask. Simplest way would be adding a global entry.
     - Entries with empty **x** column are skipped
