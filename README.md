@@ -138,7 +138,6 @@ Were these automated equally-sized tiles not sufficient for your needs? Now you 
 - **Notes:**
     - You **must** have values in the entire mask. Simplest way would be adding a global entry.
     - Entries with empty **x** column are skipped
-        - Right now, there's no way to delete a row, so just leave the **x** column empty...
 
 - **Regions:**
     - Each region contains a (**x**, **y**) range and a **weight**

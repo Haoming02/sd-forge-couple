@@ -1,22 +1,47 @@
-#fc_adv {
+#forge_couple_t2i .fc_enable>label {
+    height: 100%;
+}
+
+#forge_couple_t2i .fc_adv {
     flex-direction: row;
     justify-content: center;
 }
 
-#fc_adv>div {
+#forge_couple_t2i .fc_adv>div {
     gap: 2em;
     width: 100%;
 }
 
-#fc_adv .gradio-image {
+#forge_couple_t2i .fc_adv .gradio-image {
     width: 100%;
 }
 
-#fc_enable label {
+#forge_couple_t2i .fc_preview {
+    margin: 0.25em 1em;
+    border-radius: 0.5em;
+}
+
+/* sep */
+
+#forge_couple_i2i .fc_enable>label {
     height: 100%;
 }
 
-#fc_preview {
+#forge_couple_i2i .fc_adv {
+    flex-direction: row;
+    justify-content: center;
+}
+
+#forge_couple_i2i .fc_adv>div {
+    gap: 2em;
+    width: 100%;
+}
+
+#forge_couple_i2i .fc_adv .gradio-image {
+    width: 100%;
+}
+
+#forge_couple_i2i .fc_preview {
     margin: 0.25em 1em;
     border-radius: 0.5em;
 }

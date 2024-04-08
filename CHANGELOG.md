@@ -1,3 +1,6 @@
+### v1.3.1 - 2024 Apr.08
+- Add **Row-Control Buttons** for Advanced Mapping
+
 ### v1.3.0 - 2024 Mar.30
 - Add **Advanced Mapping** *(manual regions)*
 

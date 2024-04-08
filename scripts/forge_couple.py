@@ -7,7 +7,7 @@ from scripts.couple_ui import couple_UI, validata_mapping, parse_mapping
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.3.0"
+VERSION = "1.3.1"
 
 
 class ForgeCouple(scripts.Script):
@@ -21,8 +21,8 @@ class ForgeCouple(scripts.Script):
     def show(self, is_img2img):
         return scripts.AlwaysVisible
 
-    def ui(self, *args, **kwargs):
-        return couple_UI(self, f"{self.title()} {VERSION}")
+    def ui(self, is_img2img):
+        return couple_UI(self, is_img2img, f"{self.title()} {VERSION}")
 
     def parse_networks(self, prompt: str) -> str:
         """LoRAs are already parsed"""
@@ -95,7 +95,9 @@ class ForgeCouple(scripts.Script):
 
         # ===== Infotext =====
         p.extra_generation_params["forge_couple"] = True
-        p.extra_generation_params["forge_couple_separator"] = "\n" if not separator.strip() else separator
+        p.extra_generation_params["forge_couple_separator"] = (
+            "\n" if not separator.strip() else separator
+        )
         p.extra_generation_params["forge_couple_mode"] = mode
         if mode == "Basic":
             p.extra_generation_params["forge_couple_direction"] = direction
