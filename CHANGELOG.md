@@ -1,3 +1,8 @@
+### v1.3.2 - 2024 Apr.08
+- Implement **Click & Drag** for Advanced Mapping
+- Auto **Preview**
+- Improved **Error Log**
+
 ### v1.3.1 - 2024 Apr.08
 - Add **Row-Control Buttons** for Advanced Mapping
 

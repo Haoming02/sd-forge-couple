@@ -7,7 +7,7 @@ from scripts.couple_ui import couple_UI, validata_mapping, parse_mapping
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.3.1"
+VERSION = "1.3.2"
 
 
 class ForgeCouple(scripts.Script):
@@ -61,17 +61,21 @@ class ForgeCouple(scripts.Script):
 
             couples.append(prompt)
 
-        if len(couples) < (3 if background != "None" else 2):
-            print("\n\n[Couple] Not Enough Lines in Prompt...\n\n")
-            self.couples = None
-            return
-
-        if (mode == "Advanced") and (len(couples) != len(parse_mapping(mapping))):
-            print("\n\n[Couple] Number of Couples and Mapping is not the same...\n\n")
+        if (mode == "Basic") and len(couples) < (3 if background != "None" else 2):
+            print(
+                f"\n\n[Couple] Not Enough Lines in Prompt...\nCurrent: {len(couples)} / Required: {3 if background != 'None' else 2}\n\n"
+            )
             self.couples = None
             return
 
         if (mode == "Advanced") and not validata_mapping(mapping):
+            self.couples = None
+            return
+
+        if (mode == "Advanced") and (len(couples) != len(parse_mapping(mapping))):
+            print(
+                f"\n\n[Couple] Number of Couples and Mapping is not the same...\nCurrent: {len(couples)} / Required: {len(parse_mapping(mapping))}\n\n"
+            )
             self.couples = None
             return
 

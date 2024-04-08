@@ -1,3 +1,9 @@
+#forge_couple_t2i, #forge_couple_i2i {
+    user-select: none;
+}
+
+/* sep */
+
 #forge_couple_t2i .fc_enable>label {
     height: 100%;
 }
@@ -12,13 +18,22 @@
     width: 100%;
 }
 
+#forge_couple_t2i .fc_preview {
+    margin: 0.25em 1em;
+    border-radius: 0.5em;
+}
+
 #forge_couple_t2i .fc_adv .gradio-image {
     width: 100%;
 }
 
-#forge_couple_t2i .fc_preview {
-    margin: 0.25em 1em;
-    border-radius: 0.5em;
+#forge_couple_t2i .fc_adv .gradio-image>img {
+    margin: auto;
+    width: auto;
+}
+
+#forge_couple_t2i .fc_adv .gradio-image>img.drag {
+    cursor: crosshair;
 }
 
 /* sep */
@@ -37,11 +52,20 @@
     width: 100%;
 }
 
+#forge_couple_i2i .fc_preview {
+    margin: 0.25em 1em;
+    border-radius: 0.5em;
+}
+
 #forge_couple_i2i .fc_adv .gradio-image {
     width: 100%;
 }
 
-#forge_couple_i2i .fc_preview {
-    margin: 0.25em 1em;
-    border-radius: 0.5em;
+#forge_couple_i2i .fc_adv .gradio-image>img {
+    margin: auto;
+    width: auto;
+}
+
+#forge_couple_i2i .fc_adv .gradio-image>img.drag {
+    cursor: crosshair;
 }

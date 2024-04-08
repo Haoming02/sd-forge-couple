@@ -133,10 +133,8 @@ LoRA with multiple subjects works better in my experience.
 ## Advanced Mapping
 Were these automated equally-sized tiles not sufficient for your needs? Now you can manually specify each regions! The mapping logic is the same: one line corresponds to one entry.
 
-> **UI/UX** to be improved...
-
 - **Notes:**
-    - You **must** have values in the entire mask. Simplest way would be adding a global entry.
+    - You **must** have values in the entire mask. Simplest way would be adding a global entry by clicking `New First Row`
     - Entries with empty **x** column are skipped
 
 - **Regions:**
@@ -145,6 +143,14 @@ Were these automated equally-sized tiles not sufficient for your needs? Now you 
     - **x** is from left to right; **y** is from top to bottom
     - The values should be `0.0 ~ 1.0`, representing the **percentage** of the full width/height
         - **eg.** `0.0:1.0` would span across the entire axis
+
+- **Click & Drag:**
+    Tired of ~~painstakingly~~ specifying the ranges? Just use the mouse to draw the regions!
+    - Click the button to get started *(cursor will become **crosshair** when hovering the preview image)*
+    - Make a selection on top of the preview image with the mouse
+    - **Row Index:** The index of the entry to edit
+        - The index follows the Python logic *(**ie.** Start from `0`; negative counts from the last entry)*
+        - Use an index out of range to append a new entry instead
 
 - **Preview:**
     - Specify a width and height for the preivew
