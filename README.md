@@ -3,8 +3,6 @@ This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-
 
 > This does **not** work with [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
 
-> One advantage over **Latent Couple** is that, since the conditioning only needs to be calculated once at the beginning, the actual generation speed is not affected!
-
 > As shown in the examples below, even if a region only contains 1 subject, it's usually still better to prompt for the total amount of subjects first.
 
 ## How to Use
@@ -39,7 +37,8 @@ Choose between dividing the image into columns or rows
 - **Vertical:** Tiles from top to bottom
 
 <p align="center">
-<img src="example/03.jpg" width=384>
+<img src="example/03.jpg" width=384><br>
+<b>Direction:</b><code>Vertical</code>
 </p>
 
 ```
@@ -93,15 +92,15 @@ By default, this Extension uses newline (`\n`) as the separator between tiles. Y
 
 <p align="center">
 <img src="example/09.jpg" width=384><br>
-<b>Separator:</b><code>{SEP}</code>
+<b>Separator:</b><code>~BA DUM TSS~</code>
 </p>
 
 ```
-a high quality photo of a man and a woman
-side-by-side,
-blonde hair, hair bow, smile, blush {SEP}
-a man and a woman,
-white hair, angry, frown
+masterpiece, white themed
+heaven, clouds, bright, glowing
+~BA DUM TSS~
+illustration, red themed
+hell, volcano, dark, dim
 ```
 
 ### LoRA Support
@@ -169,19 +168,6 @@ couple photo, woman, white dress
 wedding photo, holding flower bouquet together
 sunset, golden hour, lens flare
 ```
-
-<hr>
-
-## Compatibility Table
-
-<table>
-    <tr><th>Feature</th><th>Example</th><th>Support</th></tr>
-    <tr><td>Control Net</td><td>OpenPose</td><td>Yes</td></tr>
-    <tr><td>Wildcards</td><td>__colors__</td><td>Yes</td></tr>
-    <tr><td>Single LoRA</td><td>Style</td><td>Yes</td></tr>
-    <tr><td>Multi-LoRA</td><td>Characters</td><td>Limited</td></tr>
-    <tr><td>Prompt Scheduling</td><td>[from:to:steps]</td><td>No</td></tr>
-</table>
 
 <hr>
 

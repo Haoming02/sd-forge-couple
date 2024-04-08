@@ -46,8 +46,7 @@ class ForgeCouple(scripts.Script):
         if not enable:
             return
 
-        if not separator.strip():
-            separator = "\n"
+        separator = "\n" if not separator.strip() else separator.strip()
 
         couples = []
 
@@ -100,7 +99,7 @@ class ForgeCouple(scripts.Script):
         # ===== Infotext =====
         p.extra_generation_params["forge_couple"] = True
         p.extra_generation_params["forge_couple_separator"] = (
-            "\n" if not separator.strip() else separator
+            "\n" if not separator.strip() else separator.strip()
         )
         p.extra_generation_params["forge_couple_mode"] = mode
         if mode == "Basic":

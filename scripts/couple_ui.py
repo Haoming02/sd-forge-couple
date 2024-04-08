@@ -59,7 +59,7 @@ def validata_mapping(data: list) -> bool:
         print("\n\n[Couple] Range must be between 0.0 and 1.0...\n\n")
         return False
     except IndexError:
-        print('\n\n[Couple] "To" value must be larger than "From" value...\n\n')
+        print('\n\n[Couple] "to" value must be larger than "from" value...\n\n')
         return False
 
 
