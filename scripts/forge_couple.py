@@ -1,19 +1,21 @@
 from modules import scripts
 import re
+from modules.processing import StableDiffusionProcessing
 
-from scripts.couple_mapping import empty_tensor, basic_mapping, advanced_mapping
-from scripts.couple_ui import couple_UI, validata_mapping, parse_mapping, hook_component
+from scripts.couple_mapping import empty_tensor, get_masked_conditionings_basic, get_masked_conditionings_advanced
+from scripts.couple_ui import couple_UI
 
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.3.6"
+VERSION = "1.4.0"
 
 
 class ForgeCouple(scripts.Script):
+    prompts: list[str]
 
     def __init__(self):
-        self.couples: list = None
+        self.prompts = None
 
     def title(self):
         return "Forge Couple"
@@ -22,137 +24,118 @@ class ForgeCouple(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
-        return couple_UI(self, is_img2img, f"{self.title()} v{VERSION}")
-
-    def after_component(self, component, **kwargs):
-        if "elem_id" in kwargs:
-            hook_component(component, kwargs["elem_id"])
-
-    def parse_networks(self, prompt: str) -> str:
-        """LoRAs are already parsed"""
-        pattern = re.compile(r"<.*?>")
-        cleaned = re.sub(pattern, "", prompt)
-
-        return cleaned
+        return couple_UI(self, f"{self.title()} {VERSION}", is_img2img)
 
     def after_extra_networks_activate(
         self,
-        p,
+        p: StableDiffusionProcessing,
         enable: bool,
-        direction: str,
-        background: str,
+        basic_direction: str,
+        basic_background_type: str,
         separator: str,
         mode: str,
-        mapping: list,
+        advanced_regions: str,
+        *args,
+        prompts: list[str],
+        **kwargs,
+    ):
+        self.prompts = None
+        if not enable:
+            return
+
+        separator = separator.strip()
+        if not separator:
+            separator = "\n"
+
+        region_prompts: list[str] = []
+        for region_prompt in prompts[0].split(separator):
+            region_prompt = re.sub(r"<.*?>", "", region_prompt)
+            if not region_prompt.strip():
+                # Skip Empty Lines
+                continue
+
+            region_prompts.append(region_prompt)
+
+        if mode == "Basic" and len(region_prompts) < (3 if basic_background_type != "None" else 2):
+            print("\n\n[Couple] Not Enough Lines in Prompt...\n\n")
+            return
+
+        # ===== Infotext =====
+        p.extra_generation_params["forge_couple"] = True
+        p.extra_generation_params["forge_couple_separator"] = "\n" if not separator.strip() else separator
+        p.extra_generation_params["forge_couple_mode"] = mode
+        if mode == "Basic":
+            p.extra_generation_params["forge_couple_direction"] = basic_direction
+            p.extra_generation_params["forge_couple_background"] = basic_background_type
+        else:
+            p.extra_generation_params["forge_couple_regions"] = advanced_regions
+        # ===== Infotext =====
+        
+        self.prompts = region_prompts
+
+    def process_before_every_sampling(
+        self,
+        p: StableDiffusionProcessing,
+        enable: bool,
+        basic_direction: str,
+        basic_background_type: str,
+        separator: str,
+        mode: str,
+        advanced_regions: str,
         *args,
         **kwargs,
     ):
         if not enable:
             return
-
-        separator = "\n" if not separator.strip() else separator.strip()
-
-        couples = []
-
-        chunks = kwargs["prompts"][0].split(separator)
-        for chunk in chunks:
-            prompt = self.parse_networks(chunk).strip()
-
-            if not prompt.strip():
-                # Skip Empty Lines
-                continue
-
-            couples.append(prompt)
-
-        if (mode == "Basic") and len(couples) < (3 if background != "None" else 2):
-            print(
-                f"\n\n[Couple] Not Enough Lines in Prompt...\nCurrent: {len(couples)} / Required: {3 if background != 'None' else 2}\n\n"
-            )
-            self.couples = None
+        
+        if mode == "Basic" and not self.prompts:
             return
-
-        if (mode == "Advanced") and not validata_mapping(mapping):
-            self.couples = None
+        
+        if mode == "Advanced" and not advanced_regions:
             return
-
-        if (mode == "Advanced") and (len(couples) != len(parse_mapping(mapping))):
-            print(
-                f"\n\n[Couple] Number of Couples and Mapping is not the same...\nCurrent: {len(couples)} / Required: {len(parse_mapping(mapping))}\n\n"
-            )
-            self.couples = None
-            return
-
-        self.couples = couples
-
-    def process_before_every_sampling(
-        self,
-        p,
-        enable: bool,
-        direction: str,
-        background: str,
-        separator: str,
-        mode: str,
-        mapping: list,
-        *args,
-        **kwargs,
-    ):
-
-        if not enable or not self.couples:
-            return
-
-        # ===== Infotext =====
-        p.extra_generation_params["forge_couple"] = True
-        p.extra_generation_params["forge_couple_separator"] = (
-            "\n" if not separator.strip() else separator.strip()
-        )
-        p.extra_generation_params["forge_couple_mode"] = mode
-        if mode == "Basic":
-            p.extra_generation_params["forge_couple_direction"] = direction
-            p.extra_generation_params["forge_couple_background"] = background
-        else:
-            p.extra_generation_params["forge_couple_mapping"] = mapping
-        # ===== Infotext =====
 
         # ===== Init =====
         unet = p.sd_model.forge_objects.unet
 
-        WIDTH: int = p.width
-        HEIGHT: int = p.height
-        IS_HORIZONTAL: bool = direction == "Horizontal"
+        image_width: int = p.width
+        image_height: int = p.height
+        basic_mapping_horizontal: bool = basic_direction == "Horizontal"
 
-        LINE_COUNT: int = len(self.couples)
-        TILE_COUNT: int = LINE_COUNT - (background != "None")
+        num_prompts: int = len(self.prompts)
 
         if mode == "Basic":
-            TILE_WEIGHT: float = 1.25 if background == "None" else 1.0
-            BG_WEIGHT: float = 0.0 if background == "None" else 0.5
-
-            TILE_SIZE: int = (
-                (WIDTH if IS_HORIZONTAL else HEIGHT) - 1
-            ) // TILE_COUNT + 1
+            num_basic_regions: int = num_prompts - (basic_background_type != "None")
+            basic_region_size: int = (
+                (image_width if basic_mapping_horizontal else image_height) - 1
+            ) // num_basic_regions + 1
+            basic_region_weight: float = 1.25 if basic_background_type == "None" else 1.0
+            basic_background_weight: float = 0.0 if basic_background_type == "None" else 0.5
         # ===== Init =====
 
         # ===== Tiles =====
         if mode == "Basic":
-            ARGs = basic_mapping(
+            masked_conds = get_masked_conditionings_basic(
                 p.sd_model,
-                self.couples,
-                WIDTH,
-                HEIGHT,
-                LINE_COUNT,
-                IS_HORIZONTAL,
-                background,
-                TILE_SIZE,
-                TILE_WEIGHT,
-                BG_WEIGHT,
+                image_width,
+                image_height,
+                self.prompts,
+                basic_background_type,
+                basic_background_weight,
+                basic_mapping_horizontal,
+                basic_region_size,
+                basic_region_weight
             )
-
         else:
-            ARGs = advanced_mapping(p.sd_model, self.couples, WIDTH, HEIGHT, mapping)
+            masked_conds = get_masked_conditionings_advanced(
+                p.sd_model,
+                separator.join(self.prompts),
+                0.5,
+                image_width,
+                image_height,
+                advanced_regions
+            )
         # ===== Tiles =====
 
-        assert len(ARGs.keys()) // 2 == LINE_COUNT
-
-        base_mask = empty_tensor(HEIGHT, WIDTH)
-        patched_unet = forgeAttentionCouple.patch_unet(unet, base_mask, ARGs)
+        base_mask = empty_tensor(image_height, image_width)
+        patched_unet = forgeAttentionCouple.patch_unet(unet, image_width, image_height, base_mask, masked_conds)
         p.sd_model.forge_objects.unet = patched_unet

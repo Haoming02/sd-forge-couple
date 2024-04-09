@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "allowJs": false,
+        "lib": ["DOM", "ES2022"],
+        "target": "ES2022",
+        "outFile": "../javascript/regions.js",
+        "sourceMap": true
+    }
+}

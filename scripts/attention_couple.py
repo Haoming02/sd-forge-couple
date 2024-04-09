@@ -5,43 +5,45 @@ https://github.com/laksjdjf/cgem156-ComfyUI/blob/main/scripts/attention_couple/n
 Modified by. Haoming02 to work with Forge
 """
 
-from scripts.attention_masks import get_mask, lcm_for_list
+from modules_forge.unet_patcher import UnetPatcher
+from scripts.attention_masks import downsample_mask, lcm_for_list
+from scripts.couple_mapping import MaskedConditioning
 from modules.devices import get_optimal_device
 import torch
-
+from torch import Tensor
+from typing import Any
 
 class AttentionCouple:
+    batch_size: int
+    def patch_unet(self, model: UnetPatcher, image_width: int, image_height: int, base_mask: Tensor, masked_conds: list[MaskedConditioning]):
+        new_model: UnetPatcher = model.clone()
+        dtype: torch.dtype = new_model.model.diffusion_model.dtype
+        device: torch.device = get_optimal_device()
 
-    def patch_unet(self, model, base_mask, kwargs: dict):
+        num_conds = 1 + len(masked_conds)
 
-        new_model = model.clone()
-        dtype = new_model.model.diffusion_model.dtype
-        device = get_optimal_device()
-
-        num_conds = len(kwargs) // 2 + 1
-
-        mask = [base_mask] + [kwargs[f"mask_{i}"] for i in range(1, num_conds)]
+        mask = [base_mask] + [c.mask for c in masked_conds]
         mask = torch.stack(mask, dim=0).to(device, dtype=dtype)
         assert mask.sum(dim=0).min() > 0, "Masks must not contain zeroes..."
         mask = mask / mask.sum(dim=0, keepdim=True)
 
         conds = [
-            kwargs[f"cond_{i}"][0][0].to(device, dtype=dtype)
-            for i in range(1, num_conds)
+            c.conditioning.to(device, dtype=dtype)
+            for c in masked_conds
         ]
-        num_tokens = [cond.shape[1] for cond in conds]
+        cond_token_counts = [cond.shape[1] for cond in conds]
 
-        def attn2_patch(q, k, v, extra_options):
+        def attn2_patch(q: Tensor, k: Tensor, v: Tensor, extra_options: dict[str, Any]):
             assert k.mean() == v.mean(), "k and v must be the same."
-            cond_or_unconds = extra_options["cond_or_uncond"]
+            cond_or_unconds: list[int] = extra_options["cond_or_uncond"]
             num_chunks = len(cond_or_unconds)
             self.batch_size = q.shape[0] // num_chunks
             q_chunks = q.chunk(num_chunks, dim=0)
             k_chunks = k.chunk(num_chunks, dim=0)
-            lcm_tokens = lcm_for_list(num_tokens + [k.shape[1]])
+            lcm_tokens = lcm_for_list(cond_token_counts + [k.shape[1]])
             conds_tensor = torch.cat(
                 [
-                    cond.repeat(self.batch_size, lcm_tokens // num_tokens[i], 1)
+                    cond.repeat(self.batch_size, lcm_tokens // cond_token_counts[i], 1)
                     for i, cond in enumerate(conds)
                 ],
                 dim=0,
@@ -62,10 +64,10 @@ class AttentionCouple:
 
             return qs, ks, ks
 
-        def attn2_output_patch(out, extra_options):
-            cond_or_unconds = extra_options["cond_or_uncond"]
-            mask_downsample = get_mask(
-                mask, self.batch_size, out.shape[1], extra_options["original_shape"]
+        def attn2_output_patch(out: Tensor, extra_options: dict[str, Any]):
+            cond_or_unconds: list[int] = extra_options["cond_or_uncond"]
+            mask_downsample = downsample_mask(
+                mask, self.batch_size, out.shape[1], image_width, image_height
             )
             outputs = []
             pos = 0
