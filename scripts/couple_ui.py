@@ -114,40 +114,44 @@ def visualize_mapping(p_WIDTH: int, p_HEIGHT: int, data: list) -> Image:
 
 
 def reset_mapping() -> list:
-    return DEFAULT_MAPPING
+    return DEFAULT_MAPPING, 2
 
 
 def add_first_row(data: list) -> list:
-    return [["0.0:1.0", "0.0:1.0", "1.0"]] + data
+    return [["0.0:1.0", "0.0:1.0", "1.0"]] + data, 0
 
 
 def add_last_row(data: list) -> list:
-    return data + [["0.25:0.75", "0.25:0.75", "1.0"]]
+    i = len(data)
+    return data + [["0.25:0.75", "0.25:0.75", "1.0"]], i
 
 
 def del_first_row(data: list) -> list:
     if len(data) == 1:
-        return [["0.0:1.0", "0.0:1.0", "1.0"]]
+        return [["0.0:1.0", "0.0:1.0", "1.0"]], 0
     else:
-        return data[1:]
+        return data[1:], 0
 
 
 def del_last_row(data: list) -> list:
+    i = len(data)
     if len(data) == 1:
-        return [["0.0:1.0", "0.0:1.0", "1.0"]]
+        return [["0.0:1.0", "0.0:1.0", "1.0"]], 0
     else:
-        return data[:-1]
+        return data[:-1], i - 2
 
 
 def del_sele_row(data: list, index: int) -> list:
+    i = len(data) - 1
     try:
         if index == 0 and len(data) == 1:
-            return [["0.0:1.0", "0.0:1.0", "1.0"]]
+            return [["0.0:1.0", "0.0:1.0", "1.0"]], 0
         del data[index]
+        i -= 1
     except IndexError:
         pass
 
-    return data
+    return data, i
 
 
 def manual_entry(data: list, new: str, index: int) -> list:
@@ -231,20 +235,15 @@ def couple_UI(script, is_img2img: bool, title: str):
             )
 
             preview_btn = gr.Button("Preview Mapping", elem_classes="fc_preview")
-
-            if is_img2img:
-                preview_btn.click(
-                    visualize_mapping,
-                    [I2I_W, I2I_H, mapping],
-                    preview_img,
-                )
-
-            else:
-                preview_btn.click(
-                    visualize_mapping,
-                    [T2I_W, T2I_H, mapping],
-                    preview_img,
-                )
+            preview_btn.click(
+                visualize_mapping,
+                [
+                    I2I_W if is_img2img else T2I_W,
+                    I2I_H if is_img2img else T2I_H,
+                    mapping,
+                ],
+                preview_img,
+            )
 
             with gr.Column(elem_classes="fc_map_btns"):
                 with gr.Row():
@@ -261,29 +260,28 @@ def couple_UI(script, is_img2img: bool, title: str):
                     reset_map = gr.Button("Reset Mapping")
                     manual_idx = gr.Number(
                         label="Selected Row",
-                        value=0,
+                        value=2,
                         interactive=True,
                         precision=0,
                         elem_classes="fc_index",
-                        # visible=False,
                     )
 
-        add_first.click(add_first_row, mapping, mapping).success(
+        add_first.click(add_first_row, mapping, [mapping, manual_idx]).success(
             None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
         )
-        add_last.click(add_last_row, mapping, mapping).success(
+        add_last.click(add_last_row, mapping, [mapping, manual_idx]).success(
             None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
         )
-        del_first.click(del_first_row, mapping, mapping).success(
+        del_first.click(del_first_row, mapping, [mapping, manual_idx]).success(
             None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
         )
-        del_last.click(del_last_row, mapping, mapping).success(
+        del_last.click(del_last_row, mapping, [mapping, manual_idx]).success(
             None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
         )
-        del_sele.click(del_sele_row, [mapping, manual_idx], mapping).success(
-            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
-        )
-        reset_map.click(reset_mapping, None, mapping).success(
+        del_sele.click(
+            del_sele_row, [mapping, manual_idx], [mapping, manual_idx]
+        ).success(None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}")
+        reset_map.click(reset_mapping, None, [mapping, manual_idx]).success(
             None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
         )
 
@@ -299,7 +297,7 @@ def couple_UI(script, is_img2img: bool, title: str):
             manual_entry, [mapping, manual_field, manual_idx], mapping
         ).success(None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}")
 
-        def on_radio_change(choice):
+        def on_mode_change(choice):
             if choice == "Basic":
                 return [
                     gr.Group.update(visible=True),
@@ -311,7 +309,7 @@ def couple_UI(script, is_img2img: bool, title: str):
                     gr.Group.update(visible=True),
                 ]
 
-        mode.change(on_radio_change, mode, [basic_settings, adv_settings])
+        mode.change(on_mode_change, mode, [basic_settings, adv_settings])
 
         script.paste_field_names = []
         script.infotext_fields = [
