@@ -1,3 +1,9 @@
+### v1.3.4 - 2024 Apr.10
+- Auto Preview **Resolution**
+
+### v1.3.3 - 2024 Apr.10
+- Add Row **Colors**
+
 ### v1.3.2 - 2024 Apr.08
 - Implement **Click & Drag** for Advanced Mapping
 - Auto **Preview**

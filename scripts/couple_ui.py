@@ -5,6 +5,24 @@ import gradio as gr
 DEFAULT_MAPPING = [["0.0:0.5", "0.0:1.0", "1.0"], ["0.5:1.0", "0.0:1.0", "1.0"]]
 COLORS = ("red", "orange", "yellow", "green", "blue", "indigo", "violet")
 
+T2I_W = None
+T2I_H = None
+I2I_W = None
+I2I_H = None
+
+
+def hook_component(component, id: str):
+    global T2I_W, T2I_H, I2I_W, I2I_H
+
+    if id == "txt2img_width":
+        T2I_W = component
+    elif id == "txt2img_height":
+        T2I_H = component
+    elif id == "img2img_width":
+        I2I_W = component
+    elif id == "img2img_height":
+        I2I_H = component
+
 
 def parse_mapping(data: list) -> list:
     mapping = []
@@ -212,17 +230,21 @@ def couple_UI(script, is_img2img: bool, title: str):
                 height=512,
             )
 
-            with gr.Row():
-                preview_width = gr.Number(value=1024, label="Width", precision=0)
-                preview_height = gr.Number(value=1024, label="Height", precision=0)
-
             preview_btn = gr.Button("Preview Mapping", elem_classes="fc_preview")
 
-            preview_btn.click(
-                visualize_mapping,
-                [preview_width, preview_height, mapping],
-                preview_img,
-            )
+            if is_img2img:
+                preview_btn.click(
+                    visualize_mapping,
+                    [I2I_W, I2I_H, mapping],
+                    preview_img,
+                )
+
+            else:
+                preview_btn.click(
+                    visualize_mapping,
+                    [T2I_W, T2I_H, mapping],
+                    preview_img,
+                )
 
             with gr.Column(elem_classes="fc_map_btns"):
                 with gr.Row():
@@ -305,7 +327,7 @@ def couple_UI(script, is_img2img: bool, title: str):
             comp.do_not_save_to_config = True
             script.paste_field_names.append(name)
 
-        for comp in (preview_width, preview_height, manual_idx, manual_field):
+        for comp in (manual_idx, manual_field):
             comp.do_not_save_to_config = True
 
         return [enable, direction, background, separator, mode, mapping]
