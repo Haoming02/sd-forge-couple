@@ -3,6 +3,7 @@ import gradio as gr
 
 
 DEFAULT_MAPPING = [["0.0:0.5", "0.0:1.0", "1.0"], ["0.5:1.0", "0.0:1.0", "1.0"]]
+COLORS = ("red", "orange", "yellow", "green", "blue", "indigo", "violet")
 
 
 def parse_mapping(data: list) -> list:
@@ -69,14 +70,13 @@ def visualize_mapping(p_WIDTH: int, p_HEIGHT: int, data: list) -> Image:
     if not (validata_mapping(data)):
         return matt
 
-    COLORS = ("red", "orange", "yellow", "green", "blue", "violet", "purple")
-    lnw = int(max(min(p_WIDTH, p_HEIGHT) / 256, 2.0))
+    lnw = int(max(min(p_WIDTH, p_HEIGHT) / 128, 2.0))
 
     draw = ImageDraw.Draw(matt)
 
     mapping = parse_mapping(data)
 
-    print("\nAdv. Preview:")
+    # print("\nAdv. Preview:")
     for tile_index in range(len(mapping)):
         color_index = tile_index % len(COLORS)
 
@@ -87,7 +87,7 @@ def visualize_mapping(p_WIDTH: int, p_HEIGHT: int, data: list) -> Image:
         y_to = int(p_HEIGHT * Y[1])
         weight = W
 
-        print(f"  [{y_from:4d}:{y_to:4d}, {x_from:4d}:{x_to:4d}] = {weight:.2f}")
+        # print(f"  [{y_from:4d}:{y_to:4d}, {x_from:4d}:{x_to:4d}] = {weight:.2f}")
         draw.rectangle(
             [(x_from, y_from), (x_to, y_to)], outline=COLORS[color_index], width=lnw
         )
@@ -104,15 +104,32 @@ def add_first_row(data: list) -> list:
 
 
 def add_last_row(data: list) -> list:
-    return data + [["0.0:1.0", "0.0:1.0", "1.0"]]
+    return data + [["0.25:0.75", "0.25:0.75", "1.0"]]
 
 
 def del_first_row(data: list) -> list:
-    return data[1:]
+    if len(data) == 1:
+        return [["0.0:1.0", "0.0:1.0", "1.0"]]
+    else:
+        return data[1:]
 
 
 def del_last_row(data: list) -> list:
-    return data[:-1]
+    if len(data) == 1:
+        return [["0.0:1.0", "0.0:1.0", "1.0"]]
+    else:
+        return data[:-1]
+
+
+def del_sele_row(data: list, index: int) -> list:
+    try:
+        if index == 0 and len(data) == 1:
+            return [["0.0:1.0", "0.0:1.0", "1.0"]]
+        del data[index]
+    except IndexError:
+        pass
+
+    return data
 
 
 def manual_entry(data: list, new: str, index: int) -> list:
@@ -124,7 +141,8 @@ def manual_entry(data: list, new: str, index: int) -> list:
         v[2], v[3] = v[3], v[2]
 
     try:
-        data[index] = [f"{v[0]}:{v[1]}", f"{v[2]}:{v[3]}", "1.0"]
+        data[index][0] = f"{v[0]}:{v[1]}"
+        data[index][1] = f"{v[2]}:{v[3]}"
     except IndexError:
         data.append([f"{v[0]}:{v[1]}", f"{v[2]}:{v[3]}", "1.0"])
 
@@ -175,12 +193,15 @@ def couple_UI(script, is_img2img: bool, title: str):
                 label="Mapping",
                 headers=["x", "y", "weight"],
                 datatype="str",
-                row_count=(2, "dynamic"),
+                row_count=(1, "dynamic"),
                 col_count=(3, "fixed"),
                 interactive=True,
                 type="array",
                 value=DEFAULT_MAPPING,
+                elem_classes="fc_mapping",
             )
+
+            mapping.select(None, None, None, _js=f"() => {{ FCMCD.select({m}); }}")
 
             preview_img = gr.Image(
                 value=Image.new("RGB", (1, 1), "black"),
@@ -205,35 +226,44 @@ def couple_UI(script, is_img2img: bool, title: str):
 
             with gr.Column(elem_classes="fc_map_btns"):
                 with gr.Row():
-                    with gr.Column():
-                        add_first = gr.Button("New First Row")
-                        add_first.click(add_first_row, mapping, mapping).success(
-                            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
-                        )
-                        add_last = gr.Button("New Last Row")
-                        add_last.click(add_last_row, mapping, mapping).success(
-                            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
-                        )
-                    with gr.Column():
-                        del_first = gr.Button("Delete First Row")
-                        del_first.click(del_first_row, mapping, mapping).success(
-                            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
-                        )
-                        del_last = gr.Button("Delete Last Row")
-                        del_last.click(del_last_row, mapping, mapping).success(
-                            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
-                        )
-
-                    reset_map = gr.Button("Reset Mapping")
-                    reset_map.click(reset_mapping, None, mapping).success(
-                        None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
-                    )
+                    add_first = gr.Button("New First Row")
+                    add_last = gr.Button("New Last Row")
+                    manual_btn = gr.Button("Click & Drag", elem_classes="fc_manual")
 
                 with gr.Row():
-                    manual_btn = gr.Button("Click & Drag", elem_classes="fc_manual")
+                    del_first = gr.Button("Delete First Row")
+                    del_last = gr.Button("Delete Last Row")
+                    del_sele = gr.Button("Delete Selection")
+
+                with gr.Row():
+                    reset_map = gr.Button("Reset Mapping")
                     manual_idx = gr.Number(
-                        label="Row Index", value=-100, interactive=True, precision=0
+                        label="Selected Row",
+                        value=0,
+                        interactive=True,
+                        precision=0,
+                        elem_classes="fc_index",
+                        # visible=False,
                     )
+
+        add_first.click(add_first_row, mapping, mapping).success(
+            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
+        )
+        add_last.click(add_last_row, mapping, mapping).success(
+            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
+        )
+        del_first.click(del_first_row, mapping, mapping).success(
+            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
+        )
+        del_last.click(del_last_row, mapping, mapping).success(
+            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
+        )
+        del_sele.click(del_sele_row, [mapping, manual_idx], mapping).success(
+            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
+        )
+        reset_map.click(reset_mapping, None, mapping).success(
+            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
+        )
 
         manual_field = gr.Textbox(
             lines=1,

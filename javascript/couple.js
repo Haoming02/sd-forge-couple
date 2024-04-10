@@ -5,10 +5,43 @@ class FCMCD {
     static x2;
     static y2;
 
+    static COLORS = [
+        "hsl(0, 36%, 36%)",
+        "hsl(30, 36%, 36%)",
+        "hsl(60, 36%, 36%)",
+        "hsl(120, 36%, 36%)",
+        "hsl(240, 36%, 36%)",
+        "hsl(280, 36%, 36%)",
+        "hsl(320, 36%, 36%)"
+    ];
+
     static preview(mode) {
         const ex = document.getElementById(`forge_couple_${mode}`);
         const btn = ex.querySelector(".fc_preview");
         btn.click();
+
+        const table = ex.querySelector(".fc_mapping").querySelector("tbody");
+        const rows = table.querySelectorAll("tr");
+
+        for (let i = 0; i < rows.length; i++) {
+            const bg = getComputedStyle(rows[i]).backgroundColor;
+            rows[i].querySelectorAll("td")[2].style.background = `linear-gradient(to right, ${bg} 25%, ${this.COLORS[i % this.COLORS.length]})`;
+        }
+    }
+
+    static select(mode) {
+        const ex = document.getElementById(`forge_couple_${mode}`);
+        const table = ex.querySelector(".fc_mapping").querySelector("tbody");
+        const rows = table.querySelectorAll("tr");
+        const index = ex.querySelector(".fc_index").querySelector("input");
+
+        for (let i = 0; i < rows.length; i++) {
+            if (rows[i].querySelector(":focus-within") != null) {
+                index.value = i;
+                updateInput(index);
+                break;
+            }
+        }
     }
 }
 
@@ -60,5 +93,7 @@ onUiLoaded(async () => {
 
             preview_img.classList.remove("drag");
         }
+
+        FCMCD.preview(mode);
     });
 })
