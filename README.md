@@ -132,7 +132,7 @@ LoRA with multiple subjects works better in my experience.
 ## Advanced Mapping
 Were these automated equally-sized tiles not sufficient for your needs? Now you can manually specify each regions! The mapping logic is the same: one line corresponds to one entry.
 
-- **Notes:**
+- **Note:**
     - You **must** have values in the entire mask. Simplest way would be adding a global entry by clicking `New First Row`
     - Entries with empty **x** column are skipped
 
@@ -145,16 +145,18 @@ Were these automated equally-sized tiles not sufficient for your needs? Now you 
 
 - **Click & Drag:**
     Tired of ~~painstakingly~~ specifying the ranges? Just use the mouse to draw the regions!
-    - Click the button to get started *(cursor will become **crosshair** when hovering the preview image)*
+    - Click the button to get started *(cursor will become a **crosshair** when hovering the preview image)*
     - Make a selection on top of the preview image with the mouse
-    - **Row Index:** The index of the entry to edit
-        - The index follows the Python logic *(**ie.** Start from `0`; negative counts from the last entry)*
-        - Use an index out of range to append a new entry instead
+
+- **Selected Row:**
+    - The index of the entry to be edited by `Click & Drag`; or to be deleted
+    - Use an index out of range to append a new entry instead
+    - The index follows the Python logic *(**ie.** Start from `0`; negative counts from the last entry)*
+    - Clicking a row will update the index
 
 - **Preview:**
-    - Specify a width and height for the preivew
     - Click the **Preview Mapping** button to see each region
-    - Colors are mapped in the sequence of a rainbow
+    - Colors are mapped in the sequence of a rainbow; corresponding row is also colored
 
 <p align="center">
 <img src="example/10.jpg" height=384>
