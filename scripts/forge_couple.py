@@ -2,12 +2,12 @@ from modules import scripts
 import re
 
 from scripts.couple_mapping import empty_tensor, basic_mapping, advanced_mapping
-from scripts.couple_ui import couple_UI, validata_mapping, parse_mapping
+from scripts.couple_ui import couple_UI, validata_mapping, parse_mapping, hook_component
 
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.3.0"
+VERSION = "1.3.4"
 
 
 class ForgeCouple(scripts.Script):
@@ -21,8 +21,12 @@ class ForgeCouple(scripts.Script):
     def show(self, is_img2img):
         return scripts.AlwaysVisible
 
-    def ui(self, *args, **kwargs):
-        return couple_UI(self, f"{self.title()} {VERSION}")
+    def ui(self, is_img2img):
+        return couple_UI(self, is_img2img, f"{self.title()} {VERSION}")
+
+    def after_component(self, component, **kwargs):
+        if "elem_id" in kwargs:
+            hook_component(component, kwargs["elem_id"])
 
     def parse_networks(self, prompt: str) -> str:
         """LoRAs are already parsed"""
@@ -46,8 +50,7 @@ class ForgeCouple(scripts.Script):
         if not enable:
             return
 
-        if not separator.strip():
-            separator = "\n"
+        separator = "\n" if not separator.strip() else separator.strip()
 
         couples = []
 
@@ -61,17 +64,21 @@ class ForgeCouple(scripts.Script):
 
             couples.append(prompt)
 
-        if len(couples) < (3 if background != "None" else 2):
-            print("\n\n[Couple] Not Enough Lines in Prompt...\n\n")
-            self.couples = None
-            return
-
-        if (mode == "Advanced") and (len(couples) != len(parse_mapping(mapping))):
-            print("\n\n[Couple] Number of Couples and Mapping is not the same...\n\n")
+        if (mode == "Basic") and len(couples) < (3 if background != "None" else 2):
+            print(
+                f"\n\n[Couple] Not Enough Lines in Prompt...\nCurrent: {len(couples)} / Required: {3 if background != 'None' else 2}\n\n"
+            )
             self.couples = None
             return
 
         if (mode == "Advanced") and not validata_mapping(mapping):
+            self.couples = None
+            return
+
+        if (mode == "Advanced") and (len(couples) != len(parse_mapping(mapping))):
+            print(
+                f"\n\n[Couple] Number of Couples and Mapping is not the same...\nCurrent: {len(couples)} / Required: {len(parse_mapping(mapping))}\n\n"
+            )
             self.couples = None
             return
 
@@ -95,7 +102,9 @@ class ForgeCouple(scripts.Script):
 
         # ===== Infotext =====
         p.extra_generation_params["forge_couple"] = True
-        p.extra_generation_params["forge_couple_separator"] = "\n" if not separator.strip() else separator
+        p.extra_generation_params["forge_couple_separator"] = (
+            "\n" if not separator.strip() else separator.strip()
+        )
         p.extra_generation_params["forge_couple_mode"] = mode
         if mode == "Basic":
             p.extra_generation_params["forge_couple_direction"] = direction

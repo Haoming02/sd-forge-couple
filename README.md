@@ -3,8 +3,6 @@ This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-
 
 > This does **not** work with [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
 
-> One advantage over **Latent Couple** is that, since the conditioning only needs to be calculated once at the beginning, the actual generation speed is not affected!
-
 > As shown in the examples below, even if a region only contains 1 subject, it's usually still better to prompt for the total amount of subjects first.
 
 ## How to Use
@@ -39,7 +37,8 @@ Choose between dividing the image into columns or rows
 - **Vertical:** Tiles from top to bottom
 
 <p align="center">
-<img src="example/03.jpg" width=384>
+<img src="example/03.jpg" width=384><br>
+<b>Direction:</b><code>Vertical</code>
 </p>
 
 ```
@@ -93,15 +92,15 @@ By default, this Extension uses newline (`\n`) as the separator between tiles. Y
 
 <p align="center">
 <img src="example/09.jpg" width=384><br>
-<b>Separator:</b><code>{SEP}</code>
+<b>Separator:</b><code>~BA DUM TSS~</code>
 </p>
 
 ```
-a high quality photo of a man and a woman
-side-by-side,
-blonde hair, hair bow, smile, blush {SEP}
-a man and a woman,
-white hair, angry, frown
+masterpiece, white themed
+heaven, clouds, bright, glowing
+~BA DUM TSS~
+illustration, red themed
+hell, volcano, dark, dim
 ```
 
 ### LoRA Support
@@ -133,12 +132,9 @@ LoRA with multiple subjects works better in my experience.
 ## Advanced Mapping
 Were these automated equally-sized tiles not sufficient for your needs? Now you can manually specify each regions! The mapping logic is the same: one line corresponds to one entry.
 
-> **UI/UX** to be improved...
-
-- **Notes:**
-    - You **must** have values in the entire mask. Simplest way would be adding a global entry.
+- **Note:**
+    - You **must** have values in the entire mask. Simplest way would be adding a global entry by clicking `New First Row`
     - Entries with empty **x** column are skipped
-        - Right now, there's no way to delete a row, so just leave the **x** column empty...
 
 - **Regions:**
     - Each region contains a (**x**, **y**) range and a **weight**
@@ -147,10 +143,20 @@ Were these automated equally-sized tiles not sufficient for your needs? Now you 
     - The values should be `0.0 ~ 1.0`, representing the **percentage** of the full width/height
         - **eg.** `0.0:1.0` would span across the entire axis
 
+- **Click & Drag:**
+    Tired of ~~painstakingly~~ specifying the ranges? Just use the mouse to draw the regions!
+    - Click the button to get started *(cursor will become a **crosshair** when hovering the preview image)*
+    - Make a selection on top of the preview image with the mouse
+
+- **Selected Row:**
+    - The index of the entry to be edited by `Click & Drag`; or to be deleted
+    - Use an index out of range to append a new entry instead
+    - The index follows the Python logic *(**ie.** Start from `0`; negative counts from the last entry)*
+    - Clicking a row will update the index
+
 - **Preview:**
-    - Specify a width and height for the preivew
     - Click the **Preview Mapping** button to see each region
-    - Colors are mapped in the sequence of a rainbow
+    - Colors are mapped in the sequence of a rainbow; corresponding row is also colored
 
 <p align="center">
 <img src="example/10.jpg" height=384>
@@ -164,19 +170,6 @@ couple photo, woman, white dress
 wedding photo, holding flower bouquet together
 sunset, golden hour, lens flare
 ```
-
-<hr>
-
-## Compatibility Table
-
-<table>
-    <tr><th>Feature</th><th>Example</th><th>Support</th></tr>
-    <tr><td>Control Net</td><td>OpenPose</td><td>Yes</td></tr>
-    <tr><td>Wildcards</td><td>__colors__</td><td>Yes</td></tr>
-    <tr><td>Single LoRA</td><td>Style</td><td>Yes</td></tr>
-    <tr><td>Multi-LoRA</td><td>Characters</td><td>Limited</td></tr>
-    <tr><td>Prompt Scheduling</td><td>[from:to:steps]</td><td>No</td></tr>
-</table>
 
 <hr>
 
