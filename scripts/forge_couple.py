@@ -7,7 +7,7 @@ from scripts.couple_ui import couple_UI, validata_mapping, parse_mapping, hook_c
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.3.5"
+VERSION = "1.3.6"
 
 
 class ForgeCouple(scripts.Script):
@@ -22,7 +22,7 @@ class ForgeCouple(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
-        return couple_UI(self, is_img2img, f"{self.title()} {VERSION}")
+        return couple_UI(self, is_img2img, f"{self.title()} v{VERSION}")
 
     def after_component(self, component, **kwargs):
         if "elem_id" in kwargs:

@@ -1,9 +1,10 @@
-/** Forge Couple Manual Click & Drag */
-class FCMCD {
-    static x1;
-    static y1;
-    static x2;
-    static y2;
+class ForgeCouple {
+
+    static previewBtn = {};
+    static mappingTable = {};
+    static manualIndex = {};
+
+    static coords = [[-1, -1], [-1, -1]];
 
     static COLORS = [
         "hsl(0, 36%, 36%)",
@@ -15,39 +16,38 @@ class FCMCD {
         "hsl(320, 36%, 36%)"
     ];
 
-    static preview(mode) {
-        const ex = document.getElementById(`forge_couple_${mode}`);
-        const btn = ex.querySelector(".fc_preview");
-        btn.click();
-
-        const table = ex.querySelector(".fc_mapping").querySelector("tbody");
-        const rows = table.querySelectorAll("tr");
-
-        for (let i = 0; i < rows.length; i++) {
-            const bg = getComputedStyle(rows[i]).backgroundColor;
-            rows[i].querySelectorAll("td")[2].style.background = `linear-gradient(to right, ${bg} 25%, ${this.COLORS[i % this.COLORS.length]})`;
-        }
+    static updateColors(mode) {
+        const rows = this.mappingTable[mode].querySelectorAll("tr");
+        rows.forEach((row, i) => {
+            const bg = `var(--table-${(i % 2 == 0) ? "odd" : "even"}-background-fill)`;
+            row.style.background = `linear-gradient(to right, ${bg} 80%, ${this.COLORS[i % this.COLORS.length]})`;
+        });
     }
 
-    static select(mode) {
-        const ex = document.getElementById(`forge_couple_${mode}`);
-        const table = ex.querySelector(".fc_mapping").querySelector("tbody");
-        const rows = table.querySelectorAll("tr");
-        const index = ex.querySelector(".fc_index").querySelector("input");
+    static preview(mode) {
+        this.updateColors(mode);
+        this.previewBtn[mode].click();
+    }
 
-        for (let i = 0; i < rows.length; i++) {
-            if (rows[i].querySelector(":focus-within") != null) {
-                index.value = i;
-                updateInput(index);
-                break;
+    static onSelect(mode) {
+        const rows = Array.from(this.mappingTable[mode].querySelectorAll("tr"));
+        rows.forEach((row, i) => {
+            if (row.querySelector(":focus-within") != null) {
+                this.manualIndex[mode].value = i;
+                updateInput(this.manualIndex[mode]);
             }
-        }
+        });
+        this.updateColors(mode);
     }
 }
 
 onUiLoaded(async () => {
     ["t2i", "i2i"].forEach((mode) => {
         const ex = document.getElementById(`forge_couple_${mode}`);
+
+        ForgeCouple.previewBtn[mode] = ex.querySelector(".fc_preview");
+        ForgeCouple.mappingTable[mode] = ex.querySelector(".fc_mapping").querySelector("tbody");
+        ForgeCouple.manualIndex[mode] = ex.querySelector(".fc_index").querySelector("input");
 
         const row = ex.querySelector(".controls-wrap");
         const btns = ex.querySelector(".fc_map_btns");
@@ -73,8 +73,8 @@ onUiLoaded(async () => {
 
             e.preventDefault();
             const rect = e.target.getBoundingClientRect();
-            FCMCD.x1 = (e.clientX - rect.left) / rect.width;
-            FCMCD.y1 = (e.clientY - rect.top) / rect.height;
+            ForgeCouple.coords[0][0] = (e.clientX - rect.left) / rect.width;
+            ForgeCouple.coords[0][1] = (e.clientY - rect.top) / rect.height;
         }
 
         preview_img.onmouseup = (e) => {
@@ -85,15 +85,17 @@ onUiLoaded(async () => {
 
             e.preventDefault();
             const rect = e.target.getBoundingClientRect();
-            FCMCD.x2 = (e.clientX - rect.left) / rect.width;
-            FCMCD.y2 = (e.clientY - rect.top) / rect.height;
+            ForgeCouple.coords[1][0] = (e.clientX - rect.left) / rect.width;
+            ForgeCouple.coords[1][1] = (e.clientY - rect.top) / rect.height;
 
-            manual_field.value = `${FCMCD.x1},${FCMCD.x2},${FCMCD.y1},${FCMCD.y2}`;
+            manual_field.value = `${ForgeCouple.coords[0][0]},${ForgeCouple.coords[1][0]},${ForgeCouple.coords[0][1]},${ForgeCouple.coords[1][1]}`;
             updateInput(manual_field);
 
             preview_img.classList.remove("drag");
         }
 
-        FCMCD.preview(mode);
+        setTimeout(() => {
+            ForgeCouple.preview(mode);
+        }, 100);
     });
 })

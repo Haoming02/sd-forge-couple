@@ -172,12 +172,12 @@ def manual_entry(data: list, new: str, index: int) -> list:
 
 
 def couple_UI(script, is_img2img: bool, title: str):
-    mode = "i2i" if is_img2img else "t2i"
-    m = f'"{mode}"'
+    m: str = "i2i" if is_img2img else "t2i"
+    preview_js: str = f'() => {{ ForgeCouple.preview("{m}"); }}'
 
     with gr.Accordion(
         label=title,
-        elem_id=f"forge_couple_{mode}",
+        elem_id=f"forge_couple_{m}",
         open=False,
     ):
         with gr.Row():
@@ -223,7 +223,9 @@ def couple_UI(script, is_img2img: bool, title: str):
                 elem_classes="fc_mapping",
             )
 
-            mapping.select(None, None, None, _js=f"() => {{ FCMCD.select({m}); }}")
+            mapping.select(
+                None, None, None, _js=f'() => {{ ForgeCouple.onSelect("{m}"); }}'
+            )
 
             preview_img = gr.Image(
                 value=Image.new("RGB", (1, 1), "black"),
@@ -267,22 +269,22 @@ def couple_UI(script, is_img2img: bool, title: str):
                     )
 
         add_first.click(add_first_row, mapping, [mapping, manual_idx]).success(
-            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
+            None, None, None, _js=preview_js
         )
         add_last.click(add_last_row, mapping, [mapping, manual_idx]).success(
-            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
+            None, None, None, _js=preview_js
         )
         del_first.click(del_first_row, mapping, [mapping, manual_idx]).success(
-            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
+            None, None, None, _js=preview_js
         )
         del_last.click(del_last_row, mapping, [mapping, manual_idx]).success(
-            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
+            None, None, None, _js=preview_js
         )
         del_sele.click(
             del_sele_row, [mapping, manual_idx], [mapping, manual_idx]
-        ).success(None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}")
+        ).success(None, None, None, _js=preview_js)
         reset_map.click(reset_mapping, None, [mapping, manual_idx]).success(
-            None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}"
+            None, None, None, _js=preview_js
         )
 
         manual_field = gr.Textbox(
@@ -295,7 +297,7 @@ def couple_UI(script, is_img2img: bool, title: str):
 
         manual_field.input(
             manual_entry, [mapping, manual_field, manual_idx], mapping
-        ).success(None, None, None, _js=f"() => {{ FCMCD.preview({m}); }}")
+        ).success(None, None, None, _js=preview_js)
 
         def on_mode_change(choice):
             if choice == "Basic":

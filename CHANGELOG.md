@@ -1,3 +1,6 @@
+### v1.3.6 - 2024 Apr.12
+- **Cache** DOM Elements
+
 ### v1.3.5 - 2024 Apr.12
 - Support **Arbitrary Resolution** by. <ins>arcusmaximus</ins>
 
