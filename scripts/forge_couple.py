@@ -7,7 +7,7 @@ from scripts.couple_ui import couple_UI, validata_mapping, parse_mapping, hook_c
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.3.4"
+VERSION = "1.3.5"
 
 
 class ForgeCouple(scripts.Script):

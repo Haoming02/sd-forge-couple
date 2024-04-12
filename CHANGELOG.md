@@ -1,3 +1,6 @@
+### v1.3.5 - 2024 Apr.12
+- Support **Arbitrary Resolution** by. <ins>arcusmaximus</ins>
+
 ### v1.3.4 - 2024 Apr.10
 - Auto Preview **Resolution**
 
