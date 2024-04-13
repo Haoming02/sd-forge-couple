@@ -1,7 +1,7 @@
 from modules import scripts
 import re
 
-from scripts.couple_mapping import empty_tensor, basic_mapping, advanced_mapping
+from scripts.couple_mapping import empty_tensor, basic_mapping, advanced_mapping, mask_mapping
 from scripts.couple_ui import couple_UI, validata_mapping, parse_mapping, hook_component
 
 from scripts.attention_couple import AttentionCouple
@@ -44,6 +44,7 @@ class ForgeCouple(scripts.Script):
         separator: str,
         mode: str,
         mapping: list,
+        background_weight: float,
         *args,
         **kwargs,
     ):
@@ -68,6 +69,13 @@ class ForgeCouple(scripts.Script):
             print(
                 f"\n\n[Couple] Not Enough Lines in Prompt...\nCurrent: {len(couples)} / Required: {3 if background != 'None' else 2}\n\n"
             )
+        if mode == "Mask": 
+            if not mapping or len(mapping) != len(couples)- (1 if background != "None" else 0):
+                print("\n\n[Couple] Number of Couples and Masks is not the same...\n\n")
+                self.couples = None
+                return
+        elif len(couples) < (3 if background != "None" else 2):
+            print("\n\n[Couple] Not Enough Lines in Prompt...\n\n")
             self.couples = None
             return
 
@@ -93,6 +101,7 @@ class ForgeCouple(scripts.Script):
         separator: str,
         mode: str,
         mapping: list,
+        background_weight: float,
         *args,
         **kwargs,
     ):
@@ -125,7 +134,7 @@ class ForgeCouple(scripts.Script):
 
         if mode == "Basic":
             TILE_WEIGHT: float = 1.25 if background == "None" else 1.0
-            BG_WEIGHT: float = 0.0 if background == "None" else 0.5
+            BG_WEIGHT: float = 0.0 if background == "None" else (0.1 if background_weight == 0.0 else background_weight or 0.5)
 
             TILE_SIZE: int = (
                 (WIDTH if IS_HORIZONTAL else HEIGHT) - 1
@@ -147,11 +156,23 @@ class ForgeCouple(scripts.Script):
                 BG_WEIGHT,
             )
 
+        elif mode== "Mask":
+            BG_WEIGHT: float = 0.0 if background == "None" else (0.1 if background_weight == 0.0 else background_weight or 0.5)
+            
+            ARGs = mask_mapping(p.sd_model,
+                self.couples,
+                WIDTH,
+                HEIGHT,
+                LINE_COUNT,
+                mapping,
+                background,
+                BG_WEIGHT)
         else:
             ARGs = advanced_mapping(p.sd_model, self.couples, WIDTH, HEIGHT, mapping)
         # ===== Tiles =====
 
-        assert len(ARGs.keys()) // 2 == LINE_COUNT
+        if mode != "Mask":
+            assert len(ARGs.keys()) // 2 == LINE_COUNT
 
         base_mask = empty_tensor(HEIGHT, WIDTH)
         patched_unet = forgeAttentionCouple.patch_unet(unet, base_mask, ARGs)

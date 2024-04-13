@@ -209,6 +209,12 @@ def couple_UI(script, is_img2img: bool, title: str):
                     label="Global Effect",
                     value="None",
                 )
+                background_weight = gr.Slider(
+                    minimum=0.1,
+                    maximum=1,
+                    value=0.5,
+                    label="Global Effect Weight",
+                )
 
         with gr.Group(visible=False, elem_classes="fc_adv") as adv_settings:
             mapping = gr.Dataframe(
@@ -330,4 +336,4 @@ def couple_UI(script, is_img2img: bool, title: str):
         for comp in (manual_idx, manual_field):
             comp.do_not_save_to_config = True
 
-        return [enable, direction, background, separator, mode, mapping]
+        return [enable, direction, background, separator, mode, mapping, background_weight]
