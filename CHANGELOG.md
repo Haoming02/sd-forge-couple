@@ -1,3 +1,7 @@
+### v1.3.7 - 2024 Apr.14
+- **Global Effect Weight** Slider by. <ins>ramyma</ins>
+- **Mask API** by. <ins>ramyma</ins>
+
 ### v1.3.6 - 2024 Apr.12
 - **Cache** DOM Elements
 

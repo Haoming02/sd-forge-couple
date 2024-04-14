@@ -1,13 +1,18 @@
 from modules import scripts
 import re
 
-from scripts.couple_mapping import empty_tensor, basic_mapping, advanced_mapping, mask_mapping
+from scripts.couple_mapping import (
+    empty_tensor,
+    basic_mapping,
+    advanced_mapping,
+    mask_mapping,
+)
 from scripts.couple_ui import couple_UI, validata_mapping, parse_mapping, hook_component
 
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.3.6"
+VERSION = "1.3.7"
 
 
 class ForgeCouple(scripts.Script):
@@ -69,8 +74,10 @@ class ForgeCouple(scripts.Script):
             print(
                 f"\n\n[Couple] Not Enough Lines in Prompt...\nCurrent: {len(couples)} / Required: {3 if background != 'None' else 2}\n\n"
             )
-        if mode == "Mask": 
-            if not mapping or len(mapping) != len(couples)- (1 if background != "None" else 0):
+        if mode == "Mask":
+            if not mapping or len(mapping) != len(couples) - (
+                1 if background != "None" else 0
+            ):
                 print("\n\n[Couple] Number of Couples and Masks is not the same...\n\n")
                 self.couples = None
                 return
@@ -115,10 +122,11 @@ class ForgeCouple(scripts.Script):
             "\n" if not separator.strip() else separator.strip()
         )
         p.extra_generation_params["forge_couple_mode"] = mode
+        p.extra_generation_params["forge_couple_background_weight"] = background_weight
         if mode == "Basic":
             p.extra_generation_params["forge_couple_direction"] = direction
             p.extra_generation_params["forge_couple_background"] = background
-        else:
+        elif mode == "Advanced":
             p.extra_generation_params["forge_couple_mapping"] = mapping
         # ===== Infotext =====
 
@@ -134,7 +142,9 @@ class ForgeCouple(scripts.Script):
 
         if mode == "Basic":
             TILE_WEIGHT: float = 1.25 if background == "None" else 1.0
-            BG_WEIGHT: float = 0.0 if background == "None" else (0.1 if background_weight == 0.0 else background_weight or 0.5)
+            BG_WEIGHT: float = (
+                0.0 if background == "None" else max(0.1, background_weight)
+            )
 
             TILE_SIZE: int = (
                 (WIDTH if IS_HORIZONTAL else HEIGHT) - 1
@@ -156,17 +166,21 @@ class ForgeCouple(scripts.Script):
                 BG_WEIGHT,
             )
 
-        elif mode== "Mask":
-            BG_WEIGHT: float = 0.0 if background == "None" else (0.1 if background_weight == 0.0 else background_weight or 0.5)
-            
-            ARGs = mask_mapping(p.sd_model,
+        elif mode == "Mask":
+            BG_WEIGHT: float = (
+                0.0 if background == "None" else max(0.1, background_weight)
+            )
+
+            ARGs = mask_mapping(
+                p.sd_model,
                 self.couples,
                 WIDTH,
                 HEIGHT,
                 LINE_COUNT,
                 mapping,
                 background,
-                BG_WEIGHT)
+                BG_WEIGHT,
+            )
         else:
             ARGs = advanced_mapping(p.sd_model, self.couples, WIDTH, HEIGHT, mapping)
         # ===== Tiles =====
