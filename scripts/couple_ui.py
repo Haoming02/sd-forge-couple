@@ -214,7 +214,7 @@ def couple_UI(script, is_img2img: bool, title: str):
                     minimum=0.1,
                     maximum=1.0,
                     step=0.1,
-                    value=1.0,
+                    value=0.5,
                     label="Global Effect Weight",
                 )
 
