@@ -1,6 +1,12 @@
 from modules.prompt_parser import SdConditioning
-from scripts.couple_ui import parse_mapping
+from modules import images
+from PIL import Image
+import numpy as np
+import base64
 import torch
+import io
+
+from scripts.couple_ui import parse_mapping
 
 
 def empty_tensor(H: int, W: int):
@@ -87,6 +93,78 @@ def basic_mapping(
 
         ARGs[f"cond_{tile + 1}"] = pos_cond
         ARGs[f"mask_{tile + 1}"] = mask.unsqueeze(0)
+
+    if background == "Last Line":
+        ARGs[f"mask_{LINE_COUNT}"] = (
+            torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
+        ).unsqueeze(0)
+
+    return ARGs
+
+
+def convert_base64_image_to_tensor(base_64_image_string: str, WIDTH: int, HEIGHT: int):
+    image_bytes = base64.b64decode(base_64_image_string)
+    image = Image.open(io.BytesIO(image_bytes))
+    image = image.convert("L")
+
+    if image.width != WIDTH or image.height != HEIGHT:
+        image = image.resize((WIDTH, HEIGHT), resample=images.LANCZOS)
+
+    image = np.array(image).astype(np.float32) / 255.0
+    image = torch.from_numpy(image)[None,]
+
+    return image
+
+
+def mask_mapping(
+    sd_model,
+    couples: list,
+    WIDTH: int,
+    HEIGHT: int,
+    LINE_COUNT: int,
+    mapping: list[dict],
+    background: str,
+    BG_WEIGHT: float,
+):
+
+    mapping = (
+        [
+            {
+                "mask": convert_base64_image_to_tensor(m["mask"], WIDTH, HEIGHT),
+                "weight": m["weight"],
+            }
+            for m in mapping
+        ]
+        if mapping
+        else mapping
+    )
+
+    ARGs: dict = {}
+    IS_SDXL: bool = hasattr(
+        sd_model.forge_objects.unet.model.diffusion_model, "label_emb"
+    )
+
+    for layer in range(LINE_COUNT):
+        mask = torch.zeros((HEIGHT, WIDTH))
+
+        # ===== Cond =====
+        texts = SdConditioning([couples[layer]], False, WIDTH, HEIGHT, None)
+        cond = sd_model.get_learned_conditioning(texts)
+        pos_cond = [[cond["crossattn"]]] if IS_SDXL else [[cond]]
+        # ===== Cond =====
+
+        # ===== Mask =====
+        if background == "First Line":
+            if layer == 0:
+                mask = torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
+            else:
+                mask = mapping[layer - 1]["mask"] * mapping[layer - 1]["weight"]
+        else:
+            mask = mapping[layer]["mask"] * mapping[layer]["weight"]
+        # ===== Mask =====
+
+        ARGs[f"cond_{layer + 1}"] = pos_cond
+        ARGs[f"mask_{layer + 1}"] = mask.unsqueeze(0) if mask.dim() == 2 else mask
 
     if background == "Last Line":
         ARGs[f"mask_{LINE_COUNT}"] = (
