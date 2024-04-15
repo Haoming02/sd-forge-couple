@@ -16,23 +16,41 @@ class ForgeCouple {
         "hsl(320, 36%, 36%)"
     ];
 
+    /**
+     * Update the color of the rows based on order and selection
+     * @param {string} mode "t2i" | "i2i"
+     */
     static updateColors(mode) {
         const rows = this.mappingTable[mode].querySelectorAll("tr");
         rows.forEach((row, i) => {
-            const bg = `var(--table-${(i % 2 == 0) ? "odd" : "even"}-background-fill)`;
+            const bg = row.classList.contains("last-selected") ?
+                "var(--table-row-focus)" :
+                `var(--table-${(i % 2 == 0) ? "odd" : "even"}-background-fill)`;
             row.style.background = `linear-gradient(to right, ${bg} 80%, ${this.COLORS[i % this.COLORS.length]})`;
         });
     }
 
+    /**
+     *  When updating the mappings, trigger a preview
+     * @param {string} mode "t2i" | "i2i"
+     */
     static preview(mode) {
+        this.manualIndex[mode].value = -1;
+        updateInput(this.manualIndex[mode]);
         this.updateColors(mode);
         this.previewBtn[mode].click();
     }
 
+    /**
+     * When clicking on a row, update the index
+     * @param {string} mode "t2i" | "i2i"
+     */
     static onSelect(mode) {
-        const rows = Array.from(this.mappingTable[mode].querySelectorAll("tr"));
+        const rows = this.mappingTable[mode].querySelectorAll("tr");
         rows.forEach((row, i) => {
+            row.classList.remove("last-selected");
             if (row.querySelector(":focus-within") != null) {
+                row.classList.add("last-selected");
                 this.manualIndex[mode].value = i;
                 updateInput(this.manualIndex[mode]);
             }
