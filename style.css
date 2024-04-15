@@ -2,6 +2,16 @@
     user-select: none;
 }
 
+.fc_map_btns>div {
+    justify-content: center;
+    margin: 0 0 2px 0;
+    gap: 1em;
+}
+
+.fc_map_btns>div>button {
+    max-height: 2.2em;
+}
+
 
 .fc_enable>label {
     height: 100%;
@@ -29,9 +39,6 @@
 .fc_adv .gradio-image>img {
     margin: auto;
     width: auto;
-}
-
-.fc_adv .gradio-image>img.drag {
     cursor: crosshair;
 }
 

@@ -23,7 +23,7 @@ class ForgeCouple {
     static updateColors(mode) {
         const rows = this.mappingTable[mode].querySelectorAll("tr");
         rows.forEach((row, i) => {
-            const bg = row.classList.contains("last-selected") ?
+            const bg = (this.manualIndex[mode].value == i) ?
                 "var(--table-row-focus)" :
                 `var(--table-${(i % 2 == 0) ? "odd" : "even"}-background-fill)`;
             row.style.background = `linear-gradient(to right, ${bg} 80%, ${this.COLORS[i % this.COLORS.length]})`;
@@ -48,10 +48,12 @@ class ForgeCouple {
     static onSelect(mode) {
         const rows = this.mappingTable[mode].querySelectorAll("tr");
         rows.forEach((row, i) => {
-            row.classList.remove("last-selected");
             if (row.querySelector(":focus-within") != null) {
-                row.classList.add("last-selected");
-                this.manualIndex[mode].value = i;
+                if (this.manualIndex[mode].value == i)
+                    this.manualIndex[mode].value = -1;
+                else
+                    this.manualIndex[mode].value = i;
+
                 updateInput(this.manualIndex[mode]);
             }
         });
@@ -68,24 +70,20 @@ onUiLoaded(async () => {
         ForgeCouple.manualIndex[mode] = ex.querySelector(".fc_index").querySelector("input");
 
         const row = ex.querySelector(".controls-wrap");
-        const btns = ex.querySelector(".fc_map_btns");
-
         while (row.firstChild)
             row.firstChild.remove();
 
-        row.appendChild(btns);
+        const mapping_div = ex.querySelector(".fc_mapping").children[1];
+        const btns = ex.querySelector(".fc_map_btns");
+
+        mapping_div.insertBefore(btns, mapping_div.children[1]);
 
         const preview_img = ex.querySelector("img");
         preview_img.ondragstart = (e) => { e.preventDefault(); return false; };
 
-        const manual_btn = ex.querySelector(".fc_manual");
-        manual_btn.onclick = () => { preview_img.classList.add("drag"); }
-
         const manual_field = ex.querySelector(".fc_manual_field").querySelector("input");
 
         preview_img.onmousedown = (e) => {
-            if (!preview_img.classList.contains("drag"))
-                return;
             if (e.button != 0)
                 return;
 
@@ -96,8 +94,6 @@ onUiLoaded(async () => {
         }
 
         preview_img.onmouseup = (e) => {
-            if (!preview_img.classList.contains("drag"))
-                return;
             if (e.button != 0)
                 return;
 
@@ -108,8 +104,6 @@ onUiLoaded(async () => {
 
             manual_field.value = `${ForgeCouple.coords[0][0]},${ForgeCouple.coords[1][0]},${ForgeCouple.coords[0][1]},${ForgeCouple.coords[1][1]}`;
             updateInput(manual_field);
-
-            preview_img.classList.remove("drag");
         }
 
         setTimeout(() => {

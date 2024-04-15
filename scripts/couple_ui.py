@@ -1,3 +1,4 @@
+from modules.ui_components import FormRow, ToolButton
 from PIL import Image, ImageDraw
 import gradio as gr
 
@@ -114,47 +115,37 @@ def visualize_mapping(p_WIDTH: int, p_HEIGHT: int, data: list) -> Image:
 
 
 def reset_mapping() -> list:
-    return DEFAULT_MAPPING, 2
+    return DEFAULT_MAPPING
 
 
-def add_first_row(data: list) -> list:
-    return [["0.0:1.0", "0.0:1.0", "1.0"]] + data, 0
+def add_row_above(data: list, index: int) -> list:
+    if index < 0:
+        return data
+    return data[:index] + [["0.0:1.0", "0.0:1.0", "1.0"]] + data[index:]
 
 
-def add_last_row(data: list) -> list:
-    i = len(data)
-    return data + [["0.25:0.75", "0.25:0.75", "1.0"]], i
+def add_row_below(data: list, index: int) -> list:
+    if index < 0:
+        return data
+    if index == len(data) - 1:
+        return data + [["0.0:1.0", "0.0:1.0", "1.0"]]
+    return data[: index + 1] + [["0.0:1.0", "0.0:1.0", "1.0"]] + data[index + 1 :]
 
 
-def del_first_row(data: list) -> list:
+def del_row_select(data: list, index: int) -> list:
+    if index < 0:
+        return data
     if len(data) == 1:
-        return [["0.0:1.0", "0.0:1.0", "1.0"]], 0
+        return [["0.0:1.0", "0.0:1.0", "1.0"]]
     else:
-        return data[1:], 0
-
-
-def del_last_row(data: list) -> list:
-    i = len(data)
-    if len(data) == 1:
-        return [["0.0:1.0", "0.0:1.0", "1.0"]], 0
-    else:
-        return data[:-1], i - 2
-
-
-def del_sele_row(data: list, index: int) -> list:
-    i = len(data) - 1
-    try:
-        if index == 0 and len(data) == 1:
-            return [["0.0:1.0", "0.0:1.0", "1.0"]], 0
         del data[index]
-        i -= 1
-    except IndexError:
-        pass
-
-    return data, i
+        return data
 
 
 def manual_entry(data: list, new: str, index: int) -> list:
+    if index < 0:
+        return data
+
     v = [round(float(val), 2) for val in new.split(",")]
 
     if v[1] < v[0]:
@@ -221,6 +212,25 @@ def couple_UI(script, is_img2img: bool, title: str):
                 )
 
         with gr.Group(visible=False, elem_classes="fc_adv") as adv_settings:
+
+            with FormRow(elem_classes="fc_map_btns"):
+                up_btn = ToolButton(
+                    value="\U0001F53C", elem_id="fc_up_btn", tooltip="New Row Above"
+                )
+                del_btn = ToolButton(
+                    value="\U0000274C",
+                    elem_id="fc_del_btn",
+                    tooltip="Delete Selected Row",
+                )
+                dn_btn = ToolButton(
+                    value="\U0001F53D", elem_id="fc_dn_btn", tooltip="New Row Below"
+                )
+                ref_btn = ToolButton(
+                    value="\U0001F504",
+                    elem_id="fc_ref_btn",
+                    tooltip="Refresh Mapping",
+                )
+
             mapping = gr.Dataframe(
                 label="Mapping",
                 headers=["x", "y", "weight"],
@@ -257,43 +267,25 @@ def couple_UI(script, is_img2img: bool, title: str):
                 preview_img,
             )
 
-            with gr.Column(elem_classes="fc_map_btns"):
-                with gr.Row():
-                    add_first = gr.Button("New First Row")
-                    add_last = gr.Button("New Last Row")
-                    manual_btn = gr.Button("Click & Drag", elem_classes="fc_manual")
+        manual_idx = gr.Number(
+            label="Selected Row",
+            value=2,
+            interactive=True,
+            visible=False,
+            precision=0,
+            elem_classes="fc_index",
+        )
 
-                with gr.Row():
-                    del_first = gr.Button("Delete First Row")
-                    del_last = gr.Button("Delete Last Row")
-                    del_sele = gr.Button("Delete Selection")
-
-                with gr.Row():
-                    reset_map = gr.Button("Reset Mapping")
-                    manual_idx = gr.Number(
-                        label="Selected Row",
-                        value=2,
-                        interactive=True,
-                        precision=0,
-                        elem_classes="fc_index",
-                    )
-
-        add_first.click(add_first_row, mapping, [mapping, manual_idx]).success(
+        up_btn.click(add_row_above, [mapping, manual_idx], mapping).success(
             None, None, None, _js=preview_js
         )
-        add_last.click(add_last_row, mapping, [mapping, manual_idx]).success(
+        del_btn.click(del_row_select, [mapping, manual_idx], mapping).success(
             None, None, None, _js=preview_js
         )
-        del_first.click(del_first_row, mapping, [mapping, manual_idx]).success(
+        ref_btn.click(reset_mapping, None, mapping).success(
             None, None, None, _js=preview_js
         )
-        del_last.click(del_last_row, mapping, [mapping, manual_idx]).success(
-            None, None, None, _js=preview_js
-        )
-        del_sele.click(
-            del_sele_row, [mapping, manual_idx], [mapping, manual_idx]
-        ).success(None, None, None, _js=preview_js)
-        reset_map.click(reset_mapping, None, [mapping, manual_idx]).success(
+        dn_btn.click(add_row_below, [mapping, manual_idx], mapping).success(
             None, None, None, _js=preview_js
         )
 
