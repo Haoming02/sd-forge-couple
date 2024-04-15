@@ -181,19 +181,18 @@ def couple_UI(script, is_img2img: bool, title: str):
         open=False,
     ):
         with gr.Row():
-            enable = gr.Checkbox(label="Enable", elem_classes="fc_enable")
+            enable = gr.Checkbox(label="Enable", elem_classes="fc_enable", scale=2)
 
             mode = gr.Radio(
-                ["Basic", "Advanced"],
-                label="Region Assignment",
-                value="Basic",
+                ["Basic", "Advanced"], label="Region Assignment", value="Basic", scale=3
             )
 
             separator = gr.Textbox(
                 label="Couple Separator",
                 lines=1,
                 max_lines=1,
-                placeholder="Leave empty to use newline",
+                placeholder="Default: Newline",
+                scale=1,
             )
 
         with gr.Group() as basic_settings:
@@ -202,12 +201,14 @@ def couple_UI(script, is_img2img: bool, title: str):
                     ["Horizontal", "Vertical"],
                     label="Tile Direction",
                     value="Horizontal",
+                    scale=2,
                 )
 
                 background = gr.Radio(
                     ["None", "First Line", "Last Line"],
                     label="Global Effect",
                     value="None",
+                    scale=3,
                 )
 
                 background_weight = gr.Slider(
@@ -216,6 +217,7 @@ def couple_UI(script, is_img2img: bool, title: str):
                     step=0.1,
                     value=0.5,
                     label="Global Effect Weight",
+                    scale=1,
                 )
 
         with gr.Group(visible=False, elem_classes="fc_adv") as adv_settings:
