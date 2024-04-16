@@ -91,10 +91,10 @@ class ForgeCoupleBox {
                 if (T < this.margin.top)
                     T = this.margin.top;
 
-                if (L + this.boxBound.width > this.imgBound.width)
-                    L = this.imgBound.width - this.boxBound.width;
-                if (T + this.boxBound.height > this.imgBound.height)
-                    T = this.imgBound.height - this.boxBound.height;
+                if (L + this.boxBound.width > this.margin.left + this.imgBound.width)
+                    L = this.margin.left + this.imgBound.width - this.boxBound.width;
+                if (T + this.boxBound.height > this.margin.top + this.imgBound.height)
+                    T = this.margin.top + this.imgBound.height - this.boxBound.height;
 
                 this.box.style.left = `${L}px`;
                 this.box.style.top = `${T}px`;
