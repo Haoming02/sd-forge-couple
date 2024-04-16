@@ -1,3 +1,6 @@
+### v1.4.0 - 2024 Apr.16
+- Implement **Draggable Regions**
+
 ### v1.3.7 - 2024 Apr.14
 - **Global Effect Weight** Slider by. <ins>ramyma</ins>
 - **Mask API** by. <ins>ramyma</ins>

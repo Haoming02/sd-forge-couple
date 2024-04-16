@@ -7,12 +7,12 @@ from scripts.couple_mapping import (
     advanced_mapping,
     mask_mapping,
 )
-from scripts.couple_ui import couple_UI, validata_mapping, parse_mapping, hook_component
+from scripts.couple_ui import couple_UI, validate_mapping, parse_mapping, hook_component
 
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.3.7"
+VERSION = "1.4.0"
 
 
 class ForgeCouple(scripts.Script):
@@ -86,7 +86,7 @@ class ForgeCouple(scripts.Script):
             self.couples = None
             return
 
-        if (mode == "Advanced") and not validata_mapping(mapping):
+        if (mode == "Advanced") and not validate_mapping(mapping):
             self.couples = None
             return
 

@@ -43,7 +43,7 @@ def parse_mapping(data: list) -> list:
     return mapping
 
 
-def validata_mapping(data: list) -> bool:
+def validate_mapping(data: list) -> bool:
     try:
         for [X, Y, W] in data:
             if not X.strip():
@@ -86,7 +86,7 @@ def validata_mapping(data: list) -> bool:
 def visualize_mapping(p_WIDTH: int, p_HEIGHT: int, data: list) -> Image:
     matt = Image.new("RGB", (p_WIDTH, p_HEIGHT), "black")
 
-    if not (validata_mapping(data)):
+    if not (validate_mapping(data)):
         return matt
 
     lnw = int(max(min(p_WIDTH, p_HEIGHT) / 128, 2.0))
@@ -226,7 +226,7 @@ def couple_UI(script, is_img2img: bool, title: str):
                 ref_btn = ToolButton(
                     value="\U0001F504",
                     elem_id="fc_ref_btn",
-                    tooltip="Refresh Mapping",
+                    tooltip="Reset Mapping",
                 )
 
             mapping = gr.Dataframe(
