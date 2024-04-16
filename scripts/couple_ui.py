@@ -127,8 +127,6 @@ def add_row_above(data: list, index: int) -> list:
 def add_row_below(data: list, index: int) -> list:
     if index < 0:
         return data
-    if index == len(data) - 1:
-        return data + [["0.0:1.0", "0.0:1.0", "1.0"]]
     return data[: index + 1] + [["0.0:1.0", "0.0:1.0", "1.0"]] + data[index + 1 :]
 
 
@@ -265,11 +263,13 @@ def couple_UI(script, is_img2img: bool, title: str):
                     mapping,
                 ],
                 preview_img,
+            ).success(
+                None, None, None, _js=f'() => {{ ForgeCouple.updateColors("{m}"); }}'
             )
 
         manual_idx = gr.Number(
             label="Selected Row",
-            value=2,
+            value=-1,
             interactive=True,
             visible=False,
             precision=0,

@@ -3,6 +3,7 @@ class ForgeCouple {
     static previewBtn = {};
     static mappingTable = {};
     static manualIndex = {};
+    static bbox = {};
 
     static coords = [[-1, -1], [-1, -1]];
 
@@ -21,13 +22,20 @@ class ForgeCouple {
      * @param {string} mode "t2i" | "i2i"
      */
     static updateColors(mode) {
+        const selection = parseInt(this.manualIndex[mode].value);
+
         const rows = this.mappingTable[mode].querySelectorAll("tr");
         rows.forEach((row, i) => {
-            const bg = (this.manualIndex[mode].value == i) ?
+            const bg = (selection === i) ?
                 "var(--table-row-focus)" :
                 `var(--table-${(i % 2 == 0) ? "odd" : "even"}-background-fill)`;
             row.style.background = `linear-gradient(to right, ${bg} 80%, ${this.COLORS[i % this.COLORS.length]})`;
         });
+
+        if (selection < 0 || selection >= rows.length)
+            ForgeCouple.bbox[mode].hideBox();
+        else
+            ForgeCouple.bbox[mode].showBox(this.COLORS[selection], rows[selection]);
     }
 
     /**
@@ -35,9 +43,6 @@ class ForgeCouple {
      * @param {string} mode "t2i" | "i2i"
      */
     static preview(mode) {
-        this.manualIndex[mode].value = -1;
-        updateInput(this.manualIndex[mode]);
-        this.updateColors(mode);
         this.previewBtn[mode].click();
     }
 
@@ -83,28 +88,7 @@ onUiLoaded(async () => {
 
         const manual_field = ex.querySelector(".fc_manual_field").querySelector("input");
 
-        preview_img.onmousedown = (e) => {
-            if (e.button != 0)
-                return;
-
-            e.preventDefault();
-            const rect = e.target.getBoundingClientRect();
-            ForgeCouple.coords[0][0] = (e.clientX - rect.left) / rect.width;
-            ForgeCouple.coords[0][1] = (e.clientY - rect.top) / rect.height;
-        }
-
-        preview_img.onmouseup = (e) => {
-            if (e.button != 0)
-                return;
-
-            e.preventDefault();
-            const rect = e.target.getBoundingClientRect();
-            ForgeCouple.coords[1][0] = (e.clientX - rect.left) / rect.width;
-            ForgeCouple.coords[1][1] = (e.clientY - rect.top) / rect.height;
-
-            manual_field.value = `${ForgeCouple.coords[0][0]},${ForgeCouple.coords[1][0]},${ForgeCouple.coords[0][1]},${ForgeCouple.coords[1][1]}`;
-            updateInput(manual_field);
-        }
+        ForgeCouple.bbox[mode] = new ForgeCoupleBox(preview_img, manual_field);
 
         setTimeout(() => {
             ForgeCouple.preview(mode);
