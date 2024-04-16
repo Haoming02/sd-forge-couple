@@ -104,16 +104,14 @@ class ForgeCoupleBox {
     }
 
     registerUp(field) {
-        [this.img, document].forEach((el) => {
-            el.addEventListener("mouseup", (e) => {
-                if (e.button !== 0 || !this.isValid)
-                    return;
+        document.addEventListener("mouseup", (e) => {
+            if (e.button !== 0 || !this.isValid)
+                return;
 
-                field.value = this.styleToMapping();
-                updateInput(field);
+            field.value = this.styleToMapping();
+            updateInput(field);
 
-                this.isValid = false;
-            });
+            this.isValid = false;
         });
     }
 
@@ -124,9 +122,9 @@ class ForgeCoupleBox {
             const [from_x, to_x, from_y, to_y] = this.mappingToStyle(row);
 
             this.margin.left = this.imgBound.left - this.containerBound.left;
-            this.margin.right = this.containerBound.right - this.imgBound.right;
+            // this.margin.right = this.containerBound.right - this.imgBound.right;
             this.margin.top = this.imgBound.top - this.containerBound.top;
-            this.margin.bottom = this.containerBound.bottom - this.imgBound.bottom;
+            // this.margin.bottom = this.containerBound.bottom - this.imgBound.bottom;
 
             this.box.style.width = `${this.imgBound.width * (to_x - from_x)}px`;
             this.box.style.height = `${this.imgBound.height * (to_y - from_y)}px`;
