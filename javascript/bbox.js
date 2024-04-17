@@ -1,6 +1,6 @@
 class ForgeCoupleBox {
 
-    static resizeBorder = 8;
+    static resizeBorder = 16;
     static minimumSize = 32;
 
     /** @param {Element} image @param {Element} field */
@@ -13,6 +13,7 @@ class ForgeCoupleBox {
         this.box.style.display = "none";
 
         this.margin = {};
+        this.step = {};
         this.registerClick();
         this.registerHover();
         this.registerUp(field);
@@ -62,6 +63,8 @@ class ForgeCoupleBox {
 
             if (this.isResize) {
 
+                this.img.style.cursor = "nwse-resize";
+
                 var W = e.clientX - this.boxBound.left;
                 var H = e.clientY - this.boxBound.top;
 
@@ -74,6 +77,9 @@ class ForgeCoupleBox {
                     W = this.imgBound.right - this.boxX;
                 if (H + this.boxY > this.imgBound.bottom)
                     H = this.imgBound.bottom - this.boxY;
+
+                W = this.step.w * Math.round(W / this.step.w);
+                H = this.step.h * Math.round(H / this.step.h);
 
                 this.box.style.width = `${W}px`;
                 this.box.style.height = `${H}px`;
@@ -95,6 +101,9 @@ class ForgeCoupleBox {
                     L = this.margin.left + this.imgBound.width - this.boxBound.width;
                 if (T + this.boxBound.height > this.margin.top + this.imgBound.height)
                     T = this.margin.top + this.imgBound.height - this.boxBound.height;
+
+                L = this.step.w * Math.round(L / this.step.w);
+                T = this.step.h * Math.round(T / this.step.h);
 
                 this.box.style.left = `${L}px`;
                 this.box.style.top = `${T}px`;
@@ -125,6 +134,9 @@ class ForgeCoupleBox {
             // this.margin.right = this.containerBound.right - this.imgBound.right;
             this.margin.top = this.imgBound.top - this.containerBound.top;
             // this.margin.bottom = this.containerBound.bottom - this.imgBound.bottom;
+
+            this.step.h = this.imgBound.width / 100.0;
+            this.step.w = this.imgBound.height / 100.0;
 
             this.box.style.width = `${this.imgBound.width * (to_x - from_x)}px`;
             this.box.style.height = `${this.imgBound.height * (to_y - from_y)}px`;
@@ -181,8 +193,9 @@ class ForgeCoupleBox {
         const to_x = (this.boxBound.right - this.imgBound.left) / this.imgBound.width;
         const from_y = (this.boxBound.top - this.imgBound.top) / this.imgBound.height;
         const to_y = (this.boxBound.bottom - this.imgBound.top) / this.imgBound.height;
+        const cl = ForgeCoupleBox.clamp;
 
-        return `${ForgeCoupleBox.clamp(from_x)},${ForgeCoupleBox.clamp(to_x)},${ForgeCoupleBox.clamp(from_y)},${ForgeCoupleBox.clamp(to_y)}`;
+        return `${cl(from_x)},${cl(to_x)},${cl(from_y)},${cl(to_y)}`;
     }
 
 

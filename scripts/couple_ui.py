@@ -3,7 +3,7 @@ from PIL import Image, ImageDraw
 import gradio as gr
 
 
-DEFAULT_MAPPING = [["0.0:0.5", "0.0:1.0", "1.0"], ["0.5:1.0", "0.0:1.0", "1.0"]]
+DEFAULT_MAPPING = [["0.00:0.50", "0.00:1.00", "1.0"], ["0.50:1.00", "0.00:1.00", "1.0"]]
 COLORS = ("red", "orange", "yellow", "green", "blue", "indigo", "violet")
 
 T2I_W = None
@@ -89,7 +89,7 @@ def visualize_mapping(p_WIDTH: int, p_HEIGHT: int, data: list) -> Image:
     if not (validate_mapping(data)):
         return matt
 
-    lnw = int(max(min(p_WIDTH, p_HEIGHT) / 128, 2.0))
+    lnw = int(max(min(p_WIDTH, p_HEIGHT) / 256, 2.0))
 
     draw = ImageDraw.Draw(matt)
 
@@ -127,7 +127,7 @@ def add_row_above(data: list, index: int) -> list:
 def add_row_below(data: list, index: int) -> list:
     if index < 0:
         return data
-    return data[: index + 1] + [["0.0:1.0", "0.0:1.0", "1.0"]] + data[index + 1 :]
+    return data[: index + 1] + [["0.25:0.75", "0.25:0.75", "1.0"]] + data[index + 1 :]
 
 
 def del_row_select(data: list, index: int) -> list:
@@ -152,10 +152,10 @@ def manual_entry(data: list, new: str, index: int) -> list:
         v[2], v[3] = v[3], v[2]
 
     try:
-        data[index][0] = f"{v[0]}:{v[1]}"
-        data[index][1] = f"{v[2]}:{v[3]}"
+        data[index][0] = f"{v[0]:.2f}:{v[1]:.2f}"
+        data[index][1] = f"{v[2]:.2f}:{v[3]:.2f}"
     except IndexError:
-        data.append([f"{v[0]}:{v[1]}", f"{v[2]}:{v[3]}", "1.0"])
+        data.append([f"{v[0]:.2f}:{v[1]:.2f}", f"{v[2]:.2f}:{v[3]:.2f}", "1.0"])
 
     return data
 
@@ -213,20 +213,24 @@ def couple_UI(script, is_img2img: bool, title: str):
 
             with FormRow(elem_classes="fc_map_btns"):
                 up_btn = ToolButton(
-                    value="\U0001F53C", elem_id="fc_up_btn", tooltip="New Row Above"
+                    value="\U0001F53C",
+                    elem_id="fc_up_btn",
+                    tooltip="Add a New Row above the Selected Row",
                 )
                 del_btn = ToolButton(
                     value="\U0000274C",
                     elem_id="fc_del_btn",
-                    tooltip="Delete Selected Row",
+                    tooltip="Delete the Selected Row",
                 )
                 dn_btn = ToolButton(
-                    value="\U0001F53D", elem_id="fc_dn_btn", tooltip="New Row Below"
+                    value="\U0001F53D",
+                    elem_id="fc_dn_btn",
+                    tooltip="Add a New Row below the Selected Row",
                 )
                 ref_btn = ToolButton(
                     value="\U0001F504",
                     elem_id="fc_ref_btn",
-                    tooltip="Reset Mapping",
+                    tooltip="Reset to the Default Mapping",
                 )
 
             mapping = gr.Dataframe(
@@ -239,10 +243,6 @@ def couple_UI(script, is_img2img: bool, title: str):
                 type="array",
                 value=DEFAULT_MAPPING,
                 elem_classes="fc_mapping",
-            )
-
-            mapping.select(
-                None, None, None, _js=f'() => {{ ForgeCouple.onSelect("{m}"); }}'
             )
 
             preview_img = gr.Image(
@@ -265,6 +265,30 @@ def couple_UI(script, is_img2img: bool, title: str):
                 preview_img,
             ).success(
                 None, None, None, _js=f'() => {{ ForgeCouple.updateColors("{m}"); }}'
+            )
+
+            mapping.select(
+                None, None, None, _js=f'() => {{ ForgeCouple.onSelect("{m}"); }}'
+            )
+
+            mapping.input(
+                visualize_mapping,
+                [
+                    I2I_W if is_img2img else T2I_W,
+                    I2I_H if is_img2img else T2I_H,
+                    mapping,
+                ],
+                preview_img,
+            ).success(
+                None, None, None, _js=f'() => {{ ForgeCouple.updateColors("{m}"); }}'
+            )
+
+            gr.Markdown(
+                """
+                <p align="center">
+                    <a href="https://github.com/Haoming02/sd-forge-couple#advanced-mapping">[How to Use]</a>
+                </p>
+                """
             )
 
         manual_idx = gr.Number(

@@ -18,7 +18,7 @@ class ForgeCouple {
     ];
 
     /**
-     * Update the color of the rows based on order and selection
+     * Update the color of the rows based on the order and selection
      * @param {string} mode "t2i" | "i2i"
      */
     static updateColors(mode) {
@@ -62,8 +62,10 @@ class ForgeCouple {
                 updateInput(this.manualIndex[mode]);
             }
         });
+
         this.updateColors(mode);
     }
+
 }
 
 onUiLoaded(async () => {
@@ -75,8 +77,7 @@ onUiLoaded(async () => {
         ForgeCouple.manualIndex[mode] = ex.querySelector(".fc_index").querySelector("input");
 
         const row = ex.querySelector(".controls-wrap");
-        while (row.firstChild)
-            row.firstChild.remove();
+        row.remove();
 
         const mapping_div = ex.querySelector(".fc_mapping").children[1];
         const btns = ex.querySelector(".fc_map_btns");

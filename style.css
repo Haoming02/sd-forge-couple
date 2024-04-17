@@ -53,6 +53,8 @@
 
 .fc_bbox {
     position: absolute;
-    opacity: 0.75;
+    opacity: 0.8;
     pointer-events: none;
+    resize: both;
+    overflow: auto;
 }
