@@ -98,6 +98,20 @@ class ForgeCouple(scripts.Script):
             self.couples = None
             return
 
+        # ===== Infotext =====
+        p.extra_generation_params["forge_couple"] = True
+        p.extra_generation_params["forge_couple_separator"] = (
+            "\n" if not separator.strip() else separator.strip()
+        )
+        p.extra_generation_params["forge_couple_mode"] = mode
+        if mode == "Basic":
+            p.extra_generation_params["forge_couple_direction"] = direction
+            p.extra_generation_params["forge_couple_background"] = background
+            p.extra_generation_params["forge_couple_background_weight"] = background_weight
+        elif mode == "Advanced":
+            p.extra_generation_params["forge_couple_mapping"] = dumps(mapping)
+        # ===== Infotext =====
+
         self.couples = couples
 
     def process_before_every_sampling(
@@ -116,20 +130,6 @@ class ForgeCouple(scripts.Script):
 
         if not enable or not self.couples:
             return
-
-        # ===== Infotext =====
-        p.extra_generation_params["forge_couple"] = True
-        p.extra_generation_params["forge_couple_separator"] = (
-            "\n" if not separator.strip() else separator.strip()
-        )
-        p.extra_generation_params["forge_couple_mode"] = mode
-        p.extra_generation_params["forge_couple_background_weight"] = background_weight
-        if mode == "Basic":
-            p.extra_generation_params["forge_couple_direction"] = direction
-            p.extra_generation_params["forge_couple_background"] = background
-        elif mode == "Advanced":
-            p.extra_generation_params["forge_couple_mapping"] = dumps(mapping)
-        # ===== Infotext =====
 
         # ===== Init =====
         unet = p.sd_model.forge_objects.unet
