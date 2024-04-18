@@ -112,29 +112,29 @@ class ForgeCoupleBox {
         const { parseStyle } = ForgeCoupleBox;
 
         if (this.resize.R) {
-            var H = mouseX - this.boxBound.left;
+            var W = mouseX - this.boxBound.left;
 
-            if (H < minimumSize)
-                H = minimumSize;
+            if (W < minimumSize)
+                W = minimumSize;
 
-            if (H + this.boxX > this.imgBound.right)
-                H = this.imgBound.right - this.boxX;
+            if (W + this.boxX > this.imgBound.right)
+                W = this.imgBound.right - this.boxX;
 
-            H = this.step.w * Math.round(H / this.step.w);
-            this.box.style.width = `${H}px`;
+            W = this.step.w * Math.round(W / this.step.w);
+            this.box.style.width = `${W}px`;
         } else if (this.resize.L) {
             const right = parseStyle(this.box.style.left) + parseStyle(this.box.style.width);
-            var H = this.boxBound.right - mouseX;
+            var W = this.boxBound.right - mouseX;
 
-            if (H < minimumSize)
-                H = minimumSize;
+            if (W < minimumSize)
+                W = minimumSize;
 
-            if (H > right)
-                H = right;
+            if (W > right)
+                W = right;
 
-            H = this.step.w * Math.round(H / this.step.w);
-            this.box.style.left = `${right - H}px`;
-            this.box.style.width = `${H}px`;
+            W = this.step.w * Math.round(W / this.step.w);
+            this.box.style.left = `${right - W}px`;
+            this.box.style.width = `${W}px`;
         }
 
         if (this.resize.B) {
