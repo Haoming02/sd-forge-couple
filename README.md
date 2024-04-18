@@ -158,8 +158,8 @@ Were these automated equally-sized tiles not sufficient for your needs? Now you 
 
 - **Prompt Hint:**
     - When hovering a row, it will show the corresponding prompt or if the prompt is missing
-    - Only shows if positive prompt is not empty
-    - Right click on the rows to toggle the display
+    - Only works when the positive prompt is not empty
+    - Right click on the table to toggle the display
 
 <p align="center">
 <img src="example/10.jpg" height=384>

@@ -1,3 +1,6 @@
+### v1.4.3 - 2024 Apr.18
+- Support **Infotext Pasting** for Advanced Mapping
+
 ### v1.4.2 - 2024 Apr.18
 - Implement **Prompt Hint**
 

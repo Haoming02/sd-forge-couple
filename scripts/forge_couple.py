@@ -1,4 +1,5 @@
 from modules import scripts
+from json import dumps
 import re
 
 from scripts.couple_mapping import (
@@ -12,7 +13,7 @@ from scripts.couple_ui import couple_UI, validate_mapping, parse_mapping, hook_c
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.4.2"
+VERSION = "1.4.3"
 
 
 class ForgeCouple(scripts.Script):
@@ -127,7 +128,7 @@ class ForgeCouple(scripts.Script):
             p.extra_generation_params["forge_couple_direction"] = direction
             p.extra_generation_params["forge_couple_background"] = background
         elif mode == "Advanced":
-            p.extra_generation_params["forge_couple_mapping"] = mapping
+            p.extra_generation_params["forge_couple_mapping"] = dumps(mapping)
         # ===== Infotext =====
 
         # ===== Init =====

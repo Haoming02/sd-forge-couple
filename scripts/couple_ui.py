@@ -1,5 +1,7 @@
 from modules.ui_components import FormRow, ToolButton
+from json.decoder import JSONDecodeError
 from PIL import Image, ImageDraw
+from json import loads
 import gradio as gr
 
 
@@ -138,6 +140,14 @@ def del_row_select(data: list, index: int) -> list:
     else:
         del data[index]
         return data
+
+
+def on_paste(data: str) -> list:
+    try:
+        return loads(data)
+    except JSONDecodeError:
+        print("\n[Adv. Mapping] Pasting Old Infotext is not supported...\n")
+        return DEFAULT_MAPPING
 
 
 def manual_entry(data: list, new: str, index: int) -> list:
@@ -340,6 +350,11 @@ def couple_UI(script, is_img2img: bool, title: str):
 
         mode.change(on_mode_change, mode, [basic_settings, adv_settings])
 
+        mapping_paste_field = gr.Textbox(visible=False)
+        mapping_paste_field.change(on_paste, mapping_paste_field, mapping).success(
+            None, None, None, _js=preview_js
+        )
+
         script.paste_field_names = []
         script.infotext_fields = [
             (enable, "forge_couple"),
@@ -347,7 +362,7 @@ def couple_UI(script, is_img2img: bool, title: str):
             (background, "forge_couple_background"),
             (separator, "forge_couple_separator"),
             (mode, "forge_couple_mode"),
-            (mapping, "forge_couple_mapping"),
+            (mapping_paste_field, "forge_couple_mapping"),
             (background_weight, "forge_couple_background_weight"),
         ]
 
@@ -355,7 +370,7 @@ def couple_UI(script, is_img2img: bool, title: str):
             comp.do_not_save_to_config = True
             script.paste_field_names.append(name)
 
-        for comp in (manual_idx, manual_field):
+        for comp in (manual_idx, manual_field, mapping):
             comp.do_not_save_to_config = True
 
         return [
