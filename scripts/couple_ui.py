@@ -121,7 +121,7 @@ def reset_mapping() -> list:
 def add_row_above(data: list, index: int) -> list:
     if index < 0:
         return data
-    return data[:index] + [["0.0:1.0", "0.0:1.0", "1.0"]] + data[index:]
+    return data[:index] + [["0.00:1.00", "0.00:1.00", "1.0"]] + data[index:]
 
 
 def add_row_below(data: list, index: int) -> list:
@@ -181,6 +181,7 @@ def couple_UI(script, is_img2img: bool, title: str):
                 lines=1,
                 max_lines=1,
                 placeholder="Default: Newline",
+                elem_classes="fc_separator",
                 scale=1,
             )
 

@@ -56,3 +56,15 @@
     opacity: 0.8;
     pointer-events: none;
 }
+
+.prompt-hint {
+    position: fixed;
+    z-index: 100;
+    background-color: var(--input-background-fill);
+    color: var(--body-text-color);
+    border: var(--input-border-width) solid var(--input-border-color);
+    border-radius: var(--input-radius);
+    padding: 0.5em;
+    box-shadow: 0 0 1em rgba(0, 0, 0, 0.2);
+    display: none;
+}

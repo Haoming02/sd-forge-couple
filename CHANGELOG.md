@@ -1,3 +1,9 @@
+### v1.4.2 - 2024 Apr.18
+- Implement **Prompt Hint**
+
+### v1.4.1 - 2024 Apr.18
+- Implement **8-Direction** Resizing
+
 ### v1.4.0 - 2024 Apr.16
 - Implement **Draggable Regions**
 

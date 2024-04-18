@@ -156,6 +156,11 @@ Were these automated equally-sized tiles not sufficient for your needs? Now you 
     - Simply drag the box around to reposition the region
     - Use the edges / corners to resize the region
 
+- **Prompt Hint:**
+    - When hovering a row, it will show the corresponding prompt or if the prompt is missing
+    - Only shows if positive prompt is not empty
+    - Right click on the rows to toggle the display
+
 <p align="center">
 <img src="example/10.jpg" height=384>
 <img src="example/10s.jpg" height=384>

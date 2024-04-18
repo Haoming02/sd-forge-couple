@@ -66,15 +66,81 @@ class ForgeCouple {
         this.updateColors(mode);
     }
 
+    /**
+     * When hovering on a row, try to show the corresponding prompt
+     * @param {string} mode "t2i" | "i2i"
+     * @param {Element} separator
+     */
+    static registerHovering(mode, separator) {
+        const promptHint = document.createElement("div");
+        promptHint.classList.add("prompt-hint");
+
+        const table = ForgeCouple.mappingTable[mode].parentElement.parentElement.parentElement;
+        table.appendChild(promptHint);
+
+        var showHint = true;
+
+        table.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            showHint = !showHint;
+        });
+
+        ForgeCouple.mappingTable[mode].addEventListener('mousemove', (e) => {
+            if (!showHint) {
+                promptHint.style.display = 'none';
+                return;
+            }
+
+            var el = e.target;
+
+            while (el.tagName !== 'TR') {
+                el = el.parentElement;
+                if (el.tagName === 'TABLE') {
+                    promptHint.style.display = 'none';
+                    return;
+                }
+            }
+
+            const prompt = gradioApp().getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`).querySelector("textarea").value;
+            var sep = separator.value.trim();
+
+            if (!sep)
+                sep = "\n";
+
+            const rows = [...ForgeCouple.mappingTable[mode].querySelectorAll("tr")];
+            const rowIndex = rows.indexOf(el);
+
+            if (!prompt.trim()) {
+                promptHint.style.display = 'none';
+                return;
+            }
+
+            if (rowIndex < prompt.split(sep).length)
+                promptHint.innerHTML = prompt.split(sep)[rowIndex].replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+            else
+                promptHint.innerHTML = '<p style="color:red;"><i>missing...</i></p>';
+
+            promptHint.style.left = `calc(${e.clientX}px + 1em)`;
+            promptHint.style.top = `calc(${e.clientY}px + 1em)`;
+
+            promptHint.style.display = 'block';
+        });
+
+        ForgeCouple.mappingTable[mode].addEventListener('mouseleave', (e) => {
+            promptHint.style.display = 'none';
+        });
+    }
+
 }
 
 onUiLoaded(async () => {
     ["t2i", "i2i"].forEach((mode) => {
-        const ex = document.getElementById(`forge_couple_${mode}`);
+        const ex = gradioApp().getElementById(`forge_couple_${mode}`);
 
         ForgeCouple.previewBtn[mode] = ex.querySelector(".fc_preview");
         ForgeCouple.mappingTable[mode] = ex.querySelector(".fc_mapping").querySelector("tbody");
         ForgeCouple.manualIndex[mode] = ex.querySelector(".fc_index").querySelector("input");
+        ForgeCouple.registerHovering(mode, ex.querySelector(".fc_separator").querySelector("input"));
 
         const row = ex.querySelector(".controls-wrap");
         row.remove();
