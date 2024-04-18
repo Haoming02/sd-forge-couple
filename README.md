@@ -154,7 +154,7 @@ Were these automated equally-sized tiles not sufficient for your needs? Now you 
 - **Draggable Region:**
     - When a row is selected, its corresponding region would be highlighted
     - Simply drag the box around to reposition the region
-    - Use the **bottom right** corner to resize the region
+    - Use the edges / corners to resize the region
 
 <p align="center">
 <img src="example/10.jpg" height=384>

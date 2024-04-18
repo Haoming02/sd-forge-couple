@@ -1,6 +1,6 @@
 class ForgeCoupleBox {
 
-    static resizeBorder = 16;
+    static resizeBorder = 8;
     static minimumSize = 32;
 
     /** @param {Element} image @param {Element} field */
@@ -14,6 +14,8 @@ class ForgeCoupleBox {
 
         this.margin = {};
         this.step = {};
+        this.resize = {};
+
         this.registerClick();
         this.registerHover();
         this.registerUp(field);
@@ -43,7 +45,7 @@ class ForgeCoupleBox {
                 return;
 
             this.isValid = (this.img.style.cursor != "default");
-            this.isResize = (this.img.style.cursor == "nwse-resize");
+            this.isResize = (this.resize.L || this.resize.R || this.resize.T || this.resize.B);
 
             if (this.isValid) {
                 this.startX = e.clientX;
@@ -56,35 +58,15 @@ class ForgeCoupleBox {
 
     registerHover() {
         this.img.addEventListener("mousemove", (e) => {
-            this.checkMouse(e.clientX, e.clientY);
 
-            if (e.buttons !== 1 || !this.isValid)
+            if (!this.isValid) {
+                this.checkMouse(e.clientX, e.clientY);
                 return;
+            }
 
-            if (this.isResize) {
-
-                this.img.style.cursor = "nwse-resize";
-
-                var W = e.clientX - this.boxBound.left;
-                var H = e.clientY - this.boxBound.top;
-
-                if (W < ForgeCoupleBox.minimumSize)
-                    W = ForgeCoupleBox.minimumSize;
-                if (H < ForgeCoupleBox.minimumSize)
-                    H = ForgeCoupleBox.minimumSize;
-
-                if (W + this.boxX > this.imgBound.right)
-                    W = this.imgBound.right - this.boxX;
-                if (H + this.boxY > this.imgBound.bottom)
-                    H = this.imgBound.bottom - this.boxY;
-
-                W = this.step.w * Math.round(W / this.step.w);
-                H = this.step.h * Math.round(H / this.step.h);
-
-                this.box.style.width = `${W}px`;
-                this.box.style.height = `${H}px`;
-
-            } else {
+            if (this.isResize)
+                this.resizeLogic(e.clientX, e.clientY, ForgeCoupleBox.minimumSize)
+            else {
 
                 const deltaX = e.clientX - this.startX;
                 const deltaY = e.clientY - this.startY;
@@ -122,6 +104,64 @@ class ForgeCoupleBox {
 
             this.isValid = false;
         });
+    }
+
+
+    /** @param {number} mouseX @param {number} mouseY */
+    resizeLogic(mouseX, mouseY, minimumSize) {
+        const { parseStyle } = ForgeCoupleBox;
+
+        if (this.resize.R) {
+            var H = mouseX - this.boxBound.left;
+
+            if (H < minimumSize)
+                H = minimumSize;
+
+            if (H + this.boxX > this.imgBound.right)
+                H = this.imgBound.right - this.boxX;
+
+            H = this.step.w * Math.round(H / this.step.w);
+            this.box.style.width = `${H}px`;
+        } else if (this.resize.L) {
+            const right = parseStyle(this.box.style.left) + parseStyle(this.box.style.width);
+            var H = this.boxBound.right - mouseX;
+
+            if (H < minimumSize)
+                H = minimumSize;
+
+            if (H > right)
+                H = right;
+
+            H = this.step.w * Math.round(H / this.step.w);
+            this.box.style.left = `${right - H}px`;
+            this.box.style.width = `${H}px`;
+        }
+
+        if (this.resize.B) {
+            var H = mouseY - this.boxBound.top;
+
+            if (H < minimumSize)
+                H = minimumSize;
+
+            if (H + this.boxY > this.imgBound.bottom)
+                H = this.imgBound.bottom - this.boxY;
+
+            H = this.step.h * Math.round(H / this.step.h);
+            this.box.style.height = `${H}px`;
+        } else if (this.resize.T) {
+            const bottom = parseStyle(this.box.style.top) + parseStyle(this.box.style.height);
+            var H = this.boxBound.bottom - mouseY;
+
+            if (H < minimumSize)
+                H = minimumSize;
+
+            if (H > bottom)
+                H = bottom;
+
+            H = this.step.h * Math.round(H / this.step.h);
+            this.box.style.top = `${bottom - H}px`;
+            this.box.style.height = `${H}px`;
+        }
     }
 
 
@@ -164,17 +204,33 @@ class ForgeCoupleBox {
         const { left, right, top, bottom } = this.boxBound;
         const { resizeBorder } = ForgeCoupleBox;
 
-        if (mouseX < left || mouseX > right || mouseY < top || mouseY > bottom) {
+        if (mouseX < left - resizeBorder || mouseX > right + resizeBorder || mouseY < top - resizeBorder || mouseY > bottom + resizeBorder) {
             this.img.style.cursor = "default";
             return;
         }
 
-        if ((mouseX > right - resizeBorder) && (mouseY > bottom - resizeBorder)) {
-            this.img.style.cursor = "nwse-resize";
+        this.resize.L = mouseX < left + resizeBorder;
+        this.resize.T = mouseY < top + resizeBorder;
+        this.resize.R = mouseX > right - resizeBorder;
+        this.resize.B = mouseY > bottom - resizeBorder;
+
+        if (!(this.resize.L || this.resize.T || this.resize.R || this.resize.B)) {
+            this.img.style.cursor = "move";
             return;
         }
 
-        this.img.style.cursor = "move";
+        if (this.resize.R && this.resize.B)
+            this.img.style.cursor = "nwse-resize";
+        else if (this.resize.R && this.resize.T)
+            this.img.style.cursor = "nesw-resize";
+        else if (this.resize.L && this.resize.B)
+            this.img.style.cursor = "nesw-resize";
+        else if (this.resize.L && this.resize.T)
+            this.img.style.cursor = "nwse-resize";
+        else if (this.resize.R || this.resize.L)
+            this.img.style.cursor = "ew-resize";
+        else if (this.resize.B || this.resize.T)
+            this.img.style.cursor = "ns-resize";
     }
 
 
@@ -193,9 +249,9 @@ class ForgeCoupleBox {
         const to_x = (this.boxBound.right - this.imgBound.left) / this.imgBound.width;
         const from_y = (this.boxBound.top - this.imgBound.top) / this.imgBound.height;
         const to_y = (this.boxBound.bottom - this.imgBound.top) / this.imgBound.height;
-        const cl = ForgeCoupleBox.clamp;
+        const { clamp } = ForgeCoupleBox;
 
-        return `${cl(from_x)},${cl(to_x)},${cl(from_y)},${cl(to_y)}`;
+        return `${clamp(from_x)},${clamp(to_x)},${clamp(from_y)},${clamp(to_y)}`;
     }
 
 
