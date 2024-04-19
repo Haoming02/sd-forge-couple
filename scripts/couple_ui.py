@@ -1,8 +1,11 @@
+from modules.ui_components import FormRow, ToolButton
+from json.decoder import JSONDecodeError
 from PIL import Image, ImageDraw
+from json import loads
 import gradio as gr
 
 
-DEFAULT_MAPPING = [["0.0:0.5", "0.0:1.0", "1.0"], ["0.5:1.0", "0.0:1.0", "1.0"]]
+DEFAULT_MAPPING = [["0.00:0.50", "0.00:1.00", "1.0"], ["0.50:1.00", "0.00:1.00", "1.0"]]
 COLORS = ("red", "orange", "yellow", "green", "blue", "indigo", "violet")
 
 T2I_W = None
@@ -42,7 +45,7 @@ def parse_mapping(data: list) -> list:
     return mapping
 
 
-def validata_mapping(data: list) -> bool:
+def validate_mapping(data: list) -> bool:
     try:
         for [X, Y, W] in data:
             if not X.strip():
@@ -85,10 +88,10 @@ def validata_mapping(data: list) -> bool:
 def visualize_mapping(p_WIDTH: int, p_HEIGHT: int, data: list) -> Image:
     matt = Image.new("RGB", (p_WIDTH, p_HEIGHT), "black")
 
-    if not (validata_mapping(data)):
+    if not (validate_mapping(data)):
         return matt
 
-    lnw = int(max(min(p_WIDTH, p_HEIGHT) / 128, 2.0))
+    lnw = int(max(min(p_WIDTH, p_HEIGHT) / 256, 2.0))
 
     draw = ImageDraw.Draw(matt)
 
@@ -114,47 +117,43 @@ def visualize_mapping(p_WIDTH: int, p_HEIGHT: int, data: list) -> Image:
 
 
 def reset_mapping() -> list:
-    return DEFAULT_MAPPING, 2
+    return DEFAULT_MAPPING
 
 
-def add_first_row(data: list) -> list:
-    return [["0.0:1.0", "0.0:1.0", "1.0"]] + data, 0
+def add_row_above(data: list, index: int) -> list:
+    if index < 0:
+        return data
+    return data[:index] + [["0.00:1.00", "0.00:1.00", "1.0"]] + data[index:]
 
 
-def add_last_row(data: list) -> list:
-    i = len(data)
-    return data + [["0.25:0.75", "0.25:0.75", "1.0"]], i
+def add_row_below(data: list, index: int) -> list:
+    if index < 0:
+        return data
+    return data[: index + 1] + [["0.25:0.75", "0.25:0.75", "1.0"]] + data[index + 1 :]
 
 
-def del_first_row(data: list) -> list:
+def del_row_select(data: list, index: int) -> list:
+    if index < 0:
+        return data
     if len(data) == 1:
-        return [["0.0:1.0", "0.0:1.0", "1.0"]], 0
+        return [["0.0:1.0", "0.0:1.0", "1.0"]]
     else:
-        return data[1:], 0
-
-
-def del_last_row(data: list) -> list:
-    i = len(data)
-    if len(data) == 1:
-        return [["0.0:1.0", "0.0:1.0", "1.0"]], 0
-    else:
-        return data[:-1], i - 2
-
-
-def del_sele_row(data: list, index: int) -> list:
-    i = len(data) - 1
-    try:
-        if index == 0 and len(data) == 1:
-            return [["0.0:1.0", "0.0:1.0", "1.0"]], 0
         del data[index]
-        i -= 1
-    except IndexError:
-        pass
+        return data
 
-    return data, i
+
+def on_paste(data: str) -> list:
+    try:
+        return loads(data)
+    except JSONDecodeError:
+        print("\n[Adv. Mapping] Pasting Old Infotext is not supported...\n")
+        return DEFAULT_MAPPING
 
 
 def manual_entry(data: list, new: str, index: int) -> list:
+    if index < 0:
+        return data
+
     v = [round(float(val), 2) for val in new.split(",")]
 
     if v[1] < v[0]:
@@ -163,10 +162,10 @@ def manual_entry(data: list, new: str, index: int) -> list:
         v[2], v[3] = v[3], v[2]
 
     try:
-        data[index][0] = f"{v[0]}:{v[1]}"
-        data[index][1] = f"{v[2]}:{v[3]}"
+        data[index][0] = f"{v[0]:.2f}:{v[1]:.2f}"
+        data[index][1] = f"{v[2]:.2f}:{v[3]:.2f}"
     except IndexError:
-        data.append([f"{v[0]}:{v[1]}", f"{v[2]}:{v[3]}", "1.0"])
+        data.append([f"{v[0]:.2f}:{v[1]:.2f}", f"{v[2]:.2f}:{v[3]:.2f}", "1.0"])
 
     return data
 
@@ -181,19 +180,19 @@ def couple_UI(script, is_img2img: bool, title: str):
         open=False,
     ):
         with gr.Row():
-            enable = gr.Checkbox(label="Enable", elem_classes="fc_enable")
+            enable = gr.Checkbox(label="Enable", elem_classes="fc_enable", scale=2)
 
             mode = gr.Radio(
-                ["Basic", "Advanced"],
-                label="Region Assignment",
-                value="Basic",
+                ["Basic", "Advanced"], label="Region Assignment", value="Basic", scale=3
             )
 
             separator = gr.Textbox(
                 label="Couple Separator",
                 lines=1,
                 max_lines=1,
-                placeholder="Leave empty to use newline",
+                placeholder="Default: Newline",
+                elem_classes="fc_separator",
+                scale=1,
             )
 
         with gr.Group() as basic_settings:
@@ -202,12 +201,14 @@ def couple_UI(script, is_img2img: bool, title: str):
                     ["Horizontal", "Vertical"],
                     label="Tile Direction",
                     value="Horizontal",
+                    scale=2,
                 )
 
                 background = gr.Radio(
                     ["None", "First Line", "Last Line"],
                     label="Global Effect",
                     value="None",
+                    scale=3,
                 )
 
                 background_weight = gr.Slider(
@@ -216,9 +217,33 @@ def couple_UI(script, is_img2img: bool, title: str):
                     step=0.1,
                     value=0.5,
                     label="Global Effect Weight",
+                    scale=1,
                 )
 
         with gr.Group(visible=False, elem_classes="fc_adv") as adv_settings:
+
+            with FormRow(elem_classes="fc_map_btns"):
+                up_btn = ToolButton(
+                    value="\U0001F53C",
+                    elem_id="fc_up_btn",
+                    tooltip="Add a New Row above the Selected Row",
+                )
+                del_btn = ToolButton(
+                    value="\U0000274C",
+                    elem_id="fc_del_btn",
+                    tooltip="Delete the Selected Row",
+                )
+                dn_btn = ToolButton(
+                    value="\U0001F53D",
+                    elem_id="fc_dn_btn",
+                    tooltip="Add a New Row below the Selected Row",
+                )
+                ref_btn = ToolButton(
+                    value="\U0001F504",
+                    elem_id="fc_ref_btn",
+                    tooltip="Reset to the Default Mapping",
+                )
+
             mapping = gr.Dataframe(
                 label="Mapping",
                 headers=["x", "y", "weight"],
@@ -229,10 +254,6 @@ def couple_UI(script, is_img2img: bool, title: str):
                 type="array",
                 value=DEFAULT_MAPPING,
                 elem_classes="fc_mapping",
-            )
-
-            mapping.select(
-                None, None, None, _js=f'() => {{ ForgeCouple.onSelect("{m}"); }}'
             )
 
             preview_img = gr.Image(
@@ -253,45 +274,53 @@ def couple_UI(script, is_img2img: bool, title: str):
                     mapping,
                 ],
                 preview_img,
+            ).success(
+                None, None, None, _js=f'() => {{ ForgeCouple.updateColors("{m}"); }}'
             )
 
-            with gr.Column(elem_classes="fc_map_btns"):
-                with gr.Row():
-                    add_first = gr.Button("New First Row")
-                    add_last = gr.Button("New Last Row")
-                    manual_btn = gr.Button("Click & Drag", elem_classes="fc_manual")
+            mapping.select(
+                None, None, None, _js=f'() => {{ ForgeCouple.onSelect("{m}"); }}'
+            )
 
-                with gr.Row():
-                    del_first = gr.Button("Delete First Row")
-                    del_last = gr.Button("Delete Last Row")
-                    del_sele = gr.Button("Delete Selection")
+            mapping.input(
+                visualize_mapping,
+                [
+                    I2I_W if is_img2img else T2I_W,
+                    I2I_H if is_img2img else T2I_H,
+                    mapping,
+                ],
+                preview_img,
+            ).success(
+                None, None, None, _js=f'() => {{ ForgeCouple.updateColors("{m}"); }}'
+            )
 
-                with gr.Row():
-                    reset_map = gr.Button("Reset Mapping")
-                    manual_idx = gr.Number(
-                        label="Selected Row",
-                        value=2,
-                        interactive=True,
-                        precision=0,
-                        elem_classes="fc_index",
-                    )
+            gr.Markdown(
+                """
+                <p align="center">
+                    <a href="https://github.com/Haoming02/sd-forge-couple#advanced-mapping">[How to Use]</a>
+                </p>
+                """
+            )
 
-        add_first.click(add_first_row, mapping, [mapping, manual_idx]).success(
+        manual_idx = gr.Number(
+            label="Selected Row",
+            value=-1,
+            interactive=True,
+            visible=False,
+            precision=0,
+            elem_classes="fc_index",
+        )
+
+        up_btn.click(add_row_above, [mapping, manual_idx], mapping).success(
             None, None, None, _js=preview_js
         )
-        add_last.click(add_last_row, mapping, [mapping, manual_idx]).success(
+        del_btn.click(del_row_select, [mapping, manual_idx], mapping).success(
             None, None, None, _js=preview_js
         )
-        del_first.click(del_first_row, mapping, [mapping, manual_idx]).success(
+        ref_btn.click(reset_mapping, None, mapping).success(
             None, None, None, _js=preview_js
         )
-        del_last.click(del_last_row, mapping, [mapping, manual_idx]).success(
-            None, None, None, _js=preview_js
-        )
-        del_sele.click(
-            del_sele_row, [mapping, manual_idx], [mapping, manual_idx]
-        ).success(None, None, None, _js=preview_js)
-        reset_map.click(reset_mapping, None, [mapping, manual_idx]).success(
+        dn_btn.click(add_row_below, [mapping, manual_idx], mapping).success(
             None, None, None, _js=preview_js
         )
 
@@ -321,6 +350,11 @@ def couple_UI(script, is_img2img: bool, title: str):
 
         mode.change(on_mode_change, mode, [basic_settings, adv_settings])
 
+        mapping_paste_field = gr.Textbox(visible=False)
+        mapping_paste_field.change(on_paste, mapping_paste_field, mapping).success(
+            None, None, None, _js=preview_js
+        )
+
         script.paste_field_names = []
         script.infotext_fields = [
             (enable, "forge_couple"),
@@ -328,7 +362,7 @@ def couple_UI(script, is_img2img: bool, title: str):
             (background, "forge_couple_background"),
             (separator, "forge_couple_separator"),
             (mode, "forge_couple_mode"),
-            (mapping, "forge_couple_mapping"),
+            (mapping_paste_field, "forge_couple_mapping"),
             (background_weight, "forge_couple_background_weight"),
         ]
 
@@ -336,7 +370,7 @@ def couple_UI(script, is_img2img: bool, title: str):
             comp.do_not_save_to_config = True
             script.paste_field_names.append(name)
 
-        for comp in (manual_idx, manual_field):
+        for comp in (manual_idx, manual_field, mapping):
             comp.do_not_save_to_config = True
 
         return [

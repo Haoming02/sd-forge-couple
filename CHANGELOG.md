@@ -1,3 +1,15 @@
+### v1.4.3 - 2024 Apr.18
+- Support **Infotext Pasting** for Advanced Mapping
+
+### v1.4.2 - 2024 Apr.18
+- Implement **Prompt Hint**
+
+### v1.4.1 - 2024 Apr.18
+- Implement **8-Direction** Resizing
+
+### v1.4.0 - 2024 Apr.16
+- Implement **Draggable Regions**
+
 ### v1.3.7 - 2024 Apr.14
 - **Global Effect Weight** Slider by. <ins>ramyma</ins>
 - **Mask API** by. <ins>ramyma</ins>

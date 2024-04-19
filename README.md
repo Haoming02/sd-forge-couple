@@ -133,30 +133,33 @@ LoRA with multiple subjects works better in my experience.
 Were these automated equally-sized tiles not sufficient for your needs? Now you can manually specify each regions! The mapping logic is the same: one line corresponds to one entry.
 
 - **Note:**
-    - You **must** have values in the entire mask. Simplest way would be adding a global entry by clicking `New First Row`
-    - Entries with empty **x** column are skipped
+    - You **must** have values in the entire mask
+        - Simplest way would be adding a global entry
+    - Rows with empty **x** column are skipped
 
-- **Regions:**
-    - Each region contains a (**x**, **y**) range and a **weight**
-    - The **x** and **y** are in the syntax of `from : to`
-    - **x** is from left to right; **y** is from top to bottom
-    - The values should be `0.0 ~ 1.0`, representing the **percentage** of the full width/height
+- **Entry:**
+    - Each row contains a range for **x** axis, a range for **y** axis, and a **weight**
+    - The **x** and **y** columns are in the syntax of `from:to`
+    - The range should be within `0.0 ~ 1.0`, representing the **percentage** of the full width/height
         - **eg.** `0.0:1.0` would span across the entire axis
+    - **x** axis is from left to right; **y** axis is from top to bottom
 
-- **Click & Drag:**
-    Tired of ~~painstakingly~~ specifying the ranges? Just use the mouse to draw the regions!
-    - Click the button to get started *(cursor will become a **crosshair** when hovering the preview image)*
-    - Make a selection on top of the preview image with the mouse
+- **Control:**
+    - Click on a row to select it; click on it again to deselect it
+    - Click the 🔼 button to add a new row above the selected row
+    - Click the ❌ button to delete the selected row
+    - Click the 🔽 button to add a new row below the selected row
+    - Click the 🔄 button to reset to the default mapping
 
-- **Selected Row:**
-    - The index of the entry to be edited by `Click & Drag`; or to be deleted
-    - Use an index out of range to append a new entry instead
-    - The index follows the Python logic *(**ie.** Start from `0`; negative counts from the last entry)*
-    - Clicking a row will update the index
+- **Draggable Region:**
+    - When a row is selected, its corresponding region would be highlighted
+    - Simply drag the box around to reposition the region
+    - Use the edges / corners to resize the region
 
-- **Preview:**
-    - Click the **Preview Mapping** button to see each region
-    - Colors are mapped in the sequence of a rainbow; corresponding row is also colored
+- **Prompt Hint:**
+    - When hovering a row, it will show the corresponding prompt or if the prompt is missing
+    - Only works when the positive prompt is not empty
+    - Right click on the table to toggle the display
 
 <p align="center">
 <img src="example/10.jpg" height=384>
@@ -195,3 +198,4 @@ shape '[X, Y, 1]' is invalid for input of size Z
 ## Special Thanks
 - Credits to the original author, **[laksjdjf](https://github.com/laksjdjf)**, whose original [ComfyUI Node](https://github.com/laksjdjf/cgem156-ComfyUI/tree/main/scripts/attention_couple) I used to port into Forge
 - Example images were generated with [Animagine XL V3.1](https://civitai.com/models/260267) and [juggernautXL v7](https://civitai.com/models/133005)
+- Also check out <ins>arcusmaximus</ins>'s alternative approach to [draggable-box-ui](https://github.com/arcusmaximus/sd-forge-couple/tree/draggable-box-ui)
