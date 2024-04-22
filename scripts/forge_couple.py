@@ -13,7 +13,7 @@ from scripts.couple_ui import couple_UI, validate_mapping, parse_mapping, hook_c
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.4.3"
+VERSION = "1.4.4"
 
 
 class ForgeCouple(scripts.Script):
@@ -107,7 +107,9 @@ class ForgeCouple(scripts.Script):
         if mode == "Basic":
             p.extra_generation_params["forge_couple_direction"] = direction
             p.extra_generation_params["forge_couple_background"] = background
-            p.extra_generation_params["forge_couple_background_weight"] = background_weight
+            p.extra_generation_params["forge_couple_background_weight"] = (
+                background_weight
+            )
         elif mode == "Advanced":
             p.extra_generation_params["forge_couple_mapping"] = dumps(mapping)
         # ===== Infotext =====

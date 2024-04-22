@@ -1,3 +1,6 @@
+### v1.4.4 - 2024 Apr.22
+- Improved  **Auto Resolution**
+
 ### v1.4.3 - 2024 Apr.18
 - Support **Infotext Pasting** for Advanced Mapping
 

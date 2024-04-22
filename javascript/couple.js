@@ -1,5 +1,6 @@
 class ForgeCouple {
 
+    static previewRes = {};
     static previewBtn = {};
     static mappingTable = {};
     static manualIndex = {};
@@ -42,8 +43,51 @@ class ForgeCouple {
      *  When updating the mappings, trigger a preview
      * @param {string} mode "t2i" | "i2i"
      */
-    static preview(mode) {
-        this.previewBtn[mode].click();
+    static async preview(mode) {
+        if (!mode)
+            return;
+
+        setTimeout(async () => {
+            var res = null;
+            var file = null;
+
+            if (mode === "t2i") {
+                const w = parseInt(gradioApp().getElementById("txt2img_width").querySelector("input").value);
+                const h = parseInt(gradioApp().getElementById("txt2img_height").querySelector("input").value);
+                res = `${w}x${h}`;
+            } else {
+                const i2i_size = gradioApp().getElementById("img2img_column_size").querySelector(".tab-nav");
+
+                if (mode !== "i2i") {
+                    file = mode;
+                    mode = "i2i";
+                }
+
+                if (i2i_size.children[0].classList.contains("selected")) {
+                    // Resize to
+                    const w = parseInt(gradioApp().getElementById("img2img_width").querySelector("input").value);
+                    const h = parseInt(gradioApp().getElementById("img2img_height").querySelector("input").value);
+                    res = `${w}x${h}`;
+                } else {
+                    // Resize by
+                    if (file) {
+                        const dim = await this.img2resolution(file);
+                        res = `${dim.w}x${dim.h}`;
+                    } else {
+                        res = gradioApp().getElementById("img2img_scale_resolution_preview")?.querySelector(".resolution")?.textContent;
+                        if (!res)
+                            res = "1024x1024";
+                    }
+                }
+            }
+
+            console.log(mode, res);
+            this.previewRes[mode].value = res;
+            updateInput(this.previewRes[mode]);
+
+            this.previewBtn[mode].click();
+
+        }, 50);
     }
 
     /**
@@ -131,13 +175,60 @@ class ForgeCouple {
         });
     }
 
+    /** Hook some elements to automatically refresh the resolution */
+    static registerResolutionHandles() {
+
+        [["txt2img", "t2i"], ["img2img", "i2i"]].forEach(([tab, mode]) => {
+            const btns = gradioApp().getElementById(`${tab}_dimensions_row`)?.querySelectorAll("button");
+            if (btns != null)
+                btns.forEach((btn) => { btn.onclick = () => { ForgeCouple.preview(mode); } });
+
+            const width = gradioApp().getElementById(`${tab}_width`).querySelectorAll("input");
+            const height = gradioApp().getElementById(`${tab}_height`).querySelectorAll("input");
+
+            [...width, ...height].forEach((slider) => {
+                slider.addEventListener("change", () => { ForgeCouple.preview(mode); });
+            });
+        });
+
+        const i2i_size_btns = gradioApp().getElementById("img2img_column_size").querySelector(".tab-nav");
+        i2i_size_btns.addEventListener("click", () => { ForgeCouple.preview("i2i"); });
+
+        const tabs = gradioApp().querySelector('#tabs').querySelector('.tab-nav');
+        tabs.addEventListener("click", () => {
+            if (tabs.children[0].classList.contains("selected"))
+                ForgeCouple.preview("t2i");
+            if (tabs.children[1].classList.contains("selected"))
+                ForgeCouple.preview("i2i");
+        });
+
+    }
+
+    /**
+     * Given an image, return the width and height
+     * @param {string} b64 Image in base64 encoding
+     * @returns {object} {w, h}
+     */
+    static img2resolution(b64) {
+        return new Promise(function (resolved, rejected) {
+
+            var i = new Image()
+            i.onload = function () {
+                resolved({ w: i.width, h: i.height })
+            };
+            i.src = b64;
+
+        });
+    }
+
 }
 
 onUiLoaded(async () => {
     ["t2i", "i2i"].forEach((mode) => {
         const ex = gradioApp().getElementById(`forge_couple_${mode}`);
 
-        ForgeCouple.previewBtn[mode] = ex.querySelector(".fc_preview");
+        ForgeCouple.previewRes[mode] = ex.querySelector(".fc_preview_res").querySelector("input");
+        ForgeCouple.previewBtn[mode] = ex.querySelector(".fc_preview_real");
         ForgeCouple.mappingTable[mode] = ex.querySelector(".fc_mapping").querySelector("tbody");
         ForgeCouple.manualIndex[mode] = ex.querySelector(".fc_index").querySelector("input");
         ForgeCouple.registerHovering(mode, ex.querySelector(".fc_separator").querySelector("input"));
@@ -159,6 +250,9 @@ onUiLoaded(async () => {
 
         setTimeout(() => {
             ForgeCouple.preview(mode);
-        }, 100);
+        }, 50);
     });
+
+    ForgeCouple.registerResolutionHandles();
+
 })

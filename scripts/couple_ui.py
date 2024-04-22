@@ -8,23 +8,18 @@ import gradio as gr
 DEFAULT_MAPPING = [["0.00:0.50", "0.00:1.00", "1.0"], ["0.50:1.00", "0.00:1.00", "1.0"]]
 COLORS = ("red", "orange", "yellow", "green", "blue", "indigo", "violet")
 
-T2I_W = None
-T2I_H = None
-I2I_W = None
-I2I_H = None
-
 
 def hook_component(component, id: str):
-    global T2I_W, T2I_H, I2I_W, I2I_H
-
-    if id == "txt2img_width":
-        T2I_W = component
-    elif id == "txt2img_height":
-        T2I_H = component
-    elif id == "img2img_width":
-        I2I_W = component
-    elif id == "img2img_height":
-        I2I_H = component
+    if id in (
+        "img2img_image",
+        "img2img_sketch",
+        "img2maskimg",
+        "inpaint_sketch",
+        "img_inpaint_base",
+    ):
+        component.change(
+            None, component, None, _js="(img) => { ForgeCouple.preview(img); }"
+        )
 
 
 def parse_mapping(data: list) -> list:
@@ -85,13 +80,21 @@ def validate_mapping(data: list) -> bool:
         return False
 
 
-def visualize_mapping(p_WIDTH: int, p_HEIGHT: int, data: list) -> Image:
+def visualize_mapping(res: str, data: list) -> Image:
+    w, h = res.split("x")
+    p_WIDTH = int(w)
+    p_HEIGHT = int(h)
+
+    if p_WIDTH > 2048 or p_HEIGHT > 2048:
+        p_WIDTH // 2
+        p_HEIGHT // 2
+
     matt = Image.new("RGB", (p_WIDTH, p_HEIGHT), "black")
 
     if not (validate_mapping(data)):
         return matt
 
-    lnw = int(max(min(p_WIDTH, p_HEIGHT) / 256, 2.0))
+    lnw = int(max(min(p_WIDTH, p_HEIGHT) / 128, 4.0))
 
     draw = ImageDraw.Draw(matt)
 
@@ -266,33 +269,33 @@ def couple_UI(script, is_img2img: bool, title: str):
             )
 
             preview_btn = gr.Button("Preview Mapping", elem_classes="fc_preview")
-            preview_btn.click(
+            preview_btn.click(None, _js=preview_js)
+
+            preview_res = gr.Textbox(
+                lines=1,
+                max_lines=1,
+                visible=False,
+                interactive=True,
+                elem_classes="fc_preview_res",
+            )
+
+            real_preview_btn = gr.Button(
+                elem_classes="fc_preview_real",
+                visible=False,
+                interactive=True,
+            )
+
+            real_preview_btn.click(
                 visualize_mapping,
                 [
-                    I2I_W if is_img2img else T2I_W,
-                    I2I_H if is_img2img else T2I_H,
+                    preview_res,
                     mapping,
                 ],
                 preview_img,
-            ).success(
-                None, None, None, _js=f'() => {{ ForgeCouple.updateColors("{m}"); }}'
-            )
+            ).success(None, _js=f'() => {{ ForgeCouple.updateColors("{m}"); }}')
 
-            mapping.select(
-                None, None, None, _js=f'() => {{ ForgeCouple.onSelect("{m}"); }}'
-            )
-
-            mapping.input(
-                visualize_mapping,
-                [
-                    I2I_W if is_img2img else T2I_W,
-                    I2I_H if is_img2img else T2I_H,
-                    mapping,
-                ],
-                preview_img,
-            ).success(
-                None, None, None, _js=f'() => {{ ForgeCouple.updateColors("{m}"); }}'
-            )
+            mapping.select(None, _js=f'() => {{ ForgeCouple.onSelect("{m}"); }}')
+            mapping.input(None, _js=preview_js)
 
             gr.Markdown(
                 """
@@ -312,16 +315,14 @@ def couple_UI(script, is_img2img: bool, title: str):
         )
 
         up_btn.click(add_row_above, [mapping, manual_idx], mapping).success(
-            None, None, None, _js=preview_js
+            None, _js=preview_js
         )
         del_btn.click(del_row_select, [mapping, manual_idx], mapping).success(
-            None, None, None, _js=preview_js
+            None, _js=preview_js
         )
-        ref_btn.click(reset_mapping, None, mapping).success(
-            None, None, None, _js=preview_js
-        )
+        ref_btn.click(reset_mapping, None, mapping).success(None, _js=preview_js)
         dn_btn.click(add_row_below, [mapping, manual_idx], mapping).success(
-            None, None, None, _js=preview_js
+            None, _js=preview_js
         )
 
         manual_field = gr.Textbox(
@@ -334,7 +335,7 @@ def couple_UI(script, is_img2img: bool, title: str):
 
         manual_field.input(
             manual_entry, [mapping, manual_field, manual_idx], mapping
-        ).success(None, None, None, _js=preview_js)
+        ).success(None, _js=preview_js)
 
         def on_mode_change(choice):
             if choice == "Basic":
@@ -352,7 +353,7 @@ def couple_UI(script, is_img2img: bool, title: str):
 
         mapping_paste_field = gr.Textbox(visible=False)
         mapping_paste_field.change(on_paste, mapping_paste_field, mapping).success(
-            None, None, None, _js=preview_js
+            None, _js=preview_js
         )
 
         script.paste_field_names = []
