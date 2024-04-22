@@ -376,10 +376,10 @@ def couple_UI(script, is_img2img: bool, title: str):
 
         return [
             enable,
+            mode,
+            separator,
             direction,
             background,
-            separator,
-            mode,
-            mapping,
             background_weight,
+            mapping,
         ]

@@ -1,10 +1,10 @@
 from modules.prompt_parser import SdConditioning
-from modules import images
+
+from base64 import b64decode as decode
+from io import BytesIO as bIO
 from PIL import Image
 import numpy as np
-import base64
 import torch
-import io
 
 from scripts.couple_ui import parse_mapping
 
@@ -102,16 +102,15 @@ def basic_mapping(
     return ARGs
 
 
-def convert_base64_image_to_tensor(base_64_image_string: str, WIDTH: int, HEIGHT: int):
-    image_bytes = base64.b64decode(base_64_image_string)
-    image = Image.open(io.BytesIO(image_bytes))
-    image = image.convert("L")
+def b64image2tensor(img: str, WIDTH: int, HEIGHT: int) -> torch.Tensor:
+    image_bytes = decode(img)
+    image = Image.open(bIO(image_bytes)).convert("L")
 
     if image.width != WIDTH or image.height != HEIGHT:
-        image = image.resize((WIDTH, HEIGHT), resample=images.LANCZOS)
+        image = image.resize((WIDTH, HEIGHT), resample=Image.Resampling.NEAREST)
 
     image = np.array(image).astype(np.float32) / 255.0
-    image = torch.from_numpy(image)[None,]
+    image = torch.from_numpy(image).unsqueeze(0)
 
     return image
 
@@ -127,17 +126,9 @@ def mask_mapping(
     BG_WEIGHT: float,
 ):
 
-    mapping = (
-        [
-            {
-                "mask": convert_base64_image_to_tensor(m["mask"], WIDTH, HEIGHT),
-                "weight": m["weight"],
-            }
-            for m in mapping
-        ]
-        if mapping
-        else mapping
-    )
+    mapping = [
+        b64image2tensor(m["mask"], WIDTH, HEIGHT) * float(m["weight"]) for m in mapping
+    ]
 
     ARGs: dict = {}
     IS_SDXL: bool = hasattr(
@@ -158,9 +149,9 @@ def mask_mapping(
             if layer == 0:
                 mask = torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
             else:
-                mask = mapping[layer - 1]["mask"] * mapping[layer - 1]["weight"]
+                mask = mapping[layer - 1]
         else:
-            mask = mapping[layer]["mask"] * mapping[layer]["weight"]
+            mask = mapping[layer]
         # ===== Mask =====
 
         ARGs[f"cond_{layer + 1}"] = pos_cond

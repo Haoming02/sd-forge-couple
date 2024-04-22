@@ -174,6 +174,9 @@ wedding photo, holding flower bouquet together
 sunset, golden hour, lens flare
 ```
 
+## API
+For usage with API, please refer to the [Wiki](https://github.com/Haoming02/sd-forge-couple/wiki/API)
+
 <hr>
 
 ## TypeError: 'NoneType'

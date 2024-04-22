@@ -13,7 +13,7 @@ from scripts.couple_ui import couple_UI, validate_mapping, parse_mapping, hook_c
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.4.4"
+VERSION = "1.5.0"
 
 
 class ForgeCouple(scripts.Script):
@@ -45,12 +45,12 @@ class ForgeCouple(scripts.Script):
         self,
         p,
         enable: bool,
+        mode: str,
+        separator: str,
         direction: str,
         background: str,
-        separator: str,
-        mode: str,
-        mapping: list,
         background_weight: float,
+        mapping: list,
         *args,
         **kwargs,
     ):
@@ -71,32 +71,34 @@ class ForgeCouple(scripts.Script):
 
             couples.append(prompt)
 
-        if (mode == "Basic") and len(couples) < (3 if background != "None" else 2):
-            print(
-                f"\n\n[Couple] Not Enough Lines in Prompt...\nCurrent: {len(couples)} / Required: {3 if background != 'None' else 2}\n\n"
-            )
-        if mode == "Mask":
-            if not mapping or len(mapping) != len(couples) - (
-                1 if background != "None" else 0
-            ):
-                print("\n\n[Couple] Number of Couples and Masks is not the same...\n\n")
-                self.couples = None
-                return
-        elif len(couples) < (3 if background != "None" else 2):
-            print("\n\n[Couple] Not Enough Lines in Prompt...\n\n")
-            self.couples = None
-            return
+        match mode:
+            case "Basic":
+                if len(couples) < (3 if background != "None" else 2):
+                    print(
+                        f"\n\n[Couple] Not Enough Lines in Prompt...\nCurrent: {len(couples)} / Required: {3 if background != 'None' else 2}\n\n"
+                    )
 
-        if (mode == "Advanced") and not validate_mapping(mapping):
-            self.couples = None
-            return
+            case "Mask":
+                if not mapping or len(mapping) != len(couples) + int(
+                    background in ("First Line", "Last Line")
+                ):
+                    print(
+                        f"\n\n[Couple] Number of Couples and Masks is not the same...\nCurrent: {len(couples)} / Required: {len(mapping) - int(background in ('First Line', 'Last Line'))}\n\n"
+                    )
+                    self.couples = None
+                    return
 
-        if (mode == "Advanced") and (len(couples) != len(parse_mapping(mapping))):
-            print(
-                f"\n\n[Couple] Number of Couples and Mapping is not the same...\nCurrent: {len(couples)} / Required: {len(parse_mapping(mapping))}\n\n"
-            )
-            self.couples = None
-            return
+            case "Advanced":
+                if not validate_mapping(mapping):
+                    self.couples = None
+                    return
+
+                if not mapping or (len(parse_mapping(mapping)) != len(couples)):
+                    print(
+                        f"\n\n[Couple] Number of Couples and Mapping is not the same...\nCurrent: {len(couples)} / Required: {len(parse_mapping(mapping))}\n\n"
+                    )
+                    self.couples = None
+                    return
 
         # ===== Infotext =====
         p.extra_generation_params["forge_couple"] = True
@@ -120,12 +122,12 @@ class ForgeCouple(scripts.Script):
         self,
         p,
         enable: bool,
+        mode: str,
+        separator: str,
         direction: str,
         background: str,
-        separator: str,
-        mode: str,
-        mapping: list,
         background_weight: float,
+        mapping: list,
         *args,
         **kwargs,
     ):
@@ -141,54 +143,65 @@ class ForgeCouple(scripts.Script):
         IS_HORIZONTAL: bool = direction == "Horizontal"
 
         LINE_COUNT: int = len(self.couples)
-        TILE_COUNT: int = LINE_COUNT - (background != "None")
 
-        if mode == "Basic":
-            TILE_WEIGHT: float = 1.25 if background == "None" else 1.0
+        if mode in ("Basic", "Mask"):
             BG_WEIGHT: float = (
-                0.0 if background == "None" else max(0.1, background_weight)
+                0.0
+                if (background not in ("First Line", "Last Line"))
+                else max(0.1, background_weight)
             )
 
+        if mode == "Basic":
+            TILE_COUNT: int = LINE_COUNT - int(
+                background in ("First Line", "Last Line")
+            )
+            TILE_WEIGHT: float = (
+                1.25 if (background not in ("First Line", "Last Line")) else 1.0
+            )
             TILE_SIZE: int = (
                 (WIDTH if IS_HORIZONTAL else HEIGHT) - 1
             ) // TILE_COUNT + 1
         # ===== Init =====
 
         # ===== Tiles =====
-        if mode == "Basic":
-            ARGs = basic_mapping(
-                p.sd_model,
-                self.couples,
-                WIDTH,
-                HEIGHT,
-                LINE_COUNT,
-                IS_HORIZONTAL,
-                background,
-                TILE_SIZE,
-                TILE_WEIGHT,
-                BG_WEIGHT,
-            )
+        match mode:
+            case "Basic":
+                ARGs = basic_mapping(
+                    p.sd_model,
+                    self.couples,
+                    WIDTH,
+                    HEIGHT,
+                    LINE_COUNT,
+                    IS_HORIZONTAL,
+                    background,
+                    TILE_SIZE,
+                    TILE_WEIGHT,
+                    BG_WEIGHT,
+                )
 
-        elif mode == "Mask":
-            BG_WEIGHT: float = (
-                0.0 if background == "None" else max(0.1, background_weight)
-            )
+            case "Mask":
+                ARGs = mask_mapping(
+                    p.sd_model,
+                    self.couples,
+                    WIDTH,
+                    HEIGHT,
+                    LINE_COUNT,
+                    mapping,
+                    background,
+                    BG_WEIGHT,
+                )
 
-            ARGs = mask_mapping(
-                p.sd_model,
-                self.couples,
-                WIDTH,
-                HEIGHT,
-                LINE_COUNT,
-                mapping,
-                background,
-                BG_WEIGHT,
-            )
-        else:
-            ARGs = advanced_mapping(p.sd_model, self.couples, WIDTH, HEIGHT, mapping)
+            case "Advanced":
+                ARGs = advanced_mapping(
+                    p.sd_model, self.couples, WIDTH, HEIGHT, mapping
+                )
         # ===== Tiles =====
 
-        if mode != "Mask":
+        if mode == "Mask":
+            assert len(ARGs.keys()) // 2 == LINE_COUNT - int(
+                background in ("First Line", "Last Line")
+            )
+        else:
             assert len(ARGs.keys()) // 2 == LINE_COUNT
 
         base_mask = empty_tensor(HEIGHT, WIDTH)

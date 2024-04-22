@@ -22,7 +22,7 @@ class AttentionCouple:
 
         mask = [base_mask] + [kwargs[f"mask_{i}"] for i in range(1, num_conds)]
         mask = torch.stack(mask, dim=0).to(device, dtype=dtype)
-        assert mask.sum(dim=0).min() > 0, "Masks must not contain zeroes..."
+        assert mask.sum(dim=0).min() > 0, "[Couple] Masks contain non-filled areas..."
         mask = mask / mask.sum(dim=0, keepdim=True)
 
         conds = [
