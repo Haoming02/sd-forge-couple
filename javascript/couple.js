@@ -81,7 +81,6 @@ class ForgeCouple {
                 }
             }
 
-            console.log(mode, res);
             this.previewRes[mode].value = res;
             updateInput(this.previewRes[mode]);
 

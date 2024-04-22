@@ -13,7 +13,6 @@ def hook_component(component, id: str):
     if id in (
         "img2img_image",
         "img2img_sketch",
-        "img2maskimg",
         "inpaint_sketch",
         "img_inpaint_base",
     ):
