@@ -79,9 +79,13 @@ class ForgeCouple(scripts.Script):
                     )
 
             case "Mask":
-                if not mapping or len(mapping) != len(couples) - 1:
+                if not mapping or len(mapping) != len(couples) - int(
+                    background in ("First Line", "Last Line")
+                ):
                     print(
-                        f"\n\n[Couple] Number of Couples and Masks is not the same...\nCurrent: {len(couples) - 1} / Required: {len(mapping)}\n\n"
+                        f"\n\n[Couple] Number of Couples and Masks is not the same...\nCurrent: {len(couples)} / Required: {len(mapping) + int(
+                    background in ('First Line', 'Last Line')
+                )}\n\n"
                     )
                     self.couples = None
                     return
@@ -194,7 +198,7 @@ class ForgeCouple(scripts.Script):
                     p.sd_model, self.couples, WIDTH, HEIGHT, mapping
                 )
         # ===== Tiles =====
-  
+
         assert len(ARGs.keys()) // 2 == LINE_COUNT
 
         base_mask = empty_tensor(HEIGHT, WIDTH)
