@@ -333,7 +333,10 @@ def couple_UI(script, is_img2img: bool, title: str):
         )
 
         manual_field.input(
-            manual_entry, [mapping, manual_field, manual_idx], mapping
+            manual_entry,
+            [mapping, manual_field, manual_idx],
+            mapping,
+            show_progress=False,
         ).success(None, _js=preview_js)
 
         def on_mode_change(choice):
@@ -351,9 +354,9 @@ def couple_UI(script, is_img2img: bool, title: str):
         mode.change(on_mode_change, mode, [basic_settings, adv_settings])
 
         mapping_paste_field = gr.Textbox(visible=False)
-        mapping_paste_field.change(on_paste, mapping_paste_field, mapping).success(
-            None, _js=preview_js
-        )
+        mapping_paste_field.change(
+            on_paste, mapping_paste_field, mapping, show_progress=False
+        ).success(None, _js=preview_js)
 
         script.paste_field_names = []
         script.infotext_fields = [

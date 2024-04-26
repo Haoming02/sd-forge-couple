@@ -119,14 +119,14 @@ class ForgeCoupleBox {
     resizeLogic(mouseX, mouseY) {
         if (this.resize.R) {
             var W = Math.max(mouseX - this.boxBound.left, FC_minimumSize);
-            W = Math.min(W, this.imgBound.right - this.padding.left - this.init.left);
+            W = Math.min(W, this.imgBound.right - this.padding.left - this.margin.left - this.init.left);
 
             W = this.step.w * Math.round(W / this.step.w);
             this.box.style.width = `${W}px`;
         } else if (this.resize.L) {
             const rightEdge = style2value(this.box.style.left) + style2value(this.box.style.width);
             var W = Math.max(this.boxBound.right - mouseX, FC_minimumSize)
-            W = Math.min(W, rightEdge);
+            W = Math.min(W, rightEdge - this.padding.left);
 
             W = this.step.w * Math.round(W / this.step.w);
             this.box.style.left = `${rightEdge - W}px`;
@@ -135,14 +135,14 @@ class ForgeCoupleBox {
 
         if (this.resize.B) {
             var H = Math.max(mouseY - this.boxBound.top, FC_minimumSize);
-            H = Math.min(H, this.imgBound.bottom - this.padding.top - this.init.top);
+            H = Math.min(H, this.imgBound.bottom - this.padding.top - this.margin.top - this.init.top);
 
             H = this.step.h * Math.round(H / this.step.h);
             this.box.style.height = `${H}px`;
         } else if (this.resize.T) {
             const bottomEdge = style2value(this.box.style.top) + style2value(this.box.style.height);
             var H = Math.max(this.boxBound.bottom - mouseY, FC_minimumSize);
-            H = Math.min(H, bottomEdge);
+            H = Math.min(H, bottomEdge - this.padding.top);
 
             H = this.step.h * Math.round(H / this.step.h);
             this.box.style.top = `${bottomEdge - H}px`;
@@ -305,6 +305,8 @@ class ForgeCoupleBox {
         const to_x = (right - (leftPadding + leftMargin)) / actualWidth;
         const from_y = (top - (topPadding + topMargin)) / actualHeight;
         const to_y = (bottom - (topPadding + topMargin)) / actualHeight;
+
+        // console.table({ from_x, to_x, from_y, to_y });
 
         return `${clamp01(from_x)},${clamp01(to_x)},${clamp01(from_y)},${clamp01(to_y)}`;
     }
