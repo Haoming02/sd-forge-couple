@@ -1,3 +1,7 @@
+### v1.5.1 - 2024 Apr.26
+- Improved **Draggable Regions**
+- Bug Fix
+
 ### v1.5.0 - 2024 Apr.22
 - Improved **API** Support
 - Bug Fix

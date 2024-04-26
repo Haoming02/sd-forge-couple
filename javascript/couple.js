@@ -245,7 +245,9 @@ onUiLoaded(async () => {
 
         const manual_field = ex.querySelector(".fc_manual_field").querySelector("input");
 
-        ForgeCouple.bbox[mode] = new ForgeCoupleBox(preview_img, manual_field);
+        ForgeCouple.bbox[mode] = new ForgeCoupleBox(preview_img, manual_field, mode);
+        while (preview_img.parentElement.firstElementChild.tagName === "DIV")
+            preview_img.parentElement.firstElementChild.remove();
 
         setTimeout(() => {
             ForgeCouple.preview(mode);

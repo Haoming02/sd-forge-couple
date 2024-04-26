@@ -1,37 +1,58 @@
+const FC_resizeBorder = 8;
+const FC_minimumSize = 32;
+
+
+/** @param {string} style @returns {number} */
+function style2value(style) {
+    try {
+        const re = /calc\((-?\d+(?:\.\d+)?)px\)/;
+        return parseFloat(style.match(re)[1]);
+    } catch {
+        return parseFloat(style);
+    }
+}
+
+/** @param {number} v @returns {number} */
+function clamp01(v) {
+    return Math.min(Math.max(v, 0.0), 1.0);
+}
+
+
 class ForgeCoupleBox {
 
-    static resizeBorder = 8;
-    static minimumSize = 32;
+    /** @param {Element} image @param {Element} field @param {string} mode */
+    constructor(image, field, mode) {
+        const tab = gradioApp().getElementById((mode === "t2i") ? "tab_txt2img" : "tab_img2img");
 
-    /** @param {Element} image @param {Element} field */
-    constructor(image, field) {
+        /** The background image */
         this.img = image;
-        this.container = image.parentElement;
 
+        /** The bounding box currently selected */
         this.box = document.createElement("div");
         this.box.classList.add(`fc_bbox`);
         this.box.style.display = "none";
 
-        this.margin = {};
-        this.step = {};
+        /** The booleans representing whether each edge is used for resizing */
         this.resize = {};
+        /** The margin when the background image is not a square */
+        this.padding = {};
+        /** The margin to the border of the window */
+        this.margin = {};
+        /** The step size for moving and resizing */
+        this.step = {};
 
-        this.registerClick();
-        this.registerHover();
-        this.registerUp(field);
+        /** Currently selected row */
+        this.cachedRow = null;
 
-        while (this.container.firstElementChild.tagName === "DIV")
-            this.container.firstElementChild.remove();
+        this.registerClick(tab);
+        this.registerHover(tab);
+        this.registerUp(field, tab);
 
-        this.container.appendChild(this.box);
+        image.parentElement.appendChild(this.box);
     }
 
     get imgBound() {
         return this.img.getBoundingClientRect();
-    }
-
-    get containerBound() {
-        return this.container.getBoundingClientRect();
     }
 
     get boxBound() {
@@ -39,7 +60,7 @@ class ForgeCoupleBox {
     }
 
 
-    registerClick() {
+    registerClick(tab) {
         this.img.addEventListener("mousedown", (e) => {
             if (e.button !== 0)
                 return;
@@ -48,16 +69,22 @@ class ForgeCoupleBox {
             this.isResize = (this.resize.L || this.resize.R || this.resize.T || this.resize.B);
 
             if (this.isValid) {
-                this.startX = e.clientX;
-                this.startY = e.clientY;
-                this.boxX = ForgeCoupleBox.parseStyle(this.box.style.left);
-                this.boxY = ForgeCoupleBox.parseStyle(this.box.style.top);
+                this.initCoord();
+
+                this.init = {
+                    X: e.clientX,
+                    Y: e.clientY,
+                    left: style2value(this.box.style.left),
+                    top: style2value(this.box.style.top)
+                };
+
+                tab.style.cursor = this.img.style.cursor;
             }
         });
     }
 
-    registerHover() {
-        this.img.addEventListener("mousemove", (e) => {
+    registerHover(tab) {
+        tab.addEventListener("mousemove", (e) => {
 
             if (!this.isValid) {
                 this.checkMouse(e.clientX, e.clientY);
@@ -65,132 +92,141 @@ class ForgeCoupleBox {
             }
 
             if (this.isResize)
-                this.resizeLogic(e.clientX, e.clientY, ForgeCoupleBox.minimumSize)
-            else {
+                this.resizeLogic(e.clientX, e.clientY)
+            else
+                this.offsetLogic(e.clientX, e.clientY)
 
-                const deltaX = e.clientX - this.startX;
-                const deltaY = e.clientY - this.startY;
-
-                var L = this.boxX + deltaX;
-                var T = this.boxY + deltaY;
-
-                if (L < this.margin.left)
-                    L = this.margin.left;
-                if (T < this.margin.top)
-                    T = this.margin.top;
-
-                if (L + this.boxBound.width > this.margin.left + this.imgBound.width)
-                    L = this.margin.left + this.imgBound.width - this.boxBound.width;
-                if (T + this.boxBound.height > this.margin.top + this.imgBound.height)
-                    T = this.margin.top + this.imgBound.height - this.boxBound.height;
-
-                L = this.step.w * Math.round(L / this.step.w);
-                T = this.step.h * Math.round(T / this.step.h);
-
-                this.box.style.left = `${L}px`;
-                this.box.style.top = `${T}px`;
-
-            }
         });
     }
 
-    registerUp(field) {
-        document.addEventListener("mouseup", (e) => {
-            if (e.button !== 0 || !this.isValid)
-                return;
+    registerUp(field, tab) {
+        ["mouseup", "mouseleave"].forEach((ev) => {
+            tab.addEventListener(ev, (e) => {
+                if (!this.isValid || (ev === "mouseup" && e.button !== 0))
+                    return;
 
-            field.value = this.styleToMapping();
-            updateInput(field);
+                field.value = this.styleToMapping();
+                updateInput(field);
 
-            this.isValid = false;
+                this.isValid = false;
+                tab.style.cursor = "unset";
+            });
         });
     }
 
 
     /** @param {number} mouseX @param {number} mouseY */
-    resizeLogic(mouseX, mouseY, minimumSize) {
-        const { parseStyle } = ForgeCoupleBox;
-
+    resizeLogic(mouseX, mouseY) {
         if (this.resize.R) {
-            var W = mouseX - this.boxBound.left;
-
-            if (W < minimumSize)
-                W = minimumSize;
-
-            if (W + this.boxX > this.imgBound.right)
-                W = this.imgBound.right - this.boxX;
+            var W = Math.max(mouseX - this.boxBound.left, FC_minimumSize);
+            W = Math.min(W, this.imgBound.right - this.padding.left - this.init.left);
 
             W = this.step.w * Math.round(W / this.step.w);
             this.box.style.width = `${W}px`;
         } else if (this.resize.L) {
-            const right = parseStyle(this.box.style.left) + parseStyle(this.box.style.width);
-            var W = this.boxBound.right - mouseX;
-
-            if (W < minimumSize)
-                W = minimumSize;
-
-            if (W > right)
-                W = right;
+            const rightEdge = style2value(this.box.style.left) + style2value(this.box.style.width);
+            var W = Math.max(this.boxBound.right - mouseX, FC_minimumSize)
+            W = Math.min(W, rightEdge);
 
             W = this.step.w * Math.round(W / this.step.w);
-            this.box.style.left = `${right - W}px`;
+            this.box.style.left = `${rightEdge - W}px`;
             this.box.style.width = `${W}px`;
         }
 
         if (this.resize.B) {
-            var H = mouseY - this.boxBound.top;
-
-            if (H < minimumSize)
-                H = minimumSize;
-
-            if (H + this.boxY > this.imgBound.bottom)
-                H = this.imgBound.bottom - this.boxY;
+            var H = Math.max(mouseY - this.boxBound.top, FC_minimumSize);
+            H = Math.min(H, this.imgBound.bottom - this.padding.top - this.init.top);
 
             H = this.step.h * Math.round(H / this.step.h);
             this.box.style.height = `${H}px`;
         } else if (this.resize.T) {
-            const bottom = parseStyle(this.box.style.top) + parseStyle(this.box.style.height);
-            var H = this.boxBound.bottom - mouseY;
-
-            if (H < minimumSize)
-                H = minimumSize;
-
-            if (H > bottom)
-                H = bottom;
+            const bottomEdge = style2value(this.box.style.top) + style2value(this.box.style.height);
+            var H = Math.max(this.boxBound.bottom - mouseY, FC_minimumSize);
+            H = Math.min(H, bottomEdge);
 
             H = this.step.h * Math.round(H / this.step.h);
-            this.box.style.top = `${bottom - H}px`;
+            this.box.style.top = `${bottomEdge - H}px`;
             this.box.style.height = `${H}px`;
         }
     }
 
+    /** @param {number} mouseX @param {number} mouseY */
+    offsetLogic(mouseX, mouseY) {
+        const deltaX = mouseX - this.init.X;
+        const deltaY = mouseY - this.init.Y;
 
-    /** @param {string} color @param {Element} row */
+        var newLeft = Math.max(this.init.left + deltaX, this.padding.left);
+        var newTop = Math.max(this.init.top + deltaY, this.padding.top);
+
+        newLeft = Math.min(newLeft, this.imgBound.width - this.boxBound.width - this.padding.left);
+        newTop = Math.min(newTop, this.imgBound.height - this.boxBound.height - this.padding.top);
+
+        newLeft = this.step.w * Math.round(newLeft / this.step.w);
+        newTop = this.step.h * Math.round(newTop / this.step.h);
+
+        this.box.style.left = `${newLeft}px`;
+        this.box.style.top = `${newTop}px`;
+    }
+
+    /**
+     * When a row is selected, display its corresponding bounding box, as well as initialize the coordinates
+     * @param {string} color
+     * @param {Element} row
+     */
     showBox(color, row) {
+        this.cachedRow = row;
+
         setTimeout(() => {
-            const [from_x, to_x, from_y, to_y] = this.mappingToStyle(row);
-
-            this.margin.left = this.imgBound.left - this.containerBound.left;
-            // this.margin.right = this.containerBound.right - this.imgBound.right;
-            this.margin.top = this.imgBound.top - this.containerBound.top;
-            // this.margin.bottom = this.containerBound.bottom - this.imgBound.bottom;
-
-            this.step.h = this.imgBound.width / 100.0;
-            this.step.w = this.imgBound.height / 100.0;
-
-            this.box.style.width = `${this.imgBound.width * (to_x - from_x)}px`;
-            this.box.style.height = `${this.imgBound.height * (to_y - from_y)}px`;
-
-            this.box.style.left = `${this.margin.left + this.imgBound.width * from_x}px`;
-            this.box.style.top = `${this.margin.top + this.imgBound.height * from_y}px`;
-
-            this.box.style.display = "block";
+            this.initCoord();
             this.box.style.background = color;
-        }, 50);
+            this.box.style.display = "block";
+        }, 25);
     }
 
     hideBox() {
+        this.cachedRow = null;
         this.box.style.display = "none";
+    }
+
+    initCoord() {
+        if (this.cachedRow == null)
+            return;
+
+        const [from_x, delta_x, from_y, delta_y] = this.mappingToStyle(this.cachedRow);
+        const { naturalWidth, naturalHeight } = this.img;
+
+        var W = 512.0;
+        var H = 512.0;
+
+        if (naturalWidth === naturalHeight) {
+            this.padding.left = 0.0;
+            this.padding.top = 0.0;
+        } else if (naturalWidth > naturalHeight) {
+            const ratio = naturalHeight / naturalWidth;
+            this.padding.left = 0.0;
+            this.padding.top = 256.0 * (1.0 - ratio);
+            H = 512.0 * ratio;
+        } else {
+            const ratio = naturalWidth / naturalHeight;
+            this.padding.left = 256.0 * (1.0 - ratio);
+            this.padding.top = 0.0;
+            W = 512.0 * ratio;
+        }
+
+        this.step.w = W / 100.0;
+        this.step.h = H / 100.0;
+
+        this.img.actualWidth = W;
+        this.img.actualHeight = H;
+
+        this.margin.left = this.imgBound.left;
+        this.margin.top = this.imgBound.top;
+
+        this.box.style.width = `${W * delta_x}px`;
+        this.box.style.height = `${H * delta_y}px`;
+
+        this.box.style.left = `${this.padding.left + W * from_x}px`;
+        this.box.style.top = `${this.padding.top + H * from_y}px`;
     }
 
 
@@ -202,17 +238,16 @@ class ForgeCoupleBox {
         }
 
         const { left, right, top, bottom } = this.boxBound;
-        const { resizeBorder } = ForgeCoupleBox;
 
-        if (mouseX < left - resizeBorder || mouseX > right + resizeBorder || mouseY < top - resizeBorder || mouseY > bottom + resizeBorder) {
+        if (mouseX < left - FC_resizeBorder || mouseX > right + FC_resizeBorder || mouseY < top - FC_resizeBorder || mouseY > bottom + FC_resizeBorder) {
             this.img.style.cursor = "default";
             return;
         }
 
-        this.resize.L = mouseX < left + resizeBorder;
-        this.resize.T = mouseY < top + resizeBorder;
-        this.resize.R = mouseX > right - resizeBorder;
-        this.resize.B = mouseY > bottom - resizeBorder;
+        this.resize.L = mouseX < left + FC_resizeBorder;
+        this.resize.R = mouseX > right - FC_resizeBorder;
+        this.resize.T = mouseY < top + FC_resizeBorder;
+        this.resize.B = mouseY > bottom - FC_resizeBorder;
 
         if (!(this.resize.L || this.resize.T || this.resize.R || this.resize.B)) {
             this.img.style.cursor = "move";
@@ -234,6 +269,11 @@ class ForgeCoupleBox {
     }
 
 
+    /**
+     * Convert the table row into coordinate ranges
+     * @param {Element} row
+     * @returns {number[]}
+     */
     mappingToStyle(row) {
         const x = row.querySelectorAll("span")[0].textContent;
         const y = row.querySelectorAll("span")[1].textContent;
@@ -241,33 +281,32 @@ class ForgeCoupleBox {
         const [from_x, to_x] = x.split(":");
         const [from_y, to_y] = y.split(":");
 
-        return [parseFloat(from_x), parseFloat(to_x), parseFloat(from_y), parseFloat(to_y)]
+        return [
+            parseFloat(from_x),
+            parseFloat(to_x - from_x),
+            parseFloat(from_y),
+            parseFloat(to_y - from_y)
+        ]
     }
 
+    /**
+     * Convert the coordinates of bounding box back into string
+     * @returns {string}
+     */
     styleToMapping() {
-        const from_x = (this.boxBound.left - this.imgBound.left) / this.imgBound.width;
-        const to_x = (this.boxBound.right - this.imgBound.left) / this.imgBound.width;
-        const from_y = (this.boxBound.top - this.imgBound.top) / this.imgBound.height;
-        const to_y = (this.boxBound.bottom - this.imgBound.top) / this.imgBound.height;
-        const { clamp } = ForgeCoupleBox;
+        const { actualWidth, actualHeight } = this.img;
+        const { left, right, top, bottom } = this.boxBound;
+        const { left: leftPadding, top: topPadding } = this.padding;
+        const { left: leftMargin, top: topMargin } = this.margin;
 
-        return `${clamp(from_x)},${clamp(to_x)},${clamp(from_y)},${clamp(to_y)}`;
-    }
+        // console.table({ actualWidth, actualHeight, left, right, top, bottom, leftPadding, topPadding, leftMargin, topMargin });
 
+        const from_x = (left - (leftPadding + leftMargin)) / actualWidth;
+        const to_x = (right - (leftPadding + leftMargin)) / actualWidth;
+        const from_y = (top - (topPadding + topMargin)) / actualHeight;
+        const to_y = (bottom - (topPadding + topMargin)) / actualHeight;
 
-    /** @param {string} style @returns {number} */
-    static parseStyle(style) {
-        try {
-            const re = /calc\((-?\d+(?:\.\d+)?)px\)/;
-            return parseFloat(style.match(re)[1]);
-        } catch {
-            return parseFloat(style);
-        }
-    }
-
-    /** @param {number} v @returns {number} */
-    static clamp(v) {
-        return Math.min(Math.max(v, 0.0), 1.0);
+        return `${clamp01(from_x)},${clamp01(to_x)},${clamp01(from_y)},${clamp01(to_y)}`;
     }
 
 }
