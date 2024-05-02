@@ -145,11 +145,10 @@ Were these automated equally-sized tiles not sufficient for your needs? Now you 
     - **x** axis is from left to right; **y** axis is from top to bottom
 
 - **Control:**
-    - Click on a row to select it; click on it again to deselect it
-    - Click the 🔼 button to add a new row above the selected row
-    - Click the ❌ button to delete the selected row
-    - Click the 🔽 button to add a new row below the selected row
-    - Click the 🔄 button to reset to the default mapping
+    - Click on a row to select it; click on the same row again to deselect it
+    - Click the **New Row** button to add a new row under the selected row; or add a new row at the end when no row is selected
+    - Click the **Delete Row**  button to delete the selected row
+    - Click the **Default Mapping** button to reset to the default mapping
 
 - **Draggable Region:**
     - When a row is selected, its corresponding region would be highlighted

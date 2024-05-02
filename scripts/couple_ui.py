@@ -1,4 +1,4 @@
-from modules.ui_components import FormRow, ToolButton
+from modules.ui_components import FormRow
 from json.decoder import JSONDecodeError
 from PIL import Image, ImageDraw
 from json import loads
@@ -225,26 +225,9 @@ def couple_UI(script, is_img2img: bool, title: str):
         with gr.Group(visible=False, elem_classes="fc_adv") as adv_settings:
 
             with FormRow(elem_classes="fc_map_btns"):
-                up_btn = ToolButton(
-                    value="\U0001F53C",
-                    elem_id="fc_up_btn",
-                    tooltip="Add a New Row above the Selected Row",
-                )
-                del_btn = ToolButton(
-                    value="\U0000274C",
-                    elem_id="fc_del_btn",
-                    tooltip="Delete the Selected Row",
-                )
-                dn_btn = ToolButton(
-                    value="\U0001F53D",
-                    elem_id="fc_dn_btn",
-                    tooltip="Add a New Row below the Selected Row",
-                )
-                ref_btn = ToolButton(
-                    value="\U0001F504",
-                    elem_id="fc_ref_btn",
-                    tooltip="Reset to the Default Mapping",
-                )
+                new_btn = gr.Button("New Row")
+                del_btn = gr.Button("Delete Row")
+                ref_btn = gr.Button("Default Mapping")
 
             mapping = gr.Dataframe(
                 label="Mapping",
@@ -313,14 +296,18 @@ def couple_UI(script, is_img2img: bool, title: str):
             elem_classes="fc_index",
         )
 
-        up_btn.click(add_row_above, [mapping, manual_idx], mapping).success(
-            None, _js=preview_js
-        )
-        del_btn.click(del_row_select, [mapping, manual_idx], mapping).success(
-            None, _js=preview_js
-        )
-        ref_btn.click(reset_mapping, None, mapping).success(None, _js=preview_js)
-        dn_btn.click(add_row_below, [mapping, manual_idx], mapping).success(
+        new_btn.click(
+            add_row_below, [mapping, manual_idx], mapping, show_progress=False
+        ).success(None, _js=preview_js)
+
+        del_btn.click(
+            del_row_select,
+            [mapping, manual_idx],
+            mapping,
+            show_progress=False,
+        ).success(None, _js=preview_js)
+
+        ref_btn.click(reset_mapping, None, mapping, show_progress=False).success(
             None, _js=preview_js
         )
 
@@ -336,7 +323,6 @@ def couple_UI(script, is_img2img: bool, title: str):
             manual_entry,
             [mapping, manual_field, manual_idx],
             mapping,
-            show_progress=False,
         ).success(None, _js=preview_js)
 
         def on_mode_change(choice):
