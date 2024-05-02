@@ -249,6 +249,12 @@ onUiLoaded(async () => {
         while (preview_img.parentElement.firstElementChild.tagName === "DIV")
             preview_img.parentElement.firstElementChild.remove();
 
+        const bg_btns = ex.querySelector(".fc_bg_btns");
+        preview_img.parentElement.style.overflow = "visible";
+        preview_img.parentElement.appendChild(bg_btns);
+
+        ForgeCoupleImageLoader.setup(preview_img, bg_btns.querySelectorAll("button"))
+
         setTimeout(() => {
             ForgeCouple.preview(mode);
         }, 50);

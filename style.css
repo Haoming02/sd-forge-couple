@@ -41,6 +41,12 @@
     background-color: black;
 }
 
+.fc_adv .fc_bg_btns {
+    min-width: unset !important;
+    left: calc(100% + 4px);
+    position: absolute;
+}
+
 .fc_bbox {
     position: absolute;
     opacity: 0.8;
