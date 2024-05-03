@@ -124,8 +124,10 @@ class ForgeCouple {
         var showHint = true;
 
         table.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            showHint = !showHint;
+            if (e.ctrlKey) {
+                e.preventDefault();
+                showHint = !showHint;
+            }
         });
 
         ForgeCouple.mappingTable[mode].addEventListener('mousemove', (e) => {
@@ -237,8 +239,10 @@ onUiLoaded(async () => {
 
         const mapping_div = ex.querySelector(".fc_mapping").children[1];
         const btns = ex.querySelector(".fc_map_btns");
+        const temp = btns.parentElement;
 
         mapping_div.insertBefore(btns, mapping_div.children[1]);
+        temp.remove();
 
         const preview_img = ex.querySelector("img");
         preview_img.ondragstart = (e) => { e.preventDefault(); return false; };

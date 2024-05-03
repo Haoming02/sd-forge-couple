@@ -53,6 +53,10 @@
     pointer-events: none;
 }
 
+.fc_mapping td {
+    --ring-color: transparent !important;
+}
+
 .prompt-hint {
     position: fixed;
     z-index: 100;
