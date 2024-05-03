@@ -47,6 +47,12 @@ class ForgeCouple {
         if (!mode)
             return;
 
+        if (mode.length === 3) {
+            const input = ForgeCouple.mappingTable[mode].querySelector("input");
+            if (input != null && input.type != "file")
+                return;
+        }
+
         setTimeout(async () => {
             var res = null;
             var file = null;
@@ -86,7 +92,7 @@ class ForgeCouple {
 
             this.previewBtn[mode].click();
 
-        }, 50);
+        }, (mode === "t2i") ? 16 : 32);
     }
 
     /**
