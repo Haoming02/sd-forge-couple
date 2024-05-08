@@ -158,17 +158,17 @@ def couple_UI(script, is_img2img: bool, title: str):
         )
 
         new_btn.click(
-            add_row_below, [mapping, manual_idx], mapping, show_progress=False
+            add_row_below, [mapping, manual_idx], mapping, show_progress="hidden"
         ).success(None, _js=preview_js)
 
         del_btn.click(
             del_row_select,
             [mapping, manual_idx],
             mapping,
-            show_progress=False,
+            show_progress="hidden",
         ).success(None, _js=preview_js)
 
-        ref_btn.click(reset_mapping, None, mapping, show_progress=False).success(
+        ref_btn.click(reset_mapping, None, mapping, show_progress="hidden").success(
             None, _js=preview_js
         )
 
@@ -184,6 +184,7 @@ def couple_UI(script, is_img2img: bool, title: str):
             manual_entry,
             [mapping, manual_field, manual_idx],
             mapping,
+            show_progress="hidden",
         ).success(None, _js=preview_js)
 
         def on_mode_change(choice):
@@ -202,7 +203,7 @@ def couple_UI(script, is_img2img: bool, title: str):
 
         mapping_paste_field = gr.Textbox(visible=False)
         mapping_paste_field.change(
-            on_paste, mapping_paste_field, mapping, show_progress=False
+            on_paste, mapping_paste_field, mapping, show_progress="hidden"
         ).success(None, _js=preview_js)
 
         script.paste_field_names = []
