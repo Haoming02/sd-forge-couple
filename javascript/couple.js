@@ -4,6 +4,7 @@ class ForgeCouple {
     static previewBtn = {};
     static mappingTable = {};
     static manualIndex = {};
+    static row_btns = {};
     static bbox = {};
 
     static coords = [[-1, -1], [-1, -1]];
@@ -103,11 +104,15 @@ class ForgeCouple {
         const rows = this.mappingTable[mode].querySelectorAll("tr");
         rows.forEach((row, i) => {
             if (row.querySelector(":focus-within") != null) {
-                if (this.manualIndex[mode].value == i)
+                if (this.manualIndex[mode].value == i) {
                     this.manualIndex[mode].value = -1;
-                else
+                    this.row_btns[mode].style.display = "none";
+                }
+                else {
                     this.manualIndex[mode].value = i;
-
+                    row.querySelectorAll("td")[2].appendChild(this.row_btns[mode]);
+                    this.row_btns[mode].style.display = "block";
+                }
                 updateInput(this.manualIndex[mode]);
             }
         });
@@ -238,7 +243,15 @@ onUiLoaded(async () => {
         ForgeCouple.previewBtn[mode] = ex.querySelector(".fc_preview_real");
         ForgeCouple.mappingTable[mode] = ex.querySelector(".fc_mapping").querySelector("tbody");
         ForgeCouple.manualIndex[mode] = ex.querySelector(".fc_index").querySelector("input");
+        ForgeCouple.row_btns[mode] = ex.querySelector(".fc_row_btns");
         ForgeCouple.registerHovering(mode, ex.querySelector(".fc_separator").querySelector("input"));
+
+        ForgeCouple.row_btns[mode].style.display = "none";
+        ForgeCouple.row_btns[mode].querySelectorAll("button").forEach((btn) => {
+            btn.setAttribute("style",
+                "width: 2em; height: 2em; min-width: unset !important;"
+            );
+        })
 
         const row = ex.querySelector(".controls-wrap");
         row.remove();

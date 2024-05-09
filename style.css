@@ -68,3 +68,20 @@
     box-shadow: 0 0 1em rgba(0, 0, 0, 0.2);
     display: none;
 }
+
+.fc_row_btns {
+    position: absolute;
+    z-index: 1000;
+    right: 0px;
+    top: -1em;
+}
+
+.fc_row_btns div {
+    width: auto !important;
+    min-width: unset !important;
+}
+
+.fc_row_btns button {
+    margin-top: auto;
+    margin-bottom: auto;
+}

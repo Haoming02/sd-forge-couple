@@ -5,6 +5,7 @@ import gradio as gr
 from scripts.ui_funcs import (
     DEFAULT_MAPPING,
     visualize_mapping,
+    add_row_above,
     add_row_below,
     del_row_select,
     reset_mapping,
@@ -67,8 +68,26 @@ def couple_UI(script, is_img2img: bool, title: str):
 
             with FormRow(elem_classes="fc_map_btns"):
                 new_btn = gr.Button("New Row")
-                del_btn = gr.Button("Delete Row")
                 ref_btn = gr.Button("Default Mapping")
+
+            with gr.Group(elem_classes="fc_row_btns"):
+                with gr.Row():
+                    with gr.Column():
+                        new_btn_up = ToolButton(
+                            value="\U0001F195",
+                            elem_id="fc_up_btn",
+                            tooltip="Add a New Row above the Selected Row",
+                        )
+                        new_btn_dn = ToolButton(
+                            value="\U0001F195",
+                            elem_id="fc_dn_btn",
+                            tooltip="Add a New Row below the Selected Row",
+                        )
+                    del_btn = ToolButton(
+                        value="\U0000274C",
+                        elem_id="fc_del_btn",
+                        tooltip="Delete the Selected Row",
+                    )
 
             mapping = gr.Dataframe(
                 label="Mapping",
@@ -158,6 +177,14 @@ def couple_UI(script, is_img2img: bool, title: str):
         )
 
         new_btn.click(
+            add_row_below, [mapping, manual_idx], mapping, show_progress="hidden"
+        ).success(None, _js=preview_js)
+
+        new_btn_up.click(
+            add_row_above, [mapping, manual_idx], mapping, show_progress="hidden"
+        ).success(None, _js=preview_js)
+
+        new_btn_dn.click(
             add_row_below, [mapping, manual_idx], mapping, show_progress="hidden"
         ).success(None, _js=preview_js)
 
