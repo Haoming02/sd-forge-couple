@@ -5,6 +5,7 @@ class ForgeCouple {
     static mappingTable = {};
     static manualIndex = {};
     static row_btns = {};
+    static row_btns_containers = {};
     static bbox = {};
 
     static coords = [[-1, -1], [-1, -1]];
@@ -34,8 +35,10 @@ class ForgeCouple {
             row.style.background = `linear-gradient(to right, ${bg} 80%, ${this.COLORS[i % this.COLORS.length]})`;
         });
 
-        if (selection < 0 || selection >= rows.length)
+        if (selection < 0 || selection >= rows.length) {
             ForgeCouple.bbox[mode].hideBox();
+            this.row_btns[mode].style.display = "none";
+        }
         else
             ForgeCouple.bbox[mode].showBox(this.COLORS[selection], rows[selection]);
     }
@@ -110,7 +113,9 @@ class ForgeCouple {
                 }
                 else {
                     this.manualIndex[mode].value = i;
-                    row.querySelectorAll("td")[2].appendChild(this.row_btns[mode]);
+                    const bounding = row.querySelector("td").getBoundingClientRect();
+                    const bounding_container = this.row_btns_containers[mode].getBoundingClientRect();
+                    this.row_btns[mode].style.top = `calc(${bounding.top - bounding_container.top}px - 1em)`;
                     this.row_btns[mode].style.display = "block";
                 }
                 updateInput(this.manualIndex[mode]);
@@ -252,6 +257,9 @@ onUiLoaded(async () => {
                 "width: 2em; height: 2em; min-width: unset !important;"
             );
         })
+
+        ForgeCouple.row_btns_containers[mode] = ex.querySelector(".fc_mapping").querySelector(".table-wrap").parentElement;
+        ForgeCouple.row_btns_containers[mode].appendChild(ForgeCouple.row_btns[mode]);
 
         const row = ex.querySelector(".controls-wrap");
         row.remove();

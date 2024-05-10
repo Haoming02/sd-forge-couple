@@ -53,6 +53,10 @@
     pointer-events: none;
 }
 
+.fc_mapping{
+    overflow: visible !important;
+}
+
 .fc_mapping td {
     --ring-color: transparent !important;
 }
@@ -71,8 +75,8 @@
 
 .fc_row_btns {
     position: absolute;
-    z-index: 1000;
-    right: 0px;
+    z-index: 500;
+    right: 4px;
     top: -1em;
 }
 
