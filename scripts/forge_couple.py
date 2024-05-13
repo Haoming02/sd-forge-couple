@@ -13,10 +13,9 @@ from scripts.couple_ui import couple_UI
 from scripts.ui_funcs import validate_mapping, parse_mapping
 
 from scripts.attention_couple import AttentionCouple
-
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.5.1"
+VERSION = "1.6.0"
 
 
 class ForgeCouple(scripts.Script):

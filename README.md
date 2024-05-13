@@ -134,8 +134,8 @@ Were these automated equally-sized tiles not sufficient for your needs? Now you 
 
 - **Note:**
     - You **must** have values in the entire mask
-        - Simplest way would be adding a global entry
-    - Rows with empty **x** column are skipped
+        - The simplest way would be adding a global entry
+    - Rows with empty **x** column are ignored
 
 - **Entry:**
     - Each row contains a range for **x** axis, a range for **y** axis, and a **weight**
@@ -145,10 +145,11 @@ Were these automated equally-sized tiles not sufficient for your needs? Now you 
     - **x** axis is from left to right; **y** axis is from top to bottom
 
 - **Control:**
+    - Click the **New Row** button to append a new row at the end
+    - Click the **Default Mapping** button to reset the mapping to defaults
     - Click on a row to select it; click on the same row again to deselect it
-    - Click the **New Row** button to add a new row under the selected row; or add a new row at the end when no row is selected
-    - Click the **Delete Row**  button to delete the selected row
-    - Click the **Default Mapping** button to reset to the default mapping
+    - Click the `🆕` button above/below to insert a new row above/below the selected row
+    - Click the `❌` button to delete the selected row
 
 - **Draggable Region:**
     - When a row is selected, its corresponding region would be highlighted
@@ -159,6 +160,12 @@ Were these automated equally-sized tiles not sufficient for your needs? Now you 
     - When hovering a row, it will show the corresponding prompt or if the prompt is missing
     - Only works when the positive prompt is not empty
     - **Ctrl + Right Click** on the table to toggle the display
+
+- **Background:**
+    - Click the `📂` button to load a image as the background of the mapping
+        - **eg.** Load a preprocessed image for ControlNet
+    - In **img2img**, you can also click the `⏏` button to load the current input image as the background
+    - Click the `❌` button to revert back to the black background
 
 <p align="center">
 <img src="example/10.jpg" height=384>

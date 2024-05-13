@@ -117,8 +117,8 @@ def add_row_above(data: list, index: int) -> list:
     return data[:index] + [["0.00:1.00", "0.00:1.00", "1.0"]] + data[index:]
 
 
-def add_row_below(data: list, index: int) -> list:
-    if index < 0:
+def add_row_below(data: list, index: int = None) -> list:
+    if index is None or index < 0:
         return data + [["0.25:0.75", "0.25:0.75", "1.0"]]
     return data[: index + 1] + [["0.25:0.75", "0.25:0.75", "1.0"]] + data[index + 1 :]
 

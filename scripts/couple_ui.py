@@ -177,7 +177,7 @@ def couple_UI(script, is_img2img: bool, title: str):
         )
 
         new_btn.click(
-            add_row_below, [mapping, manual_idx], mapping, show_progress="hidden"
+            add_row_below, mapping, mapping, show_progress="hidden"
         ).success(None, _js=preview_js)
 
         new_btn_up.click(
