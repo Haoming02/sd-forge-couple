@@ -8,12 +8,14 @@ from scripts.couple_mapping import (
     advanced_mapping,
     mask_mapping,
 )
-from scripts.couple_ui import couple_UI, validate_mapping, parse_mapping, hook_component
+
+from scripts.couple_ui import couple_UI
+from scripts.ui_funcs import validate_mapping, parse_mapping
 
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.5.1"
+VERSION = "1.6.0"
 
 
 class ForgeCouple(scripts.Script):
@@ -31,8 +33,15 @@ class ForgeCouple(scripts.Script):
         return couple_UI(self, is_img2img, f"{self.title()} v{VERSION}")
 
     def after_component(self, component, **kwargs):
-        if "elem_id" in kwargs:
-            hook_component(component, kwargs["elem_id"])
+        if kwargs.get("elem_id") in (
+            "img2img_image",
+            "img2img_sketch",
+            "inpaint_sketch",
+            "img_inpaint_base",
+        ):
+            component.change(
+                None, component, None, _js="(img) => { ForgeCouple.preview(img); }"
+            )
 
     def parse_networks(self, prompt: str) -> str:
         """LoRAs are already parsed"""

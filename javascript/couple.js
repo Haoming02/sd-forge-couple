@@ -4,6 +4,8 @@ class ForgeCouple {
     static previewBtn = {};
     static mappingTable = {};
     static manualIndex = {};
+    static row_btns = {};
+    static row_btns_containers = {};
     static bbox = {};
 
     static coords = [[-1, -1], [-1, -1]];
@@ -33,8 +35,10 @@ class ForgeCouple {
             row.style.background = `linear-gradient(to right, ${bg} 80%, ${this.COLORS[i % this.COLORS.length]})`;
         });
 
-        if (selection < 0 || selection >= rows.length)
+        if (selection < 0 || selection >= rows.length) {
             ForgeCouple.bbox[mode].hideBox();
+            this.row_btns[mode].style.display = "none";
+        }
         else
             ForgeCouple.bbox[mode].showBox(this.COLORS[selection], rows[selection]);
     }
@@ -46,6 +50,12 @@ class ForgeCouple {
     static async preview(mode) {
         if (!mode)
             return;
+
+        if (mode.length === 3) {
+            const input = ForgeCouple.mappingTable[mode].querySelector("input");
+            if (input != null && input.type != "file")
+                return;
+        }
 
         setTimeout(async () => {
             var res = null;
@@ -86,7 +96,7 @@ class ForgeCouple {
 
             this.previewBtn[mode].click();
 
-        }, 50);
+        }, (mode === "t2i") ? 16 : 32);
     }
 
     /**
@@ -97,11 +107,17 @@ class ForgeCouple {
         const rows = this.mappingTable[mode].querySelectorAll("tr");
         rows.forEach((row, i) => {
             if (row.querySelector(":focus-within") != null) {
-                if (this.manualIndex[mode].value == i)
+                if (this.manualIndex[mode].value == i) {
                     this.manualIndex[mode].value = -1;
-                else
+                    this.row_btns[mode].style.display = "none";
+                }
+                else {
                     this.manualIndex[mode].value = i;
-
+                    const bounding = row.querySelector("td").getBoundingClientRect();
+                    const bounding_container = this.row_btns_containers[mode].getBoundingClientRect();
+                    this.row_btns[mode].style.top = `calc(${bounding.top - bounding_container.top}px - 1em)`;
+                    this.row_btns[mode].style.display = "block";
+                }
                 updateInput(this.manualIndex[mode]);
             }
         });
@@ -124,8 +140,10 @@ class ForgeCouple {
         var showHint = true;
 
         table.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            showHint = !showHint;
+            if (e.ctrlKey) {
+                e.preventDefault();
+                showHint = !showHint;
+            }
         });
 
         ForgeCouple.mappingTable[mode].addEventListener('mousemove', (e) => {
@@ -230,15 +248,28 @@ onUiLoaded(async () => {
         ForgeCouple.previewBtn[mode] = ex.querySelector(".fc_preview_real");
         ForgeCouple.mappingTable[mode] = ex.querySelector(".fc_mapping").querySelector("tbody");
         ForgeCouple.manualIndex[mode] = ex.querySelector(".fc_index").querySelector("input");
+        ForgeCouple.row_btns[mode] = ex.querySelector(".fc_row_btns");
         ForgeCouple.registerHovering(mode, ex.querySelector(".fc_separator").querySelector("input"));
+
+        ForgeCouple.row_btns[mode].style.display = "none";
+        ForgeCouple.row_btns[mode].querySelectorAll("button").forEach((btn) => {
+            btn.setAttribute("style",
+                "width: 2em; height: 2em; min-width: unset !important;"
+            );
+        })
+
+        ForgeCouple.row_btns_containers[mode] = ex.querySelector(".fc_mapping").querySelector(".table-wrap").parentElement;
+        ForgeCouple.row_btns_containers[mode].appendChild(ForgeCouple.row_btns[mode]);
 
         const row = ex.querySelector(".controls-wrap");
         row.remove();
 
         const mapping_div = ex.querySelector(".fc_mapping").children[1];
         const btns = ex.querySelector(".fc_map_btns");
+        const temp = btns.parentElement;
 
         mapping_div.insertBefore(btns, mapping_div.children[1]);
+        temp.remove();
 
         const preview_img = ex.querySelector("img");
         preview_img.ondragstart = (e) => { e.preventDefault(); return false; };
@@ -248,6 +279,12 @@ onUiLoaded(async () => {
         ForgeCouple.bbox[mode] = new ForgeCoupleBox(preview_img, manual_field, mode);
         while (preview_img.parentElement.firstElementChild.tagName === "DIV")
             preview_img.parentElement.firstElementChild.remove();
+
+        const bg_btns = ex.querySelector(".fc_bg_btns");
+        preview_img.parentElement.style.overflow = "visible";
+        preview_img.parentElement.appendChild(bg_btns);
+
+        ForgeCoupleImageLoader.setup(preview_img, bg_btns.querySelectorAll("button"))
 
         setTimeout(() => {
             ForgeCouple.preview(mode);

@@ -17,6 +17,11 @@ function clamp01(v) {
     return Math.min(Math.max(v, 0.0), 1.0);
 }
 
+/** @param {number} v @param {number} min @param {number} max @returns {number} */
+function clampMinMax(v, min, max) {
+    return Math.min(Math.max(v, min), max);
+}
+
 
 class ForgeCoupleBox {
 
@@ -32,13 +37,13 @@ class ForgeCoupleBox {
         this.box.classList.add(`fc_bbox`);
         this.box.style.display = "none";
 
-        /** The booleans representing whether each edge is used for resizing */
+        /** Booleans representing whether each edge is used for resizing */
         this.resize = {};
-        /** The margin when the background image is not a square */
+        /** Delta between the image and the container, when the image is not a square */
         this.padding = {};
-        /** The margin to the border of the window */
+        /** The pixel distance to the window edge */
         this.margin = {};
-        /** The step size for moving and resizing */
+        /** The step size (1%) for moving and resizing */
         this.step = {};
 
         /** Currently selected row */
@@ -51,10 +56,12 @@ class ForgeCoupleBox {
         image.parentElement.appendChild(this.box);
     }
 
+    /** The bounding of the image */
     get imgBound() {
         return this.img.getBoundingClientRect();
     }
 
+    /** The bounding of the container */
     get boxBound() {
         return this.box.getBoundingClientRect();
     }
@@ -118,35 +125,31 @@ class ForgeCoupleBox {
     /** @param {number} mouseX @param {number} mouseY */
     resizeLogic(mouseX, mouseY) {
         if (this.resize.R) {
-            var W = Math.max(mouseX - this.boxBound.left, FC_minimumSize);
-            W = Math.min(W, this.imgBound.right - this.padding.left - this.margin.left - this.init.left);
+            const W = clampMinMax(mouseX - this.boxBound.left, FC_minimumSize,
+                this.imgBound.right + this.padding.left - this.margin.left - this.init.left
+            );
 
-            W = this.step.w * Math.round(W / this.step.w);
-            this.box.style.width = `${W}px`;
+            this.box.style.width = `${this.step.w * Math.round(W / this.step.w)}px`;
         } else if (this.resize.L) {
             const rightEdge = style2value(this.box.style.left) + style2value(this.box.style.width);
-            var W = Math.max(this.boxBound.right - mouseX, FC_minimumSize)
-            W = Math.min(W, rightEdge - this.padding.left);
+            const W = clampMinMax(this.boxBound.right - mouseX, FC_minimumSize, rightEdge - this.padding.left)
 
-            W = this.step.w * Math.round(W / this.step.w);
-            this.box.style.left = `${rightEdge - W}px`;
-            this.box.style.width = `${W}px`;
+            this.box.style.left = `${rightEdge - this.step.w * Math.round(W / this.step.w)}px`;
+            this.box.style.width = `${this.step.w * Math.round(W / this.step.w)}px`;
         }
 
         if (this.resize.B) {
-            var H = Math.max(mouseY - this.boxBound.top, FC_minimumSize);
-            H = Math.min(H, this.imgBound.bottom - this.padding.top - this.margin.top - this.init.top);
+            const H = clampMinMax(mouseY - this.boxBound.top, FC_minimumSize,
+                this.imgBound.bottom + this.padding.top - this.margin.top - this.init.top
+            );
 
-            H = this.step.h * Math.round(H / this.step.h);
-            this.box.style.height = `${H}px`;
+            this.box.style.height = `${this.step.h * Math.round(H / this.step.h)}px`;
         } else if (this.resize.T) {
             const bottomEdge = style2value(this.box.style.top) + style2value(this.box.style.height);
-            var H = Math.max(this.boxBound.bottom - mouseY, FC_minimumSize);
-            H = Math.min(H, bottomEdge - this.padding.top);
+            const H = clampMinMax(this.boxBound.bottom - mouseY, FC_minimumSize, bottomEdge - this.padding.top);
 
-            H = this.step.h * Math.round(H / this.step.h);
-            this.box.style.top = `${bottomEdge - H}px`;
-            this.box.style.height = `${H}px`;
+            this.box.style.top = `${bottomEdge - this.step.h * Math.round(H / this.step.h)}px`;
+            this.box.style.height = `${this.step.h * Math.round(H / this.step.h)}px`;
         }
     }
 
@@ -155,17 +158,14 @@ class ForgeCoupleBox {
         const deltaX = mouseX - this.init.X;
         const deltaY = mouseY - this.init.Y;
 
-        var newLeft = Math.max(this.init.left + deltaX, this.padding.left);
-        var newTop = Math.max(this.init.top + deltaY, this.padding.top);
+        const newLeft = clampMinMax(this.init.left + deltaX,
+            this.padding.left, this.imgBound.width - this.boxBound.width + this.padding.left);
 
-        newLeft = Math.min(newLeft, this.imgBound.width - this.boxBound.width - this.padding.left);
-        newTop = Math.min(newTop, this.imgBound.height - this.boxBound.height - this.padding.top);
+        const newTop = clampMinMax(this.init.top + deltaY,
+            this.padding.top, this.imgBound.height - this.boxBound.height + this.padding.top);
 
-        newLeft = this.step.w * Math.round(newLeft / this.step.w);
-        newTop = this.step.h * Math.round(newTop / this.step.h);
-
-        this.box.style.left = `${newLeft}px`;
-        this.box.style.top = `${newTop}px`;
+        this.box.style.left = `${this.step.w * Math.round(newLeft / this.step.w)}px`;
+        this.box.style.top = `${this.step.h * Math.round(newTop / this.step.h)}px`;
     }
 
     /**
@@ -193,40 +193,32 @@ class ForgeCoupleBox {
             return;
 
         const [from_x, delta_x, from_y, delta_y] = this.mappingToStyle(this.cachedRow);
-        const { naturalWidth, naturalHeight } = this.img;
+        const { width, height } = this.imgBound;
 
-        var W = 512.0;
-        var H = 512.0;
-
-        if (naturalWidth === naturalHeight) {
+        if (width === height) {
             this.padding.left = 0.0;
             this.padding.top = 0.0;
-        } else if (naturalWidth > naturalHeight) {
-            const ratio = naturalHeight / naturalWidth;
+        } else if (width > height) {
+            const ratio = height / width;
             this.padding.left = 0.0;
             this.padding.top = 256.0 * (1.0 - ratio);
-            H = 512.0 * ratio;
         } else {
-            const ratio = naturalWidth / naturalHeight;
+            const ratio = width / height;
             this.padding.left = 256.0 * (1.0 - ratio);
             this.padding.top = 0.0;
-            W = 512.0 * ratio;
         }
 
-        this.step.w = W / 100.0;
-        this.step.h = H / 100.0;
-
-        this.img.actualWidth = W;
-        this.img.actualHeight = H;
+        this.step.w = width / 100.0;
+        this.step.h = height / 100.0;
 
         this.margin.left = this.imgBound.left;
         this.margin.top = this.imgBound.top;
 
-        this.box.style.width = `${W * delta_x}px`;
-        this.box.style.height = `${H * delta_y}px`;
+        this.box.style.width = `${width * delta_x}px`;
+        this.box.style.height = `${height * delta_y}px`;
 
-        this.box.style.left = `${this.padding.left + W * from_x}px`;
-        this.box.style.top = `${this.padding.top + H * from_y}px`;
+        this.box.style.left = `${this.padding.left + width * from_x}px`;
+        this.box.style.top = `${this.padding.top + height * from_y}px`;
     }
 
 
@@ -294,19 +286,14 @@ class ForgeCoupleBox {
      * @returns {string}
      */
     styleToMapping() {
-        const { actualWidth, actualHeight } = this.img;
+        const { width, height } = this.imgBound;
         const { left, right, top, bottom } = this.boxBound;
-        const { left: leftPadding, top: topPadding } = this.padding;
         const { left: leftMargin, top: topMargin } = this.margin;
 
-        // console.table({ actualWidth, actualHeight, left, right, top, bottom, leftPadding, topPadding, leftMargin, topMargin });
-
-        const from_x = (left - (leftPadding + leftMargin)) / actualWidth;
-        const to_x = (right - (leftPadding + leftMargin)) / actualWidth;
-        const from_y = (top - (topPadding + topMargin)) / actualHeight;
-        const to_y = (bottom - (topPadding + topMargin)) / actualHeight;
-
-        // console.table({ from_x, to_x, from_y, to_y });
+        const from_x = (left - leftMargin) / width;
+        const to_x = (right - leftMargin) / width;
+        const from_y = (top - topMargin) / height;
+        const to_y = (bottom - topMargin) / height;
 
         return `${clamp01(from_x)},${clamp01(to_x)},${clamp01(from_y)},${clamp01(to_y)}`;
     }

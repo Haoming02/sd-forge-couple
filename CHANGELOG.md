@@ -1,3 +1,7 @@
+### v1.6.0 - 2024 May.13
+- Implement **Load Background Image**
+- Improved Buttons Visuals
+
 ### v1.5.1 - 2024 Apr.26
 - Improved **Draggable Regions**
 - Bug Fix
