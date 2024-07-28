@@ -1,3 +1,6 @@
+### v1.6.1 - 2024 Jul.28
+- Support **Gradio v4** *(`Basic` only)*
+
 ### v1.6.0 - 2024 May.13
 - Implement **Load Background Image**
 - Improved Buttons Visuals
