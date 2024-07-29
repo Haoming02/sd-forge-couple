@@ -264,12 +264,12 @@ onUiLoaded(async () => {
         const row = ex.querySelector(".controls-wrap");
         row.remove();
 
-        const mapping_div = ex.querySelector(".fc_mapping").children[1];
-        const btns = ex.querySelector(".fc_map_btns");
-        const temp = btns.parentElement;
+        // const mapping_div = ex.querySelector(".fc_mapping").children[1];
+        // const btns = ex.querySelector(".fc_map_btns");
+        // const temp = btns.parentElement;
 
-        mapping_div.insertBefore(btns, mapping_div.children[1]);
-        temp.remove();
+        // mapping_div.insertBefore(btns, mapping_div.children[1]);
+        // temp.remove();
 
         const preview_img = ex.querySelector("img");
         preview_img.ondragstart = (e) => { e.preventDefault(); return false; };
@@ -277,8 +277,8 @@ onUiLoaded(async () => {
         const manual_field = ex.querySelector(".fc_manual_field").querySelector("input");
 
         ForgeCouple.bbox[mode] = new ForgeCoupleBox(preview_img, manual_field, mode);
-        while (preview_img.parentElement.firstElementChild.tagName === "DIV")
-            preview_img.parentElement.firstElementChild.remove();
+        // while (preview_img.parentElement.firstElementChild.tagName === "DIV")
+            // preview_img.parentElement.firstElementChild.remove();
 
         const bg_btns = ex.querySelector(".fc_bg_btns");
         preview_img.parentElement.style.overflow = "visible";

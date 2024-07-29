@@ -13,7 +13,7 @@ from scripts.ui_funcs import (
     on_paste,
 )
 
-from scripts.v_check import javascript, is_4
+from scripts.gr_version import js, is_gradio_4
 
 
 def couple_UI(script, is_img2img: bool, title: str):
@@ -33,7 +33,7 @@ def couple_UI(script, is_img2img: bool, title: str):
                 label="Region Assignment",
                 value="Basic",
                 scale=3,
-                interactive=(not is_4()),
+                interactive=(not is_gradio_4),
             )
 
             separator = gr.Textbox(
@@ -114,6 +114,7 @@ def couple_UI(script, is_img2img: bool, title: str):
                 type="pil",
                 interactive=False,
                 height=512,
+                show_download_button=False,
             )
 
             with gr.Column(elem_classes="fc_bg_btns"):
@@ -137,7 +138,7 @@ def couple_UI(script, is_img2img: bool, title: str):
                 )
 
             preview_btn = gr.Button("Preview Mapping", elem_classes="fc_preview")
-            preview_btn.click(None, **javascript(preview_js))
+            preview_btn.click(None, **js(preview_js))
 
             preview_res = gr.Textbox(
                 lines=1,
@@ -160,10 +161,10 @@ def couple_UI(script, is_img2img: bool, title: str):
                     mapping,
                 ],
                 preview_img,
-            ).success(None, **javascript(f'() => {{ ForgeCouple.updateColors("{m}"); }}'))
+            ).success(None, **js(f'() => {{ ForgeCouple.updateColors("{m}"); }}'))
 
-            mapping.select(None, **javascript(f'() => {{ ForgeCouple.onSelect("{m}"); }}'))
-            mapping.input(None, **javascript(preview_js))
+            mapping.select(None, **js(f'() => {{ ForgeCouple.onSelect("{m}"); }}'))
+            mapping.input(None, **js(preview_js))
 
             gr.Markdown(
                 """
@@ -182,27 +183,27 @@ def couple_UI(script, is_img2img: bool, title: str):
             elem_classes="fc_index",
         )
 
-        new_btn.click(
-            add_row_below, mapping, mapping, show_progress="hidden"
-        ).success(None, **javascript(preview_js))
+        new_btn.click(add_row_below, mapping, mapping, show_progress="hidden").success(
+            None, **js(preview_js)
+        )
 
         new_btn_up.click(
             add_row_above, [mapping, manual_idx], mapping, show_progress="hidden"
-        ).success(None, **javascript(preview_js))
+        ).success(None, **js(preview_js))
 
         new_btn_dn.click(
             add_row_below, [mapping, manual_idx], mapping, show_progress="hidden"
-        ).success(None, **javascript(preview_js))
+        ).success(None, **js(preview_js))
 
         del_btn.click(
             del_row_select,
             [mapping, manual_idx],
             mapping,
             show_progress="hidden",
-        ).success(None, **javascript(preview_js))
+        ).success(None, **js(preview_js))
 
         ref_btn.click(reset_mapping, None, mapping, show_progress="hidden").success(
-            None, **javascript(preview_js)
+            None, **js(preview_js)
         )
 
         manual_field = gr.Textbox(
@@ -218,18 +219,18 @@ def couple_UI(script, is_img2img: bool, title: str):
             [mapping, manual_field, manual_idx],
             mapping,
             show_progress="hidden",
-        ).success(None, **javascript(preview_js))
+        ).success(None, **js(preview_js))
 
         def on_mode_change(choice):
             if choice == "Basic":
                 return [
-                    gr.Group.update(visible=True),
-                    gr.Group.update(visible=False),
+                    gr.update(visible=True),
+                    gr.update(visible=False),
                 ]
             else:
                 return [
-                    gr.Group.update(visible=False),
-                    gr.Group.update(visible=True),
+                    gr.update(visible=False),
+                    gr.update(visible=True),
                 ]
 
         mode.change(on_mode_change, mode, [basic_settings, adv_settings])
@@ -237,7 +238,7 @@ def couple_UI(script, is_img2img: bool, title: str):
         mapping_paste_field = gr.Textbox(visible=False)
         mapping_paste_field.change(
             on_paste, mapping_paste_field, mapping, show_progress="hidden"
-        ).success(None, **javascript(preview_js))
+        ).success(None, **js(preview_js))
 
         script.paste_field_names = []
         script.infotext_fields = [

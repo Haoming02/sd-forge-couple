@@ -15,9 +15,9 @@ from scripts.ui_funcs import validate_mapping, parse_mapping
 from scripts.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.6.1"
+VERSION = "1.6.2"
 
-from scripts.v_check import javascript
+from scripts.gr_version import js
 
 
 class ForgeCouple(scripts.Script):
@@ -42,7 +42,7 @@ class ForgeCouple(scripts.Script):
             "img_inpaint_base",
         ):
             component.change(
-                None, component, None, **javascript("(img) => { ForgeCouple.preview(img); }")
+                None, component, None, **js("(img) => { ForgeCouple.preview(img); }")
             )
 
     def parse_networks(self, prompt: str) -> str:

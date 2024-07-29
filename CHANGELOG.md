@@ -1,3 +1,6 @@
+### v1.6.2 - 2024 Jul.29
+- Preparing for Revamping
+
 ### v1.6.1 - 2024 Jul.28
 - Support **Gradio v4** *(`Basic` only)*
 
