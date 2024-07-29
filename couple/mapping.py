@@ -6,7 +6,7 @@ from PIL import Image
 import numpy as np
 import torch
 
-from scripts.ui_funcs import parse_mapping
+from .ui_funcs import parse_mapping
 
 
 def empty_tensor(H: int, W: int):

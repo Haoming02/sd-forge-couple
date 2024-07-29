@@ -2,7 +2,7 @@ from modules.ui_components import FormRow, ToolButton
 from PIL import Image
 import gradio as gr
 
-from scripts.ui_funcs import (
+from .ui_funcs import (
     DEFAULT_MAPPING,
     visualize_mapping,
     add_row_above,
@@ -13,7 +13,7 @@ from scripts.ui_funcs import (
     on_paste,
 )
 
-from scripts.gr_version import js, is_gradio_4
+from .gr_version import js, is_gradio_4
 
 
 def couple_UI(script, is_img2img: bool, title: str):

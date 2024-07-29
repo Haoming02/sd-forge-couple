@@ -5,7 +5,7 @@ https://github.com/laksjdjf/cgem156-ComfyUI/blob/main/scripts/attention_couple/n
 Modified by. Haoming02 to work with Forge
 """
 
-from scripts.attention_masks import get_mask, lcm_for_list
+from .attention_masks import get_mask, lcm_for_list
 from modules.devices import get_optimal_device
 import torch
 

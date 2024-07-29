@@ -2,22 +2,22 @@ from modules import scripts
 from json import dumps
 import re
 
-from scripts.couple_mapping import (
+from couple.mapping import (
     empty_tensor,
     basic_mapping,
     advanced_mapping,
     mask_mapping,
 )
 
-from scripts.couple_ui import couple_UI
-from scripts.ui_funcs import validate_mapping, parse_mapping
+from couple.ui import couple_UI
+from couple.ui_funcs import validate_mapping, parse_mapping
 
-from scripts.attention_couple import AttentionCouple
+from couple.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.6.2"
+VERSION = "1.6.R"
 
-from scripts.gr_version import js
+from couple.gr_version import js
 
 
 class ForgeCouple(scripts.Script):
