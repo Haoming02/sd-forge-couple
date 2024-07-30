@@ -17,7 +17,7 @@ forgeAttentionCouple = AttentionCouple()
 
 VERSION = "1.6.2"
 
-from scripts.gr_version import js
+from scripts.gr_version import js, is_gradio_4
 
 
 class ForgeCouple(scripts.Script):
@@ -35,6 +35,9 @@ class ForgeCouple(scripts.Script):
         return couple_UI(self, is_img2img, f"{self.title()} v{VERSION}")
 
     def after_component(self, component, **kwargs):
+        if is_gradio_4:
+            return
+
         if kwargs.get("elem_id") in (
             "img2img_image",
             "img2img_sketch",
