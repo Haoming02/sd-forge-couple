@@ -1,22 +1,21 @@
 class ForgeCoupleImageLoader {
 
+    static get #maxDim() { return 1024 };
+
     /** @param {string} filepath @param {method} callback */
-    static path2url(filepath, callback) {
+    static #path2url(filepath, callback) {
         const img = new Image();
 
-        const maxWidth = 1024;
-        const maxHeight = 1024;
-
-        img.onload = function () {
+        img.onload = () => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
             var width = img.width;
             var height = img.height;
 
-            while (width > maxWidth || height > maxHeight) {
-                width /= 2;
-                height /= 2;
+            while (width > this.#maxDim || height > this.#maxDim) {
+                width = parseInt(width / 2);
+                height = parseInt(height / 2);
             }
 
             canvas.width = width;
@@ -48,8 +47,8 @@ class ForgeCoupleImageLoader {
             if (file != null) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    this.path2url(e.target.result, (new_src) => {
-                        image.style.backgroundImage = `url("${new_src}")`
+                    this.#path2url(e.target.result, (new_src) => {
+                        image.style.backgroundImage = `url("${new_src}")`;
                     });
                 };
                 reader.readAsDataURL(file);
@@ -60,7 +59,7 @@ class ForgeCoupleImageLoader {
             load_i2i.onclick = () => {
                 const src = gradioApp().getElementById("img2img_image").querySelector("img")?.src;
                 if (src != null) {
-                    this.path2url(src, (new_src) => {
+                    this.#path2url(src, (new_src) => {
                         image.style.backgroundImage = `url("${new_src}")`;
                     });
                 }

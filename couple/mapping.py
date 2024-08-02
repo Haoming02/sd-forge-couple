@@ -6,46 +6,10 @@ from PIL import Image
 import numpy as np
 import torch
 
-from .ui_funcs import parse_mapping
 
-
+@torch.inference_mode()
 def empty_tensor(H: int, W: int):
     return torch.zeros((H, W)).unsqueeze(0)
-
-
-def advanced_mapping(sd_model, couples: list, WIDTH: int, HEIGHT: int, mapping: list):
-    data = parse_mapping(mapping)
-    assert len(couples) == len(data)
-
-    ARGs: dict = {}
-    IS_SDXL: bool = hasattr(
-        sd_model.forge_objects.unet.model.diffusion_model, "label_emb"
-    )
-
-    for tile_index in range(len(data)):
-        mask = torch.zeros((HEIGHT, WIDTH))
-
-        (X, Y, W) = data[tile_index]
-        x_from = int(WIDTH * X[0])
-        x_to = int(WIDTH * X[1])
-        y_from = int(HEIGHT * Y[0])
-        y_to = int(HEIGHT * Y[1])
-        weight = W
-
-        # ===== Cond =====
-        texts = SdConditioning([couples[tile_index]], False, WIDTH, HEIGHT, None)
-        cond = sd_model.get_learned_conditioning(texts)
-        pos_cond = [[cond["crossattn"]]] if IS_SDXL else [[cond]]
-        # ===== Cond =====
-
-        # ===== Mask =====
-        mask[y_from:y_to, x_from:x_to] = weight
-        # ===== Mask =====
-
-        ARGs[f"cond_{tile_index + 1}"] = pos_cond
-        ARGs[f"mask_{tile_index + 1}"] = mask.unsqueeze(0)
-
-    return ARGs
 
 
 def basic_mapping(
@@ -102,6 +66,39 @@ def basic_mapping(
     return ARGs
 
 
+def advanced_mapping(sd_model, couples: list, WIDTH: int, HEIGHT: int, mapping: list):
+    assert len(couples) == len(mapping)
+
+    ARGs: dict = {}
+    IS_SDXL: bool = hasattr(
+        sd_model.forge_objects.unet.model.diffusion_model, "label_emb"
+    )
+
+    for tile_index, (x1, x2, y1, y2, w) in enumerate(mapping):
+        mask = torch.zeros((HEIGHT, WIDTH))
+
+        x_from = int(WIDTH * x1)
+        x_to = int(WIDTH * x2)
+        y_from = int(HEIGHT * y1)
+        y_to = int(HEIGHT * y2)
+
+        # ===== Cond =====
+        texts = SdConditioning([couples[tile_index]], False, WIDTH, HEIGHT, None)
+        cond = sd_model.get_learned_conditioning(texts)
+        pos_cond = [[cond["crossattn"]]] if IS_SDXL else [[cond]]
+        # ===== Cond =====
+
+        # ===== Mask =====
+        mask[y_from:y_to, x_from:x_to] = w
+        # ===== Mask =====
+
+        ARGs[f"cond_{tile_index + 1}"] = pos_cond
+        ARGs[f"mask_{tile_index + 1}"] = mask.unsqueeze(0)
+
+    return ARGs
+
+
+@torch.inference_mode()
 def b64image2tensor(img: str, WIDTH: int, HEIGHT: int) -> torch.Tensor:
     image_bytes = decode(img)
     image = Image.open(bIO(image_bytes)).convert("L")

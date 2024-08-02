@@ -3,8 +3,6 @@ This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-
 
 > Compatible with **both** old & new Forge
 
-> **\*** Currently only the `Basic` mode works in Gradio 4
-
 > This does **not** work with [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
 
 > As shown in the examples below, even if a region only contains 1 subject, it's usually still better to prompt for the total amount of subjects first.

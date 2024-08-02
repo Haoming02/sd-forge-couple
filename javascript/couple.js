@@ -1,65 +1,36 @@
 class ForgeCouple {
 
-    static previewRes = {};
-    static previewBtn = {};
-    static mappingTable = {};
-    static manualIndex = {};
-    static row_btns = {};
-    static row_btns_containers = {};
-    static bbox = {};
+    /** The fc_mapping \<div\> */
+    static container = { "t2i": undefined, "i2i": undefined };
+    /** The actual \<tbody\> */
+    static mappingTable = { "t2i": undefined, "i2i": undefined };
 
-    static coords = [[-1, -1], [-1, -1]];
+    /** The floating \<button\>s for row controls */
+    static rowButtons = { "t2i": undefined, "i2i": undefined };
 
-    static COLORS = [
-        "hsl(0, 36%, 36%)",
-        "hsl(30, 36%, 36%)",
-        "hsl(60, 36%, 36%)",
-        "hsl(120, 36%, 36%)",
-        "hsl(240, 36%, 36%)",
-        "hsl(280, 36%, 36%)",
-        "hsl(320, 36%, 36%)"
-    ];
+    /** The \<input\> for preview resolution */
+    static previewResolution = { "t2i": undefined, "i2i": undefined };
+    /** The \<button\> to trigger preview */
+    static previewButton = { "t2i": undefined, "i2i": undefined };
 
-    /**
-     * Update the color of the rows based on the order and selection
-     * @param {string} mode "t2i" | "i2i"
-     */
-    static updateColors(mode) {
-        const selection = parseInt(this.manualIndex[mode].value);
+    /** The ForgeCoupleDataframe class */
+    static dataframe = { "t2i": undefined, "i2i": undefined };
+    /** The ForgeCoupleBox class */
+    static bbox = { "t2i": undefined, "i2i": undefined };
 
-        const rows = this.mappingTable[mode].querySelectorAll("tr");
-        rows.forEach((row, i) => {
-            const bg = (selection === i) ?
-                "var(--table-row-focus)" :
-                `var(--table-${(i % 2 == 0) ? "odd" : "even"}-background-fill)`;
-            row.style.background = `linear-gradient(to right, ${bg} 80%, ${this.COLORS[i % this.COLORS.length]})`;
-        });
-
-        if (selection < 0 || selection >= rows.length) {
-            ForgeCouple.bbox[mode].hideBox();
-            this.row_btns[mode].style.display = "none";
-        }
-        else
-            ForgeCouple.bbox[mode].showBox(this.COLORS[selection], rows[selection]);
-    }
+    /** The \<input\> for SendTo buttons */
+    static pasteField = { "t2i": undefined, "i2i": undefined };
+    /** The \<input\> for internal updates */
+    static entryField = { "t2i": undefined, "i2i": undefined };
 
     /**
-     *  When updating the mappings, trigger a preview
+     * After updating the mappings, trigger a preview
      * @param {string} mode "t2i" | "i2i"
      */
     static async preview(mode) {
-        if (!mode)
-            return;
-
-        if (mode.length === 3) {
-            const input = ForgeCouple.mappingTable[mode].querySelector("input");
-            if (input != null && input.type != "file")
-                return;
-        }
 
         setTimeout(async () => {
             var res = null;
-            var file = null;
 
             if (mode === "t2i") {
                 const w = parseInt(gradioApp().getElementById("txt2img_width").querySelector("input").value);
@@ -68,11 +39,6 @@ class ForgeCouple {
             } else {
                 const i2i_size = gradioApp().getElementById("img2img_column_size").querySelector(".tab-nav");
 
-                if (mode !== "i2i") {
-                    file = mode;
-                    mode = "i2i";
-                }
-
                 if (i2i_size.children[0].classList.contains("selected")) {
                     // Resize to
                     const w = parseInt(gradioApp().getElementById("img2img_width").querySelector("input").value);
@@ -80,23 +46,44 @@ class ForgeCouple {
                     res = `${w}x${h}`;
                 } else {
                     // Resize by
-                    if (file) {
-                        const dim = await this.img2resolution(file);
-                        res = `${dim.w}x${dim.h}`;
-                    } else {
-                        res = gradioApp().getElementById("img2img_scale_resolution_preview")?.querySelector(".resolution")?.textContent;
-                        if (!res)
-                            res = "1024x1024";
-                    }
+                    res = gradioApp().getElementById("img2img_scale_resolution_preview")?.querySelector(".resolution")?.textContent;
                 }
             }
 
-            this.previewRes[mode].value = res;
-            updateInput(this.previewRes[mode]);
+            res ??= "1024x1024";
+            this.previewResolution[mode].value = res;
+            updateInput(this.previewResolution[mode]);
 
-            this.previewBtn[mode].click();
-
+            this.previewButton[mode].click();
         }, (mode === "t2i") ? 16 : 32);
+    }
+
+    /**
+     * Update the color of the rows based on the order and selection
+     * @param {string} mode "t2i" | "i2i"
+     */
+    static updateColors(mode) {
+        const [color, row] = this.dataframe[mode].updateColors();
+
+        if (color) {
+            this.bbox[mode].showBox(color, row);
+            return row;
+        }
+        else {
+            this.bbox[mode].hideBox();
+            this.rowButtons[mode].style.display = "none";
+            return null;
+        }
+    }
+
+    /**
+     * When using SendTo buttons, refresh the table
+     * @param {string} mode "t2i" | "i2i"
+     */
+    static onPaste(mode) {
+        const vals = JSON.parse(this.pasteField[mode].value);
+        this.dataframe[mode].onPaste(vals);
+        this.preview(mode);
     }
 
     /**
@@ -104,193 +91,124 @@ class ForgeCouple {
      * @param {string} mode "t2i" | "i2i"
      */
     static onSelect(mode) {
-        const rows = this.mappingTable[mode].querySelectorAll("tr");
-        rows.forEach((row, i) => {
-            if (row.querySelector(":focus-within") != null) {
-                if (this.manualIndex[mode].value == i) {
-                    this.manualIndex[mode].value = -1;
-                    this.row_btns[mode].style.display = "none";
-                }
-                else {
-                    this.manualIndex[mode].value = i;
-                    const bounding = row.querySelector("td").getBoundingClientRect();
-                    const bounding_container = this.row_btns_containers[mode].getBoundingClientRect();
-                    this.row_btns[mode].style.top = `calc(${bounding.top - bounding_container.top}px - 1em)`;
-                    this.row_btns[mode].style.display = "block";
-                }
-                updateInput(this.manualIndex[mode]);
-            }
-        });
+        const cell = this.updateColors(mode);
 
-        this.updateColors(mode);
+        if (cell) {
+            const bounding = cell.querySelector("td").getBoundingClientRect();
+            const bounding_container = this.container[mode].getBoundingClientRect();
+            this.rowButtons[mode].style.top = `calc(${bounding.top - bounding_container.top}px - 1.5em)`;
+            this.rowButtons[mode].style.display = "block";
+        } else
+            this.rowButtons[mode].style.display = "none";
     }
 
     /**
-     * When hovering on a row, try to show the corresponding prompt
+     * When editing the mapping, update the internal JSON
      * @param {string} mode "t2i" | "i2i"
-     * @param {Element} separator
      */
-    static registerHovering(mode, separator) {
-        const promptHint = document.createElement("div");
-        promptHint.classList.add("prompt-hint");
+    static onEntry(mode) {
+        const rows = this.mappingTable[mode].querySelectorAll("tr");
 
-        const table = ForgeCouple.mappingTable[mode].parentElement.parentElement.parentElement;
-        table.appendChild(promptHint);
-
-        var showHint = true;
-
-        table.addEventListener('contextmenu', (e) => {
-            if (e.ctrlKey) {
-                e.preventDefault();
-                showHint = !showHint;
-            }
+        const vals = Array.from(rows, row => {
+            return Array.from(row.querySelectorAll("td"))
+                .slice(0, -1).map(cell => parseFloat(cell.textContent));
         });
 
-        ForgeCouple.mappingTable[mode].addEventListener('mousemove', (e) => {
-            if (!showHint) {
-                promptHint.style.display = 'none';
-                return;
-            }
+        const json = JSON.stringify(vals);
+        this.entryField[mode].value = json;
+        updateInput(this.entryField[mode]);
+    }
 
-            var el = e.target;
-
-            while (el.tagName !== 'TR') {
-                el = el.parentElement;
-                if (el.tagName === 'TABLE') {
-                    promptHint.style.display = 'none';
-                    return;
-                }
-            }
-
-            const prompt = gradioApp().getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`).querySelector("textarea").value;
-            var sep = separator.value.trim();
-
-            if (!sep)
-                sep = "\n";
-
-            const rows = [...ForgeCouple.mappingTable[mode].querySelectorAll("tr")];
-            const rowIndex = rows.indexOf(el);
-
-            if (!prompt.trim()) {
-                promptHint.style.display = 'none';
-                return;
-            }
-
-            if (rowIndex < prompt.split(sep).length)
-                promptHint.innerHTML = prompt.split(sep)[rowIndex].replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-            else
-                promptHint.innerHTML = '<p style="color:red;"><i>missing...</i></p>';
-
-            promptHint.style.left = `calc(${e.clientX}px + 1em)`;
-            promptHint.style.top = `calc(${e.clientY}px + 1em)`;
-
-            promptHint.style.display = 'block';
-        });
-
-        ForgeCouple.mappingTable[mode].addEventListener('mouseleave', (e) => {
-            promptHint.style.display = 'none';
-        });
+    /**
+     * Link the buttons related to the mapping
+     * @param {Element} ex
+     * @param {string} mode "t2i" | "i2i"
+     */
+    static #registerButtons(ex, mode) {
+        ex.querySelector(".fc_reset_btn").onclick = () => { this.dataframe[mode].reset(); };
+        ex.querySelector("#fc_up_btn").onclick = (e) => { this.dataframe[mode].newRowAbove(e.shiftKey); };
+        ex.querySelector("#fc_dn_btn").onclick = (e) => { this.dataframe[mode].newRowBelow(e.shiftKey); };
+        ex.querySelector("#fc_del_btn").onclick = (e) => { this.dataframe[mode].deleteRow(e.shiftKey); };
     }
 
     /** Hook some elements to automatically refresh the resolution */
-    static registerResolutionHandles() {
+    static #registerResolutionHandles() {
 
         [["txt2img", "t2i"], ["img2img", "i2i"]].forEach(([tab, mode]) => {
             const btns = gradioApp().getElementById(`${tab}_dimensions_row`)?.querySelectorAll("button");
             if (btns != null)
-                btns.forEach((btn) => { btn.onclick = () => { ForgeCouple.preview(mode); } });
+                btns.forEach((btn) => { btn.onclick = () => { this.preview(mode); } });
 
             const width = gradioApp().getElementById(`${tab}_width`).querySelectorAll("input");
             const height = gradioApp().getElementById(`${tab}_height`).querySelectorAll("input");
 
             [...width, ...height].forEach((slider) => {
-                slider.addEventListener("change", () => { ForgeCouple.preview(mode); });
+                slider.addEventListener("change", () => { this.preview(mode); });
             });
         });
 
         const i2i_size_btns = gradioApp().getElementById("img2img_column_size").querySelector(".tab-nav");
-        i2i_size_btns.addEventListener("click", () => { ForgeCouple.preview("i2i"); });
+        i2i_size_btns.addEventListener("click", () => { this.preview("i2i"); });
 
         const tabs = gradioApp().querySelector('#tabs').querySelector('.tab-nav');
         tabs.addEventListener("click", () => {
             if (tabs.children[0].classList.contains("selected"))
-                ForgeCouple.preview("t2i");
+                this.preview("t2i");
             if (tabs.children[1].classList.contains("selected"))
-                ForgeCouple.preview("i2i");
+                this.preview("i2i");
         });
 
     }
 
-    /**
-     * Given an image, return the width and height
-     * @param {string} b64 Image in base64 encoding
-     * @returns {object} {w, h}
-     */
-    static img2resolution(b64) {
-        return new Promise(function (resolved, rejected) {
+    static setup() {
+        ["t2i", "i2i"].forEach((mode) => {
+            const ex = gradioApp().getElementById(`forge_couple_${mode}`);
+            const mapping_btns = ex.querySelector(".fc_mapping_btns");
 
-            var i = new Image()
-            i.onload = function () {
-                resolved({ w: i.width, h: i.height })
-            };
-            i.src = b64;
+            this.container[mode] = ex.querySelector(".fc_mapping");
+            this.container[mode].appendChild(mapping_btns);
 
+            this.dataframe[mode] = new ForgeCoupleDataframe(
+                this.container[mode], mode, ex.querySelector(".fc_separator").querySelector("input")
+            );
+            this.mappingTable[mode] = this.container[mode].querySelector("tbody");
+
+            this.rowButtons[mode] = ex.querySelector(".fc_row_btns");
+            this.rowButtons[mode].style.display = "none";
+            this.container[mode].appendChild(this.rowButtons[mode]);
+
+            this.previewResolution[mode] = ex.querySelector(".fc_preview_res").querySelector("input");
+            this.previewButton[mode] = ex.querySelector(".fc_preview");
+
+            const preview_img = ex.querySelector("img");
+            preview_img.ondragstart = (e) => { e.preventDefault(); return false; };
+            preview_img.parentElement.style.overflow = "visible";
+
+            this.bbox[mode] = new ForgeCoupleBox(preview_img, mode);
+
+            const bg_btns = ex.querySelector(".fc_bg_btns");
+            preview_img.parentElement.appendChild(bg_btns);
+
+            ForgeCoupleImageLoader.setup(preview_img, bg_btns.querySelectorAll("button"))
+
+            this.pasteField[mode] = ex.querySelector(".fc_paste_field").querySelector("textarea");
+            this.entryField[mode] = ex.querySelector(".fc_entry_field").querySelector("textarea");
+
+            this.#registerButtons(ex, mode);
+            ForgeCoupleObserver.observe(
+                mode,
+                gradioApp().getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`).querySelector("textarea"),
+                () => { this.dataframe[mode].syncPrompt(); }
+            );
+
+            setTimeout(() => {
+                this.preview(mode);
+            }, 50);
         });
+
+        this.#registerResolutionHandles();
     }
 
 }
 
-onUiLoaded(async () => {
-    ["t2i", "i2i"].forEach((mode) => {
-        const ex = gradioApp().getElementById(`forge_couple_${mode}`);
-
-        ForgeCouple.previewRes[mode] = ex.querySelector(".fc_preview_res").querySelector("input");
-        ForgeCouple.previewBtn[mode] = ex.querySelector(".fc_preview_real");
-        ForgeCouple.mappingTable[mode] = ex.querySelector(".fc_mapping").querySelector("tbody");
-        ForgeCouple.manualIndex[mode] = ex.querySelector(".fc_index").querySelector("input");
-        ForgeCouple.row_btns[mode] = ex.querySelector(".fc_row_btns");
-        ForgeCouple.registerHovering(mode, ex.querySelector(".fc_separator").querySelector("input"));
-
-        ForgeCouple.row_btns[mode].style.display = "none";
-        ForgeCouple.row_btns[mode].querySelectorAll("button").forEach((btn) => {
-            btn.setAttribute("style",
-                "width: 2em; height: 2em; min-width: unset !important;"
-            );
-        })
-
-        ForgeCouple.row_btns_containers[mode] = ex.querySelector(".fc_mapping").querySelector(".table-wrap").parentElement;
-        ForgeCouple.row_btns_containers[mode].appendChild(ForgeCouple.row_btns[mode]);
-
-        const row = ex.querySelector(".controls-wrap");
-        row.remove();
-
-        // const mapping_div = ex.querySelector(".fc_mapping").children[1];
-        // const btns = ex.querySelector(".fc_map_btns");
-        // const temp = btns.parentElement;
-
-        // mapping_div.insertBefore(btns, mapping_div.children[1]);
-        // temp.remove();
-
-        const preview_img = ex.querySelector("img");
-        preview_img.ondragstart = (e) => { e.preventDefault(); return false; };
-
-        const manual_field = ex.querySelector(".fc_manual_field").querySelector("input");
-
-        ForgeCouple.bbox[mode] = new ForgeCoupleBox(preview_img, manual_field, mode);
-        // while (preview_img.parentElement.firstElementChild.tagName === "DIV")
-            // preview_img.parentElement.firstElementChild.remove();
-
-        const bg_btns = ex.querySelector(".fc_bg_btns");
-        preview_img.parentElement.style.overflow = "visible";
-        preview_img.parentElement.appendChild(bg_btns);
-
-        ForgeCoupleImageLoader.setup(preview_img, bg_btns.querySelectorAll("button"))
-
-        setTimeout(() => {
-            ForgeCouple.preview(mode);
-        }, 50);
-    });
-
-    ForgeCouple.registerResolutionHandles();
-
-})
+onUiLoaded(async () => { ForgeCouple.setup(); })

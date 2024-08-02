@@ -16,11 +16,6 @@
     width: 100%;
 }
 
-.fc_preview {
-    margin: 0.25em 1em;
-    border-radius: 0.5em;
-}
-
 .fc_adv .gradio-image {
     width: 512px;
     height: 512px;
@@ -53,26 +48,6 @@
     pointer-events: none;
 }
 
-.fc_mapping{
-    overflow: visible !important;
-}
-
-.fc_mapping td {
-    --ring-color: transparent !important;
-}
-
-.prompt-hint {
-    position: fixed;
-    z-index: 100;
-    background-color: var(--input-background-fill);
-    color: var(--body-text-color);
-    border: var(--input-border-width) solid var(--input-border-color);
-    border-radius: var(--input-radius);
-    padding: 0.5em;
-    box-shadow: 0 0 1em rgba(0, 0, 0, 0.2);
-    display: none;
-}
-
 .fc_row_btns {
     position: absolute;
     z-index: 500;
@@ -86,6 +61,48 @@
 }
 
 .fc_row_btns button {
-    margin-top: auto;
-    margin-bottom: auto;
+    margin: auto !important;
+    width: 2em !important;
+    height: 2em !important;
+    min-width: unset !important;
+}
+
+.fc_mapping {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+
+    padding: 1em;
+    border-radius: 1em;
+    background: var(--panel-background-fill);
+}
+
+.fc_mapping table {
+    width: 100%;
+    margin: auto;
+    table-layout: fixed;
+}
+
+.fc_mapping :is(th, td) {
+    padding: 4px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+    border: 2px solid var(--table-border-color) !important;
+}
+
+.fc_mapping th {
+    text-align: center !important;
+}
+
+.fc_mapping_btns {
+    display: flex;
+    flex-direction: column;
+    gap: 1em !important;
+}
+
+.fc_mapping_btns>button {
+    font-family: "Consolas";
+    border-radius: 0.5em !important;
+    margin: auto;
 }

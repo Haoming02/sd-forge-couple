@@ -1,24 +1,13 @@
-from modules.ui_components import FormRow, ToolButton
+from modules.ui_components import ToolButton
 from PIL import Image
 import gradio as gr
 
-from .ui_funcs import (
-    DEFAULT_MAPPING,
-    visualize_mapping,
-    add_row_above,
-    add_row_below,
-    del_row_select,
-    reset_mapping,
-    manual_entry,
-    on_paste,
-)
-
-from .gr_version import js, is_gradio_4
+from .ui_funcs import DEFAULT_MAPPING, visualize_mapping, on_entry
+from .gr_version import js
 
 
 def couple_UI(script, is_img2img: bool, title: str):
     m: str = "i2i" if is_img2img else "t2i"
-    preview_js: str = f'() => {{ ForgeCouple.preview("{m}"); }}'
 
     with gr.Accordion(
         label=title,
@@ -29,23 +18,20 @@ def couple_UI(script, is_img2img: bool, title: str):
             enable = gr.Checkbox(label="Enable", elem_classes="fc_enable", scale=2)
 
             mode = gr.Radio(
-                ["Basic", "Advanced"],
-                label="Region Assignment",
-                value="Basic",
-                scale=3,
-                interactive=(not is_gradio_4),
+                ["Basic", "Advanced"], label="Region Assignment", value="Basic", scale=3
             )
 
             separator = gr.Textbox(
+                value="",
                 label="Couple Separator",
                 lines=1,
                 max_lines=1,
-                placeholder="Default: Newline",
+                placeholder="\\n",
                 elem_classes="fc_separator",
                 scale=1,
             )
 
-        with gr.Group() as basic_settings:
+        with gr.Group(visible=True, elem_classes="fc_bsc") as basic_settings:
             with gr.Row():
                 direction = gr.Radio(
                     ["Horizontal", "Vertical"],
@@ -71,41 +57,63 @@ def couple_UI(script, is_img2img: bool, title: str):
                 )
 
         with gr.Group(visible=False, elem_classes="fc_adv") as adv_settings:
+            with gr.Row(elem_classes="fc_mapping_btns"):
+                gr.Button("Default Mapping", elem_classes="fc_reset_btn")
 
-            with FormRow(elem_classes="fc_map_btns"):
-                new_btn = gr.Button("New Row")
-                ref_btn = gr.Button("Default Mapping")
+            gr.HTML('<div class="fc_mapping"></div>')
+
+            mapping = gr.JSON(value=DEFAULT_MAPPING, visible=False)
+
+            mapping_paste_field = gr.Textbox(
+                visible=False, elem_classes="fc_paste_field"
+            )
+            mapping_paste_field.change(
+                on_entry, mapping_paste_field, mapping, show_progress="hidden"
+            ).success(None, **js(f'() => {{ ForgeCouple.onPaste("{m}"); }}'))
+
+            mapping_entry_field = gr.Textbox(
+                visible=False, elem_classes="fc_entry_field"
+            )
+            mapping_entry_field.change(
+                on_entry, mapping_entry_field, mapping, show_progress="hidden"
+            ).success(None, **js(f'() => {{ ForgeCouple.preview("{m}"); }}'))
 
             with gr.Group(elem_classes="fc_row_btns"):
                 with gr.Row():
                     with gr.Column():
-                        new_btn_up = ToolButton(
+                        ToolButton(
                             value="\U0001F195",
                             elem_id="fc_up_btn",
                             tooltip="Add a New Row above the Selected Row",
                         )
-                        new_btn_dn = ToolButton(
+                        ToolButton(
                             value="\U0001F195",
                             elem_id="fc_dn_btn",
                             tooltip="Add a New Row below the Selected Row",
                         )
-                    del_btn = ToolButton(
+                    ToolButton(
                         value="\U0000274C",
                         elem_id="fc_del_btn",
                         tooltip="Delete the Selected Row",
                     )
 
-            mapping = gr.Dataframe(
-                label="Mapping",
-                headers=["x", "y", "weight"],
-                datatype="str",
-                row_count=(1, "dynamic"),
-                col_count=(3, "fixed"),
-                interactive=True,
-                type="array",
-                value=DEFAULT_MAPPING,
-                elem_classes="fc_mapping",
-            )
+            with gr.Column(elem_classes="fc_bg_btns"):
+                ToolButton(
+                    value="\U0001F4C2",
+                    elem_id="fc_load_img_btn",
+                    tooltip="Load a background image for the mapping visualization",
+                )
+                if is_img2img:
+                    ToolButton(
+                        value="\U000023CF",
+                        elem_id="fc_load_i2i_img_btn",
+                        tooltip="Load the img2img image as the background image",
+                    )
+                ToolButton(
+                    value="\U0001F5D1",
+                    elem_id="fc_clear_img_btn",
+                    tooltip="Remove the background image",
+                )
 
             preview_img = gr.Image(
                 value=Image.new("RGB", (1, 1), "black"),
@@ -115,30 +123,8 @@ def couple_UI(script, is_img2img: bool, title: str):
                 interactive=False,
                 height=512,
                 show_download_button=False,
+                show_label=False,
             )
-
-            with gr.Column(elem_classes="fc_bg_btns"):
-                load_btn = ToolButton(
-                    value="\U0001F4C2",
-                    elem_id="fc_load_img_btn",
-                    tooltip="Load a background image for the mapping visualization",
-                )
-
-                if is_img2img:
-                    load_i2i_btn = ToolButton(
-                        value="\U000023CF",
-                        elem_id="fc_load_i2i_img_btn",
-                        tooltip="Load the img2img image as the background image",
-                    )
-
-                clear_btn = ToolButton(
-                    value="\U0000274C",
-                    elem_id="fc_clear_img_btn",
-                    tooltip="Remove the background image",
-                )
-
-            preview_btn = gr.Button("Preview Mapping", elem_classes="fc_preview")
-            preview_btn.click(None, **js(preview_js))
 
             preview_res = gr.Textbox(
                 lines=1,
@@ -148,78 +134,18 @@ def couple_UI(script, is_img2img: bool, title: str):
                 elem_classes="fc_preview_res",
             )
 
-            real_preview_btn = gr.Button(
+            preview_btn = gr.Button(
                 visible=False,
                 interactive=True,
-                elem_classes="fc_preview_real",
+                elem_classes="fc_preview",
             )
 
-            real_preview_btn.click(
+            preview_btn.click(
                 visualize_mapping,
-                [
-                    preview_res,
-                    mapping,
-                ],
+                [preview_res, mapping],
                 preview_img,
+                show_progress="hidden",
             ).success(None, **js(f'() => {{ ForgeCouple.updateColors("{m}"); }}'))
-
-            mapping.select(None, **js(f'() => {{ ForgeCouple.onSelect("{m}"); }}'))
-            mapping.input(None, **js(preview_js))
-
-            gr.Markdown(
-                """
-                <p align="center">
-                    <a href="https://github.com/Haoming02/sd-forge-couple#advanced-mapping">[How to Use]</a>
-                </p>
-                """
-            )
-
-        manual_idx = gr.Number(
-            label="Selected Row",
-            value=-1,
-            interactive=True,
-            visible=False,
-            precision=0,
-            elem_classes="fc_index",
-        )
-
-        new_btn.click(add_row_below, mapping, mapping, show_progress="hidden").success(
-            None, **js(preview_js)
-        )
-
-        new_btn_up.click(
-            add_row_above, [mapping, manual_idx], mapping, show_progress="hidden"
-        ).success(None, **js(preview_js))
-
-        new_btn_dn.click(
-            add_row_below, [mapping, manual_idx], mapping, show_progress="hidden"
-        ).success(None, **js(preview_js))
-
-        del_btn.click(
-            del_row_select,
-            [mapping, manual_idx],
-            mapping,
-            show_progress="hidden",
-        ).success(None, **js(preview_js))
-
-        ref_btn.click(reset_mapping, None, mapping, show_progress="hidden").success(
-            None, **js(preview_js)
-        )
-
-        manual_field = gr.Textbox(
-            lines=1,
-            max_lines=1,
-            visible=False,
-            interactive=True,
-            elem_classes="fc_manual_field",
-        )
-
-        manual_field.input(
-            manual_entry,
-            [mapping, manual_field, manual_idx],
-            mapping,
-            show_progress="hidden",
-        ).success(None, **js(preview_js))
 
         def on_mode_change(choice):
             if choice == "Basic":
@@ -235,35 +161,30 @@ def couple_UI(script, is_img2img: bool, title: str):
 
         mode.change(on_mode_change, mode, [basic_settings, adv_settings])
 
-        mapping_paste_field = gr.Textbox(visible=False)
-        mapping_paste_field.change(
-            on_paste, mapping_paste_field, mapping, show_progress="hidden"
-        ).success(None, **js(preview_js))
-
         script.paste_field_names = []
         script.infotext_fields = [
             (enable, "forge_couple"),
+            (mode, "forge_couple_mode"),
+            (separator, "forge_couple_separator"),
             (direction, "forge_couple_direction"),
             (background, "forge_couple_background"),
-            (separator, "forge_couple_separator"),
-            (mode, "forge_couple_mode"),
-            (mapping_paste_field, "forge_couple_mapping"),
             (background_weight, "forge_couple_background_weight"),
+            (mapping_paste_field, "forge_couple_mapping"),
         ]
 
         for comp, name in script.infotext_fields:
             comp.do_not_save_to_config = True
             script.paste_field_names.append(name)
 
-        for comp in (manual_idx, manual_field, mapping):
+        for comp in (mapping, preview_res):
             comp.do_not_save_to_config = True
 
-        return [
-            enable,
-            mode,
-            separator,
-            direction,
-            background,
-            background_weight,
-            mapping,
-        ]
+    return [
+        enable,
+        mode,
+        separator,
+        direction,
+        background,
+        background_weight,
+        mapping,
+    ]
