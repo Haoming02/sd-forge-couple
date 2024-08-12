@@ -2,22 +2,22 @@ from modules import scripts
 from json import dumps
 import re
 
-from couple.mapping import (
+from lib_couple.mapping import (
     empty_tensor,
     basic_mapping,
     advanced_mapping,
     mask_mapping,
 )
 
-from couple.ui import couple_UI
-from couple.ui_funcs import validate_mapping
+from lib_couple.ui import couple_UI
+from lib_couple.ui_funcs import validate_mapping
 
-from couple.attention_couple import AttentionCouple
+from lib_couple.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
 VERSION = "2.0.0"
 
-from couple.gr_version import js, is_gradio_4
+from lib_couple.gr_version import js, is_gradio_4
 
 
 class ForgeCouple(scripts.Script):

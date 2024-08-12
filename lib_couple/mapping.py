@@ -7,7 +7,6 @@ import numpy as np
 import torch
 
 
-@torch.inference_mode()
 def empty_tensor(H: int, W: int):
     return torch.zeros((H, W)).unsqueeze(0)
 

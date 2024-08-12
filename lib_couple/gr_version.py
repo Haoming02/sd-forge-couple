@@ -1,6 +1,6 @@
 import gradio as gr
 
-is_gradio_4: bool = 4 == int(str(gr.__version__).split(".")[0])
+is_gradio_4: bool = int(str(gr.__version__).split(".")[0]) == 4
 
 
 def js(func: str) -> dict:
