@@ -49,10 +49,9 @@ In the **Basic** mode, you can set either the **first line** or the **last line*
 
 <p align="center">
 <b><i>(examples using the same seed)</i></b><br>
-<img src="example/1-2.jpg" width=384><br>
-<code>disabled</code><br>
-<img src="example/1-1.jpg" width=384><br>
-<code>enabled</code>
+<img src="example/1-2.jpg" width=256>
+ <img src="example/1-1.jpg" width=256><br>
+<b>extension:</b> <code>off</code> | <b>extension:</b> <code>on</code>
 </p>
 
 ```
@@ -94,7 +93,7 @@ Were these automated and equally-sized tiles not sufficient for your needs? Now 
     - The range should be within `0.0` ~ `1.0`, representing the **percentage** of the full width/height
         - **eg.** `0.0` to `1.0` would span across the entire axis
     - **x** axis is from left to right; **y** axis is from top to bottom
-    - **2** should be larger than **1**
+    - **2** *(to)* should be larger than **1** *(from)*
 
 - **Control:**
     - Click on a row to select it, highlighting its bounding box
@@ -125,6 +124,8 @@ couple photo, woman, white dress
 wedding photo, holding flower bouquet together
 sunset, golden hour, lens flare
 ```
+
+<br>
 
 ## API
 For usage with API, please refer to the [Wiki](https://github.com/Haoming02/sd-forge-couple/wiki/API)
