@@ -2,22 +2,22 @@ from modules import scripts
 from json import dumps
 import re
 
-from scripts.couple_mapping import (
+from lib_couple.mapping import (
     empty_tensor,
     basic_mapping,
     advanced_mapping,
     mask_mapping,
 )
 
-from scripts.couple_ui import couple_UI
-from scripts.ui_funcs import validate_mapping, parse_mapping
+from lib_couple.ui import couple_UI
+from lib_couple.ui_funcs import validate_mapping
 
-from scripts.attention_couple import AttentionCouple
+from lib_couple.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "1.6.2"
+VERSION = "2.0.0"
 
-from scripts.gr_version import js, is_gradio_4
+from lib_couple.gr_version import js, is_gradio_4
 
 
 class ForgeCouple(scripts.Script):
@@ -38,18 +38,12 @@ class ForgeCouple(scripts.Script):
         if is_gradio_4:
             return
 
-        if kwargs.get("elem_id") in (
-            "img2img_image",
-            "img2img_sketch",
-            "inpaint_sketch",
-            "img_inpaint_base",
-        ):
-            component.change(
-                None, component, None, **js("(img) => { ForgeCouple.preview(img); }")
-            )
+        if kwargs.get("elem_id", None) == "img2img_image":
+            component.change(None, **js('() => { ForgeCouple.preview("i2i"); }'))
 
-    def parse_networks(self, prompt: str) -> str:
-        """LoRAs are already parsed"""
+    @staticmethod
+    def strip_networks(prompt: str) -> str:
+        """LoRAs are already parsed thus no longer needed"""
         pattern = re.compile(r"<.*?>")
         cleaned = re.sub(pattern, "", prompt)
 
@@ -77,7 +71,7 @@ class ForgeCouple(scripts.Script):
 
         chunks = kwargs["prompts"][0].split(separator)
         for chunk in chunks:
-            prompt = self.parse_networks(chunk).strip()
+            prompt = self.strip_networks(chunk).strip()
 
             if not prompt.strip():
                 # Skip Empty Lines
@@ -87,44 +81,54 @@ class ForgeCouple(scripts.Script):
 
         match mode:
             case "Basic":
-                if len(couples) < (3 if background != "None" else 2):
-                    print(
-                        f"\n\n[Couple] Not Enough Lines in Prompt...\nCurrent: {len(couples)} / Required: {3 if background != 'None' else 2}\n\n"
-                    )
+                if len(couples) < (3 - int(background == "None")):
+                    print("\n[Couple] Not Enough Lines in Prompt...")
+                    print(f"\t[{len(couples)} / {3 - int(background == 'None')}]\n")
+                    self.couples = None
+                    return
 
             case "Mask":
-                if not mapping or len(mapping) != len(couples) - int(
-                    background in ("First Line", "Last Line")
-                ):
+                if not mapping:
+                    print("\n[Couple] No Mapping...?\n")
+                    self.couples = None
+                    return
+
+                if len(couples) != len(mapping) + int(background != "None"):
                     print(
-                        f"\n\n[Couple] Number of Couples and Masks is not the same...\nCurrent: {len(couples)} / Required: {len(mapping) + int(background in ('First Line', 'Last Line'))}\n\n"
+                        f"""\n[Couple] Number of Couples and Masks is not the same...
+                        \t[{len(couples)} / {len(mapping) + int( background != 'None')}]\n"""
                     )
                     self.couples = None
                     return
 
             case "Advanced":
+                if not mapping:
+                    print("\n[Couple] No Mapping...?\n")
+                    self.couples = None
+                    return
+
                 if not validate_mapping(mapping):
                     self.couples = None
                     return
 
-                if not mapping or (len(parse_mapping(mapping)) != len(couples)):
-                    print(
-                        f"\n\n[Couple] Number of Couples and Mapping is not the same...\nCurrent: {len(couples)} / Required: {len(parse_mapping(mapping))}\n\n"
-                    )
+                if len(couples) != len(mapping):
+                    print("\n[Couple] Number of Couples and Mapping is not the same...")
+                    print(f"[{len(couples)} / {len(mapping)}]\n")
                     self.couples = None
                     return
 
         # ===== Infotext =====
         p.extra_generation_params["forge_couple"] = True
-        p.extra_generation_params["forge_couple_separator"] = (
-            "\n" if not separator.strip() else separator.strip()
-        )
+        p.extra_generation_params["forge_couple_separator"] = separator
         p.extra_generation_params["forge_couple_mode"] = mode
+
         if mode == "Basic":
-            p.extra_generation_params["forge_couple_direction"] = direction
-            p.extra_generation_params["forge_couple_background"] = background
-            p.extra_generation_params["forge_couple_background_weight"] = (
-                background_weight
+            p.extra_generation_params.update(
+                {
+                    "forge_couple_direction": direction,
+                    "forge_couple_background": background,
+                    "forge_couple_background_weight": background_weight,
+                }
             )
         elif mode == "Advanced":
             p.extra_generation_params["forge_couple_mapping"] = dumps(mapping)
@@ -155,23 +159,16 @@ class ForgeCouple(scripts.Script):
         WIDTH: int = p.width
         HEIGHT: int = p.height
         IS_HORIZONTAL: bool = direction == "Horizontal"
+        NO_BACKGROUND: bool = background == "None"
 
         LINE_COUNT: int = len(self.couples)
 
-        if mode in ("Basic", "Mask"):
-            BG_WEIGHT: float = (
-                0.0
-                if (background not in ("First Line", "Last Line"))
-                else max(0.1, background_weight)
-            )
+        if mode != "Advanced":
+            BG_WEIGHT: float = 0.0 if NO_BACKGROUND else max(0.1, background_weight)
 
         if mode == "Basic":
-            TILE_COUNT: int = LINE_COUNT - int(
-                background in ("First Line", "Last Line")
-            )
-            TILE_WEIGHT: float = (
-                1.25 if (background not in ("First Line", "Last Line")) else 1.0
-            )
+            TILE_COUNT: int = LINE_COUNT - int(not NO_BACKGROUND)
+            TILE_WEIGHT: float = 1.25 if NO_BACKGROUND else 1.0
             TILE_SIZE: int = (
                 (WIDTH if IS_HORIZONTAL else HEIGHT) - 1
             ) // TILE_COUNT + 1

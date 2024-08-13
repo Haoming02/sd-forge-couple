@@ -5,17 +5,29 @@ https://github.com/laksjdjf/cgem156-ComfyUI/blob/main/scripts/attention_couple/n
 Modified by. Haoming02 to work with Forge
 """
 
-from scripts.attention_masks import get_mask, lcm_for_list
+from .attention_masks import get_mask, lcm_for_list
 from modules.devices import get_optimal_device
 import torch
+
+try:
+    from backend.memory_management import unet_dtype
+    is_classic = False
+
+except ModuleNotFoundError:
+    is_classic = True
 
 
 class AttentionCouple:
 
+    @torch.inference_mode()
     def patch_unet(self, model, base_mask, kwargs: dict):
 
         new_model = model.clone()
-        dtype = new_model.model.diffusion_model.dtype
+        if is_classic:
+            dtype = new_model.model.diffusion_model.dtype
+        else:
+            dtype = unet_dtype()
+
         device = get_optimal_device()
 
         num_conds = len(kwargs) // 2 + 1
