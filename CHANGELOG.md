@@ -1,3 +1,9 @@
+### v2.0.0 - 2024 Aug.13
+- Support **Gradio v4** *(both `Basic` and `Advanced`)*
+- Use HTML `<table>` instead of Gradio `Dataframe`
+- Improved Visuals
+- Optimize Logics
+
 ### v1.6.2 - 2024 Jul.29
 - Preparing for Revamping
 
