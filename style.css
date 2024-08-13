@@ -23,7 +23,7 @@
     display: flex;
 }
 
-.fc_adv .gradio-image>img {
+.fc_adv .fc_preview_img img {
     width: auto;
     height: auto;
     max-width: 100%;

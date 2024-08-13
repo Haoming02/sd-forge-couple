@@ -94,7 +94,7 @@ class ForgeCoupleBox {
                 const cells = this.#cachedRow.querySelectorAll("td");
 
                 for (let i = 0; i < vals.length; i++)
-                    cells[i].textContent = Number(vals[i]).toFixed(2);
+                    cells[i].textContent = Number(Math.max(0.0, vals[i])).toFixed(2);
 
                 this.isValid = false;
                 tab.style.cursor = "unset";

@@ -119,6 +119,7 @@ def couple_UI(script, is_img2img: bool, title: str):
                 value=Image.new("RGB", (1, 1), "black"),
                 image_mode="RGBA",
                 label="Mapping Preview",
+                elem_classes="fc_preview_img",
                 type="pil",
                 interactive=False,
                 height=512,
