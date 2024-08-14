@@ -10,7 +10,7 @@ from modules.devices import get_optimal_device
 import torch
 
 try:
-    from backend.memory_management import unet_dtype
+    from backend import memory_management
     is_classic = False
 
 except ModuleNotFoundError:
@@ -23,10 +23,11 @@ class AttentionCouple:
     def patch_unet(self, model, base_mask, kwargs: dict):
 
         new_model = model.clone()
+
         if is_classic:
             dtype = new_model.model.diffusion_model.dtype
         else:
-            dtype = unet_dtype()
+            dtype = new_model.model.computation_dtype
 
         device = get_optimal_device()
 
