@@ -112,7 +112,9 @@ class ForgeCoupleDataframe {
 
             updateInput(this.#promptField);
         } else {
-            var val = parseFloat(cell.textContent);
+            var val = this.#clamp01(cell.textContent,
+                Array.from(cell.parentElement.children).indexOf(cell) === 4
+            );
             val = Math.round(val / 0.01) * 0.01;
             cell.textContent = Number(val).toFixed(2);
             ForgeCouple.onSelect(this.#mode);
@@ -349,14 +351,31 @@ class ForgeCoupleDataframe {
         const prompts = prompt.split(this.#sep).map(line => line.trim());
         const rows = this.#body.querySelectorAll("tr");
 
+        const active = document.activeElement;
         rows.forEach((row, i) => {
             const promptCell = row.querySelector("td:last-child");
+
+            // Skip editing Cell
+            if (promptCell === active)
+                return;
 
             if (i < prompts.length)
                 promptCell.textContent = prompts[i];
             else
                 promptCell.textContent = "";
         });
+    }
+
+    /** @param {number} @param {boolean} w @returns {number} */
+    #clamp01(v, w) {
+        var val = parseFloat(v);
+        if (Number.isNaN(val))
+            val = 0.0;
+
+        return Math.min(
+            Math.max(val, w ? -10.0 : 0.0),
+            w ? 10.0 : 1.0
+        );
     }
 
 }

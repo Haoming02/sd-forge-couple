@@ -13,7 +13,7 @@ def validate_mapping(data: list) -> bool:
             print("\n[Couple] Region range must be between 0.0 and 1.0...\n")
             return False
 
-        if x2 < x1 or y2 < y1:
+        if x2 <= x1 or y2 <= y1:
             print('\n[Couple] "to" value must be larger than "from" value...\n')
             return False
 

@@ -44,6 +44,7 @@ class AttentionCouple:
         ]
         num_tokens = [cond.shape[1] for cond in conds]
 
+        @torch.inference_mode()
         def attn2_patch(q, k, v, extra_options):
             assert k.mean() == v.mean(), "k and v must be the same."
             cond_or_unconds = extra_options["cond_or_uncond"]
@@ -70,11 +71,12 @@ class AttentionCouple:
                     qs.append(q_chunks[i].repeat(num_conds, 1, 1))
                     ks.append(torch.cat([k_target, conds_tensor], dim=0))
 
-            qs = torch.cat(qs, dim=0)
-            ks = torch.cat(ks, dim=0)
+            qs = torch.cat(qs, dim=0).to(q)
+            ks = torch.cat(ks, dim=0).to(k)
 
             return qs, ks, ks
 
+        @torch.inference_mode()
         def attn2_output_patch(out, extra_options):
             cond_or_unconds = extra_options["cond_or_uncond"]
             mask_downsample = get_mask(
