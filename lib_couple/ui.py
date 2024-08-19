@@ -3,6 +3,7 @@ from PIL import Image
 import gradio as gr
 
 from .ui_funcs import DEFAULT_MAPPING, visualize_mapping, on_entry
+from .ui_masks import CoupleMaskData
 from .gr_version import js
 
 
@@ -18,7 +19,10 @@ def couple_UI(script, is_img2img: bool, title: str):
             enable = gr.Checkbox(label="Enable", elem_classes="fc_enable", scale=2)
 
             mode = gr.Radio(
-                ["Basic", "Advanced"], label="Region Assignment", value="Basic", scale=3
+                ["Basic", "Advanced", "Mask"],
+                label="Region Assignment",
+                value="Basic",
+                scale=3,
             )
 
             separator = gr.Textbox(
@@ -148,21 +152,20 @@ def couple_UI(script, is_img2img: bool, title: str):
                 show_progress="hidden",
             ).success(None, **js(f'() => {{ ForgeCouple.updateColors("{m}"); }}'))
 
-        def on_mode_change(choice):
-            if choice == "Basic":
-                return [
-                    gr.update(visible=True),
-                    gr.update(visible=False),
-                ]
-            else:
-                return [
-                    gr.update(visible=False),
-                    gr.update(visible=True),
-                ]
+        with gr.Group(visible=False, elem_classes="fc_msk") as msk_settings:
+            couple_mask = CoupleMaskData()
+            couple_mask.mask_ui()
 
-        mode.change(on_mode_change, mode, [basic_settings, adv_settings]).success(
-            fn=None, **js(f'() => {{ ForgeCouple.preview("{m}"); }}')
-        )
+        def on_mode_change(choice):
+            return [
+                gr.update(visible=(choice == "Basic")),
+                gr.update(visible=(choice == "Advanced")),
+                gr.update(visible=(choice == "Mask")),
+            ]
+
+        mode.change(
+            on_mode_change, mode, [basic_settings, adv_settings, msk_settings]
+        ).success(fn=None, **js(f'() => {{ ForgeCouple.preview("{m}"); }}'))
 
         script.paste_field_names = []
         script.infotext_fields = [
