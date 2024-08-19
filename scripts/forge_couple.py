@@ -15,7 +15,7 @@ from lib_couple.ui_funcs import validate_mapping
 from lib_couple.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "2.0.2"
+VERSION = "2.0.3"
 
 from lib_couple.gr_version import js
 

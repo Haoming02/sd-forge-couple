@@ -33,20 +33,20 @@ class ForgeCouple {
             var res = null;
 
             if (mode === "t2i") {
-                const w = parseInt(gradioApp().getElementById("txt2img_width").querySelector("input").value);
-                const h = parseInt(gradioApp().getElementById("txt2img_height").querySelector("input").value);
-                res = `${w}x${h}`;
+                const w = parseInt(document.getElementById("txt2img_width").querySelector("input").value);
+                const h = parseInt(document.getElementById("txt2img_height").querySelector("input").value);
+                res = `${Math.max(64, w)}x${Math.max(64, h)}`;
             } else {
-                const i2i_size = gradioApp().getElementById("img2img_column_size").querySelector(".tab-nav");
+                const i2i_size = document.getElementById("img2img_column_size").querySelector(".tab-nav");
 
                 if (i2i_size.children[0].classList.contains("selected")) {
                     // Resize to
-                    const w = parseInt(gradioApp().getElementById("img2img_width").querySelector("input").value);
-                    const h = parseInt(gradioApp().getElementById("img2img_height").querySelector("input").value);
-                    res = `${w}x${h}`;
+                    const w = parseInt(document.getElementById("img2img_width").querySelector("input").value);
+                    const h = parseInt(document.getElementById("img2img_height").querySelector("input").value);
+                    res = `${Math.max(64, w)}x${Math.max(64, h)}`;
                 } else {
                     // Resize by
-                    res = gradioApp().getElementById("img2img_scale_resolution_preview")?.querySelector(".resolution")?.textContent;
+                    res = document.getElementById("img2img_scale_resolution_preview")?.querySelector(".resolution")?.textContent;
                 }
             }
 
@@ -55,7 +55,7 @@ class ForgeCouple {
             updateInput(this.previewResolution[mode]);
 
             this.previewButton[mode].click();
-        }, (mode === "t2i") ? 16 : 32);
+        }, (mode === "t2i") ? 25 : 50);
     }
 
     /**
@@ -135,22 +135,15 @@ class ForgeCouple {
     static #registerResolutionHandles() {
 
         [["txt2img", "t2i"], ["img2img", "i2i"]].forEach(([tab, mode]) => {
-            const btns = gradioApp().getElementById(`${tab}_dimensions_row`)?.querySelectorAll("button");
+            const btns = document.getElementById(`${tab}_dimensions_row`)?.querySelectorAll("button");
             if (btns != null)
                 btns.forEach((btn) => { btn.onclick = () => { this.preview(mode); } });
-
-            const width = gradioApp().getElementById(`${tab}_width`).querySelectorAll("input");
-            const height = gradioApp().getElementById(`${tab}_height`).querySelectorAll("input");
-
-            [...width, ...height].forEach((slider) => {
-                slider.addEventListener("change", () => { this.preview(mode); });
-            });
         });
 
-        const i2i_size_btns = gradioApp().getElementById("img2img_column_size").querySelector(".tab-nav");
+        const i2i_size_btns = document.getElementById("img2img_column_size").querySelector(".tab-nav");
         i2i_size_btns.addEventListener("click", () => { this.preview("i2i"); });
 
-        const tabs = gradioApp().querySelector('#tabs').querySelector('.tab-nav');
+        const tabs = document.getElementById('tabs').querySelector('.tab-nav');
         tabs.addEventListener("click", () => {
             if (tabs.children[0].classList.contains("selected"))
                 this.preview("t2i");
@@ -162,7 +155,7 @@ class ForgeCouple {
 
     static setup() {
         ["t2i", "i2i"].forEach((mode) => {
-            const ex = gradioApp().getElementById(`forge_couple_${mode}`);
+            const ex = document.getElementById(`forge_couple_${mode}`);
             const mapping_btns = ex.querySelector(".fc_mapping_btns");
 
             this.container[mode] = ex.querySelector(".fc_mapping");
@@ -175,6 +168,11 @@ class ForgeCouple {
 
             this.rowButtons[mode] = ex.querySelector(".fc_row_btns");
             this.rowButtons[mode].style.display = "none";
+
+            this.rowButtons[mode].querySelectorAll("button").forEach((btn) => {
+                btn.setAttribute('style', 'margin: auto !important');
+            });
+
             this.container[mode].appendChild(this.rowButtons[mode]);
 
             this.previewResolution[mode] = ex.querySelector(".fc_preview_res").querySelector("input");
@@ -197,7 +195,7 @@ class ForgeCouple {
             this.#registerButtons(ex, mode);
             ForgeCoupleObserver.observe(
                 mode,
-                gradioApp().getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`).querySelector("textarea"),
+                document.getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`).querySelector("textarea"),
                 () => { this.dataframe[mode].syncPrompt(); }
             );
         });

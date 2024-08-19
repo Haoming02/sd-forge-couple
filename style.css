@@ -65,7 +65,6 @@
 }
 
 .fc_row_btns button {
-    margin: auto !important;
     width: 2em !important;
     height: 2em !important;
     min-width: unset !important;

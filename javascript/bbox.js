@@ -37,7 +37,7 @@ class ForgeCoupleBox {
         this.#img = image;
         this.#box = box;
 
-        const tab = gradioApp().getElementById((mode === "t2i") ? "tab_txt2img" : "tab_img2img");
+        const tab = document.getElementById((mode === "t2i") ? "tab_txt2img" : "tab_img2img");
         this.#registerClick(tab);
         this.#registerHover(tab);
         this.#registerUp(tab);

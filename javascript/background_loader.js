@@ -1,6 +1,6 @@
 class ForgeCoupleImageLoader {
 
-    static get #maxDim() { return 1024 };
+    static #maxDim = 1024;
 
     /** @param {string} filepath @param {method} callback */
     static #path2url(filepath, callback) {
@@ -57,7 +57,7 @@ class ForgeCoupleImageLoader {
 
         if (load_i2i != null) {
             load_i2i.onclick = () => {
-                const src = gradioApp().getElementById("img2img_image").querySelector("img")?.src;
+                const src = document.getElementById("img2img_image").querySelector("img")?.src;
                 if (src != null) {
                     this.#path2url(src, (new_src) => {
                         image.style.backgroundImage = `url("${new_src}")`;

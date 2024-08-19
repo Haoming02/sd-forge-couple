@@ -30,7 +30,7 @@ class ForgeCoupleDataframe {
     /** @param {Element} div @param {string} mode @param {Element} separator */
     constructor(div, mode, separator) {
         this.#mode = mode;
-        this.#promptField = gradioApp().getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`).querySelector("textarea");
+        this.#promptField = document.getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`).querySelector("textarea");
         this.#separatorField = separator;
 
         const table = document.createElement('table');
