@@ -23,12 +23,16 @@
     display: flex;
 }
 
+.fc_adv .fc_preview_img .image-container {
+    display: flex;
+}
+
 .fc_adv .fc_preview_img img {
     width: auto;
     height: auto;
     max-width: 100%;
     max-height: 100%;
-    margin: auto;
+    margin: auto !important;
 
     background-image: none;
     background-size: contain;

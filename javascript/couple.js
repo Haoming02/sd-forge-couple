@@ -200,10 +200,6 @@ class ForgeCouple {
                 gradioApp().getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`).querySelector("textarea"),
                 () => { this.dataframe[mode].syncPrompt(); }
             );
-
-            setTimeout(() => {
-                this.preview(mode);
-            }, 50);
         });
 
         this.#registerResolutionHandles();

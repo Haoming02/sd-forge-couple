@@ -1,3 +1,9 @@
+### v2.0.2 - 2024 Aug.19
+- Fix Incorrect `Advanced` Mapping **Resolution**
+
+### v2.0.1 - 2024 Aug.15
+- Improve `<table>` editing **QoL**
+
 ### v2.0.0 - 2024 Aug.13
 - Support **Gradio v4** *(both `Basic` and `Advanced`)*
 - Use HTML `<table>` instead of Gradio `Dataframe`

@@ -160,7 +160,9 @@ def couple_UI(script, is_img2img: bool, title: str):
                     gr.update(visible=True),
                 ]
 
-        mode.change(on_mode_change, mode, [basic_settings, adv_settings])
+        mode.change(on_mode_change, mode, [basic_settings, adv_settings]).success(
+            fn=None, **js(f'() => {{ ForgeCouple.preview("{m}"); }}')
+        )
 
         script.paste_field_names = []
         script.infotext_fields = [

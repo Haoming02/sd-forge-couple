@@ -15,9 +15,9 @@ from lib_couple.ui_funcs import validate_mapping
 from lib_couple.attention_couple import AttentionCouple
 forgeAttentionCouple = AttentionCouple()
 
-VERSION = "2.0.0"
+VERSION = "2.0.2"
 
-from lib_couple.gr_version import js, is_gradio_4
+from lib_couple.gr_version import js
 
 
 class ForgeCouple(scripts.Script):
@@ -35,10 +35,13 @@ class ForgeCouple(scripts.Script):
         return couple_UI(self, is_img2img, f"{self.title()} v{VERSION}")
 
     def after_component(self, component, **kwargs):
-        if is_gradio_4:
+        if not (elem_id := kwargs.get("elem_id", None)):
             return
 
-        if kwargs.get("elem_id", None) == "img2img_image":
+        if elem_id in ("txt2img_width", "txt2img_height"):
+            component.change(None, **js('() => { ForgeCouple.preview("t2i"); }'))
+
+        elif elem_id in ("img2img_width", "img2img_height"):
             component.change(None, **js('() => { ForgeCouple.preview("i2i"); }'))
 
     @staticmethod
