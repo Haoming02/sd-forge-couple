@@ -167,7 +167,8 @@ def couple_UI(script, is_img2img: bool, title: str):
 
         with gr.Group(visible=False, elem_classes="fc_msk") as msk_settings:
             couple_mask = CoupleMaskData()
-            couple_mask.mask_ui()
+            couple_mask.mask_ui(preview_btn, preview_res)
+            script.get_mask = couple_mask.get_masks
 
         def on_mode_change(choice: str):
             return [

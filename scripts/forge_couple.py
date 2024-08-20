@@ -1,4 +1,5 @@
 from modules import scripts
+from typing import Callable
 from json import dumps
 import re
 
@@ -24,6 +25,7 @@ class ForgeCouple(scripts.Script):
 
     def __init__(self):
         self.couples: list = None
+        self.get_mask: Callable = None
 
     def title(self):
         return "Forge Couple"

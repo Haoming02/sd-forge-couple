@@ -11,10 +11,13 @@ class CoupleMaskData:
     def __init__(self):
         self.masks: list[Image.Image] = []
 
-    def mask_ui(self) -> list[gr.components.Component]:
-        return self._mask_ui_4() if is_gradio_4 else self._mask_ui_3()
+    def get_masks(self) -> list[Image.Image]:
+        return self.masks
 
-    def _mask_ui_3(self) -> list[gr.components.Component]:
+    def mask_ui(self, btn: gr.Button, res: gr.Textbox):
+        return self._mask_ui_4(btn, res) if is_gradio_4 else self._mask_ui_3(btn, res)
+
+    def _mask_ui_3(self, btn, res) -> list[gr.components.Component]:
 
         msk_btn_empty = gr.Button("Create Empty Image", elem_classes="round-btn")
 
@@ -57,7 +60,7 @@ class CoupleMaskData:
 
         msk_btn_reset = gr.Button("Reset All Masks", elem_classes="round-btn")
 
-        msk_btn_empty.click(fn=self._create_empty, outputs=[msk_canvas])
+        msk_btn_empty.click(fn=self._create_empty, inputs=[res], outputs=[msk_canvas])
 
         msk_btn_save.click(
             fn=self._write_mask,
@@ -79,25 +82,53 @@ class CoupleMaskData:
         ):
             comp.do_not_save_to_config = True
 
-        return msk_gallery
+        btn.click(
+            fn=self._refresh_resolution,
+            inputs=[res],
+            outputs=[msk_gallery, msk_preview],
+        )
 
-    def _mask_ui_4(self) -> list[gr.components.Component]:
+    def _mask_ui_4(self, btn, res) -> list[gr.components.Component]:
         raise NotImplementedError
 
     @staticmethod
-    def _create_empty() -> Image.Image:
-        return Image.new("L", (512, 512), "black")
+    def _create_empty(resolution: str) -> Image.Image:
+        w, h = [int(v) for v in resolution.split("x")]
+        return Image.new("L", (w, h), "black")
 
     def _generate_preview(self) -> Image.Image:
-        bg = Image.new("RGBA", (512, 512), "black")
+        if not self.masks:
+            return Image.new(("RGB"), (64, 64))
+
+        res: tuple[int, int] = self.masks[0].size
+        bg = Image.new("RGBA", res, "black")
 
         for i, mask in enumerate(self.masks):
-            color = Image.new("RGB", (512, 512), COLORS[i % 7])
+            color = Image.new("RGB", res, COLORS[i % 7])
             alpha = Image.fromarray(np.asarray(mask).astype(np.uint8) * 128)
             rgba = Image.merge("RGBA", [*color.split(), alpha.convert("L")])
             bg.paste(rgba, (0, 0), rgba)
 
         return bg
+
+    def _refresh_resolution(
+        self, resolution: str
+    ) -> list[list[Image.Image], Image.Image]:
+
+        if not self.masks:
+            return [gr.update(), gr.update()]
+
+        w, h = [int(v) for v in resolution.split("x")]
+        ow, oh = self.masks[0].size
+
+        if w != ow and h != oh:
+            new_list: list[Image.Image] = []
+            for mask in self.masks:
+                new_list.append(mask.resize((w, h)))
+            self.masks = new_list
+
+        preview = self._generate_preview()
+        return [self.masks, preview]
 
     def _reset_masks(self) -> list[list[Image.Image], Image.Image]:
         self.masks.clear()
