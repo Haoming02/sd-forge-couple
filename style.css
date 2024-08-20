@@ -6,6 +6,10 @@
     height: 100%;
 }
 
+.fc_bsc .fc_placeholder {
+    flex-grow: 2;
+}
+
 .fc_adv {
     flex-direction: row;
     justify-content: center;

@@ -44,6 +44,8 @@ def couple_UI(script, is_img2img: bool, title: str):
                     scale=2,
                 )
 
+                placeholder = gr.Group(visible=False, elem_classes="fc_placeholder")
+
                 background = gr.Radio(
                     ["None", "First Line", "Last Line"],
                     label="Global Effect",
@@ -58,7 +60,18 @@ def couple_UI(script, is_img2img: bool, title: str):
                     value=0.5,
                     label="Global Effect Weight",
                     scale=1,
+                    interactive=False,
                 )
+
+            def on_background_change(choice: str):
+                return gr.update(interactive=(choice != "None"))
+
+            background.change(
+                on_background_change,
+                background,
+                background_weight,
+                show_progress="hidden",
+            )
 
         with gr.Group(visible=False, elem_classes="fc_adv") as adv_settings:
             with gr.Row(elem_classes="fc_mapping_btns"):
@@ -156,15 +169,20 @@ def couple_UI(script, is_img2img: bool, title: str):
             couple_mask = CoupleMaskData()
             couple_mask.mask_ui()
 
-        def on_mode_change(choice):
+        def on_mode_change(choice: str):
             return [
+                gr.update(visible=(choice in ("Basic", "Mask"))),
                 gr.update(visible=(choice == "Basic")),
                 gr.update(visible=(choice == "Advanced")),
+                gr.update(visible=(choice == "Mask")),
                 gr.update(visible=(choice == "Mask")),
             ]
 
         mode.change(
-            on_mode_change, mode, [basic_settings, adv_settings, msk_settings]
+            on_mode_change,
+            mode,
+            [basic_settings, direction, adv_settings, msk_settings, placeholder],
+            show_progress="hidden",
         ).success(fn=None, **js(f'() => {{ ForgeCouple.preview("{m}"); }}'))
 
         script.paste_field_names = []
@@ -182,7 +200,14 @@ def couple_UI(script, is_img2img: bool, title: str):
             comp.do_not_save_to_config = True
             script.paste_field_names.append(name)
 
-        for comp in (mapping, preview_res):
+        for comp in (
+            placeholder,
+            mapping,
+            mapping_entry_field,
+            preview_img,
+            preview_res,
+            preview_btn,
+        ):
             comp.do_not_save_to_config = True
 
     return [
