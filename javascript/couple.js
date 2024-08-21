@@ -202,6 +202,7 @@ class ForgeCouple {
 
             ForgeCoupleMaskHandler.setup(
                 mode,
+                ex.querySelector(".fc_msk"),
                 ex.querySelector(".fc_msk_gal"),
                 ex.querySelector(".fc_masks"),
                 separator

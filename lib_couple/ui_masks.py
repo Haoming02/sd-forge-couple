@@ -28,9 +28,15 @@ class CoupleMaskData:
             source="upload",
             interactive=True,
             type="pil",
-            tool="sketch",
-            image_mode="L",
+            tool="color-sketch",
+            image_mode="RGB",
             brush_color="#ffffff",
+            elem_classes="fc_msk_canvas",
+        )
+
+        msk_canvas.change(
+            fn=None,
+            **js(f'() => {{ ForgeCoupleMaskHandler.hideButtons("{self.mode}"); }}'),
         )
 
         mask_index = gr.Number(value=0, visible=False)
@@ -48,6 +54,7 @@ class CoupleMaskData:
             show_label=True,
             show_download_button=False,
             interactive=False,
+            elem_classes="fc_msk_preview",
         )
 
         msk_gallery = gr.Gallery(
@@ -118,7 +125,8 @@ class CoupleMaskData:
     @staticmethod
     def _create_empty(resolution: str) -> Image.Image:
         w, h = CoupleMaskData._parse_resolution(resolution)
-        return Image.new("L", (w, h), "black")
+        empty = Image.new("RGB", (w, h))
+        return empty
 
     def _generate_preview(self) -> Image.Image:
         if not self.masks:
@@ -137,7 +145,7 @@ class CoupleMaskData:
 
     def _refresh_resolution(
         self, resolution: str, mode: str
-    ) -> list[list[Image.Image], Image.Image]:
+    ) -> list[list[Image.Image], Image.Image, Image.Image]:
         canvas = self._create_empty(resolution)
 
         if not self.masks or mode != "Mask":

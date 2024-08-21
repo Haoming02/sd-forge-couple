@@ -1,19 +1,48 @@
 class ForgeCoupleMaskHandler {
 
+    static #group = { "t2i": undefined, "i2i": undefined };
     static #gallery = { "t2i": undefined, "i2i": undefined };
     static #div = { "t2i": undefined, "i2i": undefined };
     static #sep = { "t2i": undefined, "i2i": undefined };
 
     /**
      * @param {string} mode
+     * @param {Element} group
      * @param {Element} gallery
      * @param {Element} div
      * @param {Element} sep
      */
-    static setup(mode, gallery, div, sep) {
+    static setup(mode, group, gallery, div, sep) {
+        this.#group[mode] = group;
         this.#gallery[mode] = gallery;
         this.#div[mode] = div;
         this.#sep[mode] = sep;
+    }
+
+    /** @param {string} mode "t2i" | "i2i" */
+    static hideButtons(mode) {
+        const undo = this.#group[mode].querySelector("button[aria-label='Undo']");
+        if (undo == null)
+            return;
+
+        undo.style.display = "none";
+
+        const clear = this.#group[mode].querySelector("button[aria-label='Clear']");
+        clear.style.display = "none";
+
+        const remove = this.#group[mode].querySelector("button[aria-label='Remove Image']");
+        remove.style.display = "none";
+
+        const brush = this.#group[mode].querySelector("button[aria-label='Use brush']");
+        brush.firstElementChild.style.width = "20px";
+        brush.firstElementChild.style.height = "20px";
+
+        const color = this.#group[mode].querySelector("button[aria-label='Select brush color']");
+        color.firstElementChild.style.width = "20px";
+        color.firstElementChild.style.height = "20px";
+
+        brush.parentElement.parentElement.style.top = "var(--size-2)";
+        brush.parentElement.parentElement.style.right = "var(--size-10)";
     }
 
     /**

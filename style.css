@@ -120,10 +120,17 @@
 }
 
 .fc_msk .gradio-image {
-    width: 512px;
     height: 512px;
     margin: auto;
     display: flex;
+}
+
+.fc_msk .gradio-image.fc_msk_canvas {
+    width: 100%;
+}
+
+.fc_msk .gradio-image.fc_msk_preview {
+    width: 512px;
 }
 
 .fc_msk .gradio-image div.empty {
