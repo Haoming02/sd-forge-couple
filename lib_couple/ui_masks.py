@@ -70,35 +70,46 @@ class CoupleMaskData:
 
         msk_btn_reset.click(fn=self._reset_masks, outputs=[msk_gallery, msk_preview])
 
-        for comp in (
-            msk_btn_empty,
-            msk_canvas,
-            mask_index,
-            msk_btn_save,
-            msk_btn_delete,
-            msk_preview,
-            msk_gallery,
-            msk_btn_reset,
-        ):
-            comp.do_not_save_to_config = True
+        [
+            setattr(comp, "do_not_save_to_config", True)
+            for comp in (
+                msk_btn_empty,
+                msk_canvas,
+                mask_index,
+                msk_btn_save,
+                msk_btn_delete,
+                msk_preview,
+                msk_gallery,
+                msk_btn_reset,
+            )
+        ]
 
         btn.click(
             fn=self._refresh_resolution,
             inputs=[res],
             outputs=[msk_gallery, msk_preview],
-        )
+        ).then(fn=self._create_empty, inputs=[res], outputs=[msk_canvas])
 
     def _mask_ui_4(self, btn, res) -> list[gr.components.Component]:
         raise NotImplementedError
 
     @staticmethod
-    def _create_empty(resolution: str) -> Image.Image:
+    def _parse_resolution(resolution: str) -> tuple[int, int]:
         w, h = [int(v) for v in resolution.split("x")]
+        while w * h > 1024 * 1024:
+            w //= 2
+            h //= 2
+
+        return (w, h)
+
+    @staticmethod
+    def _create_empty(resolution: str) -> Image.Image:
+        w, h = CoupleMaskData._parse_resolution(resolution)
         return Image.new("L", (w, h), "black")
 
     def _generate_preview(self) -> Image.Image:
         if not self.masks:
-            return Image.new(("RGB"), (64, 64))
+            return None
 
         res: tuple[int, int] = self.masks[0].size
         bg = Image.new("RGBA", res, "black")
@@ -118,7 +129,7 @@ class CoupleMaskData:
         if not self.masks:
             return [gr.update(), gr.update()]
 
-        w, h = [int(v) for v in resolution.split("x")]
+        w, h = self._parse_resolution(resolution)
         ow, oh = self.masks[0].size
 
         if w != ow and h != oh:
@@ -135,8 +146,8 @@ class CoupleMaskData:
         preview = self._generate_preview()
         return [self.masks, preview]
 
-    def _delete_mask(self, index) -> list[Image.Image]:
-        return self.masks
+    def _delete_mask(self, index) -> list[list[Image.Image], Image.Image]:
+        return [gr.update(), gr.update()]
 
     def _write_mask(
         self, img: None | dict | Image.Image
