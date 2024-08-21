@@ -138,9 +138,10 @@ class CoupleMaskData:
     def _refresh_resolution(
         self, resolution: str, mode: str
     ) -> list[list[Image.Image], Image.Image]:
+        canvas = self._create_empty(resolution)
 
         if not self.masks or mode != "Mask":
-            return [gr.update(), gr.update(), gr.update()]
+            return [gr.update(), gr.update(), canvas]
 
         w, h = self._parse_resolution(resolution)
         ow, oh = self.masks[0].size
@@ -152,7 +153,6 @@ class CoupleMaskData:
             self.masks = new_list
 
         preview = self._generate_preview()
-        canvas = self._create_empty(resolution)
         return [self.masks, preview, canvas]
 
     def _reset_masks(self) -> list[list[Image.Image], Image.Image]:

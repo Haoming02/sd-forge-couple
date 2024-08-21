@@ -72,6 +72,10 @@ class ForgeCouple(scripts.Script):
 
         separator = "\n" if not separator.strip() else separator.strip()
 
+        # Webui & API Usages...
+        if mode == "Mask":
+            mapping: list = self.get_mask() or mapping
+
         couples = []
 
         chunks = kwargs["prompts"][0].split(separator)
@@ -196,6 +200,13 @@ class ForgeCouple(scripts.Script):
                 )
 
             case "Mask":
+                mapping = self.get_mask() or mapping
+                if not isinstance(mapping[0], dict):
+                    parsed = []
+                    for map in mapping:
+                        parsed.append({"mask": map, "weight": 1.0})
+                    mapping = parsed
+
                 ARGs = mask_mapping(
                     p.sd_model,
                     self.couples,
