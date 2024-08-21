@@ -1,6 +1,7 @@
 from json.decoder import JSONDecodeError
 from PIL import Image, ImageDraw
 from json import loads
+import gradio as gr
 
 DEFAULT_MAPPING = [[0.0, 0.5, 0.0, 1.0, 1.0], [0.5, 1.0, 0.0, 1.0, 1.0]]
 COLORS = ("red", "orange", "yellow", "green", "blue", "indigo", "violet")
@@ -20,9 +21,11 @@ def validate_mapping(data: list) -> bool:
     return True
 
 
-def visualize_mapping(res: str, mapping: list) -> Image:
-    w, h = res.split("x")
-    p_WIDTH, p_HEIGHT = int(w), int(h)
+def visualize_mapping(mode: str, res: str, mapping: list) -> Image:
+    if mode != "Advanced":
+        return gr.update()
+
+    p_WIDTH, p_HEIGHT = [int(v) for v in res.split("x")]
 
     while p_WIDTH > 1024 or p_HEIGHT > 1024:
         p_WIDTH, p_HEIGHT = p_WIDTH // 2, p_HEIGHT // 2

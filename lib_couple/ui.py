@@ -160,14 +160,14 @@ def couple_UI(script, is_img2img: bool, title: str):
 
             preview_btn.click(
                 visualize_mapping,
-                [preview_res, mapping],
+                [mode, preview_res, mapping],
                 preview_img,
                 show_progress="hidden",
             ).success(None, **js(f'() => {{ ForgeCouple.updateColors("{m}"); }}'))
 
         with gr.Group(visible=False, elem_classes="fc_msk") as msk_settings:
-            couple_mask = CoupleMaskData()
-            couple_mask.mask_ui(preview_btn, preview_res)
+            couple_mask = CoupleMaskData(is_img2img)
+            couple_mask.mask_ui(preview_btn, preview_res, mode)
             script.get_mask = couple_mask.get_masks
 
         def on_mode_change(choice: str):

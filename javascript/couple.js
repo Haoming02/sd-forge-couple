@@ -198,6 +198,8 @@ class ForgeCouple {
                 document.getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`).querySelector("textarea"),
                 () => { this.dataframe[mode].syncPrompt(); }
             );
+
+            ForgeCoupleMaskHandler.setGallery(mode, ex.querySelector(".fc_msk_gal"));
         });
 
         this.#registerResolutionHandles();
