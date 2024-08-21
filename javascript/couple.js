@@ -161,9 +161,10 @@ class ForgeCouple {
             this.container[mode] = ex.querySelector(".fc_mapping");
             this.container[mode].appendChild(mapping_btns);
 
-            this.dataframe[mode] = new ForgeCoupleDataframe(
-                this.container[mode], mode, ex.querySelector(".fc_separator").querySelector("input")
-            );
+            const separator = ex.querySelector(".fc_separator").querySelector("input");
+
+            this.dataframe[mode] = new ForgeCoupleDataframe(this.container[mode], mode, separator);
+
             this.mappingTable[mode] = this.container[mode].querySelector("tbody");
 
             this.rowButtons[mode] = ex.querySelector(".fc_row_btns");
@@ -199,7 +200,12 @@ class ForgeCouple {
                 () => { this.dataframe[mode].syncPrompt(); }
             );
 
-            ForgeCoupleMaskHandler.setGallery(mode, ex.querySelector(".fc_msk_gal"));
+            ForgeCoupleMaskHandler.setup(
+                mode,
+                ex.querySelector(".fc_msk_gal"),
+                ex.querySelector(".fc_masks"),
+                separator
+            );
         });
 
         this.#registerResolutionHandles();

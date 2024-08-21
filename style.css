@@ -137,3 +137,26 @@
     max-height: 100%;
     margin: auto !important;
 }
+
+.fc_msk .fc_mask_row {
+    display: flex;
+    flex-direction: row;
+    margin: 1em;
+    padding: 1em;
+    border-radius: 0.5em;
+    width: auto;
+    height: auto;
+    gap: 1em;
+    background-color: var(--background-fill-secondary);
+}
+
+.fc_msk .fc_mask_row input {
+    margin: auto;
+    border-radius: 0.5em;
+
+    border: var(--input-border-width) solid var(--input-border-color);
+    background: var(--input-background-fill);
+    color: var(--body-text-color);
+    font-weight: var(--input-text-weight);
+    font-size: var(--input-text-size);
+}
