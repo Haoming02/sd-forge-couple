@@ -27,35 +27,40 @@ class ForgeCouple {
      * After updating the mappings, trigger a preview
      * @param {string} mode "t2i" | "i2i"
      */
-    static async preview(mode) {
+    static preview(mode) {
 
-        setTimeout(async () => {
+        setTimeout(() => {
             var res = null;
+            var w = -1;
+            var h = -1;
 
             if (mode === "t2i") {
-                const w = parseInt(document.getElementById("txt2img_width").querySelector("input").value);
-                const h = parseInt(document.getElementById("txt2img_height").querySelector("input").value);
-                res = `${Math.max(64, w)}x${Math.max(64, h)}`;
+                w = parseInt(document.getElementById("txt2img_width").querySelector("input").value);
+                h = parseInt(document.getElementById("txt2img_height").querySelector("input").value);
             } else {
                 const i2i_size = document.getElementById("img2img_column_size").querySelector(".tab-nav");
 
                 if (i2i_size.children[0].classList.contains("selected")) {
                     // Resize to
-                    const w = parseInt(document.getElementById("img2img_width").querySelector("input").value);
-                    const h = parseInt(document.getElementById("img2img_height").querySelector("input").value);
-                    res = `${Math.max(64, w)}x${Math.max(64, h)}`;
+                    w = parseInt(document.getElementById("img2img_width").querySelector("input").value);
+                    h = parseInt(document.getElementById("img2img_height").querySelector("input").value);
                 } else {
                     // Resize by
                     res = document.getElementById("img2img_scale_resolution_preview")?.querySelector(".resolution")?.textContent;
                 }
             }
 
-            res ??= "1024x1024";
+            if (w > 128 && h > 128)
+                res = `${w}x${h}`;
+            else
+                return;
+
             this.previewResolution[mode].value = res;
             updateInput(this.previewResolution[mode]);
 
             this.previewButton[mode].click();
-        }, (mode === "t2i") ? 25 : 50);
+        }, 100);
+
     }
 
     /**
@@ -221,4 +226,4 @@ class ForgeCouple {
 
 }
 
-onUiLoaded(async () => { ForgeCouple.setup(); })
+onUiLoaded(() => { ForgeCouple.setup(); })
