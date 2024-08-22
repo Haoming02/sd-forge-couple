@@ -20,11 +20,17 @@ class CoupleMaskData:
 
     def _mask_ui_3(self, btn, res, mode) -> list[gr.components.Component]:
 
-        msk_btn_empty = gr.Button("Create Empty Image", elem_classes="round-btn")
+        msk_btn_empty = gr.Button("Create Empty Canvas", elem_classes="round-btn")
+
+        gr.HTML(
+            """
+            <h2 align="center"><ins>Mask Canvas</ins></h2>
+            <p align="center"><b>[Important]</b> Do <b>NOT</b> upload / paste an image to here...</p>
+            """
+        )
 
         msk_canvas = gr.Image(
-            label="Mask Canvas",
-            show_label=True,
+            show_label=False,
             source="upload",
             interactive=True,
             type="pil",
@@ -47,18 +53,18 @@ class CoupleMaskData:
 
         gr.HTML('<div class="fc_masks"></div>')
 
+        gr.HTML('<h2 align="center"><ins>Mask Preview</ins></h2>')
+
         msk_preview = gr.Image(
-            label="Mask Preview",
+            show_label=False,
             image_mode="RGB",
             type="pil",
-            show_label=True,
-            show_download_button=False,
             interactive=False,
+            show_download_button=False,
             elem_classes="fc_msk_preview",
         )
 
         msk_gallery = gr.Gallery(
-            label="Stored Masks",
             show_label=False,
             show_share_button=False,
             show_download_button=False,
@@ -125,8 +131,7 @@ class CoupleMaskData:
     @staticmethod
     def _create_empty(resolution: str) -> Image.Image:
         w, h = CoupleMaskData._parse_resolution(resolution)
-        empty = Image.new("RGB", (w, h))
-        return empty
+        return Image.new("RGB", (w, h))
 
     def _generate_preview(self) -> Image.Image:
         if not self.masks:
@@ -137,7 +142,7 @@ class CoupleMaskData:
 
         for i, mask in enumerate(self.masks):
             color = Image.new("RGB", res, COLORS[i % 7])
-            alpha = Image.fromarray(np.asarray(mask).astype(np.uint8) * 128)
+            alpha = Image.fromarray(np.asarray(mask).astype(np.uint8) * 192)
             rgba = Image.merge("RGBA", [*color.split(), alpha.convert("L")])
             bg.paste(rgba, (0, 0), rgba)
 
@@ -152,13 +157,8 @@ class CoupleMaskData:
             return [gr.update(), gr.update(), canvas]
 
         w, h = self._parse_resolution(resolution)
-        ow, oh = self.masks[0].size
 
-        if w != ow and h != oh:
-            new_list: list[Image.Image] = []
-            for mask in self.masks:
-                new_list.append(mask.resize((w, h)))
-            self.masks = new_list
+        self.masks = [mask.resize((w, h), Image.NEAREST) for mask in self.masks]
 
         preview = self._generate_preview()
         return [self.masks, preview, canvas]
@@ -179,7 +179,7 @@ class CoupleMaskData:
             return [self.masks, gr.update()]
 
         if isinstance(img, dict):
-            img = img.get("mask", None)
+            img = img.get("mask")
 
         assert isinstance(img, Image.Image)
 

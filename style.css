@@ -154,7 +154,7 @@
     width: auto;
     height: auto;
     gap: 1em;
-    background-color: var(--background-fill-secondary);
+    background-color: var(--border-color-accent);
 }
 
 .fc_msk .fc_mask_row input {

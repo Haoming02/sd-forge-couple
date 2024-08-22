@@ -75,7 +75,7 @@ class ForgeCoupleMaskHandler {
             return;
 
         const img = document.createElement("img");
-        img.setAttribute('style', 'width: 96px !important; height: 96px !important;');
+        img.setAttribute('style', 'width: 96px !important; height: 96px !important; object-fit: contain;');
         row.appendChild(img);
         row.img = img;
 
