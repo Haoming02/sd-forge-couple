@@ -81,9 +81,16 @@ class ForgeCouple {
      * @param {string} mode "t2i" | "i2i"
      */
     static onPaste(mode) {
-        const vals = JSON.parse(this.pasteField[mode].value);
+        const infotext = this.pasteField[mode].value;
+        if (!infotext.trim())
+            return;
+
+        const vals = JSON.parse(infotext);
         this.dataframe[mode].onPaste(vals);
         this.preview(mode);
+
+        this.pasteField[mode].value = "";
+        updateInput(this.pasteField[mode]);
     }
 
     /**

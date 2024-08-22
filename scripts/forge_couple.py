@@ -12,16 +12,15 @@ from lib_couple.mapping import (
 
 from lib_couple.ui import couple_UI
 from lib_couple.ui_funcs import validate_mapping
-
 from lib_couple.attention_couple import AttentionCouple
-forgeAttentionCouple = AttentionCouple()
-
-VERSION = "2.0.3"
-
 from lib_couple.gr_version import js
 
 
+VERSION = "2.1.0"
+
+
 class ForgeCouple(scripts.Script):
+    forgeAttentionCouple = AttentionCouple()
 
     def __init__(self):
         self.couples: list = None
@@ -227,5 +226,5 @@ class ForgeCouple(scripts.Script):
         assert len(ARGs.keys()) // 2 == LINE_COUNT
 
         base_mask = empty_tensor(HEIGHT, WIDTH)
-        patched_unet = forgeAttentionCouple.patch_unet(unet, base_mask, ARGs)
+        patched_unet = self.forgeAttentionCouple.patch_unet(unet, base_mask, ARGs)
         p.sd_model.forge_objects.unet = patched_unet

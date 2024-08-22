@@ -60,6 +60,9 @@ def visualize_mapping(mode: str, res: str, mapping: list) -> Image:
 
 
 def on_entry(data: str) -> list:
+    if not data.strip():
+        return gr.update()
+
     if ":" in data:
         print("\n[Couple] Old infotext is no longer supported...\n")
         return DEFAULT_MAPPING
