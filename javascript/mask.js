@@ -1,43 +1,52 @@
 class ForgeCoupleMaskHandler {
 
-    static #group = { "t2i": undefined, "i2i": undefined };
-    static #gallery = { "t2i": undefined, "i2i": undefined };
-    static #div = { "t2i": undefined, "i2i": undefined };
-    static #sep = { "t2i": undefined, "i2i": undefined };
+    #group = undefined;
+    #gallery = undefined;
+    #preview = undefined;
+    #sep = undefined;
+    #background = undefined;
+    #promptField = undefined;
 
     /**
-     * @param {string} mode
-     * @param {Element} group
-     * @param {Element} gallery
-     * @param {Element} div
-     * @param {Element} sep
+     * @param {HTMLDivElement} group
+     * @param {HTMLDivElement} gallery
+     * @param {HTMLDivElement} preview
+     * @param {HTMLInputElement} sep
+     * @param {HTMLInputElement} background
+     * @param {HTMLTextAreaElement} promptField
      */
-    static setup(mode, group, gallery, div, sep) {
-        this.#group[mode] = group;
-        this.#gallery[mode] = gallery;
-        this.#div[mode] = div;
-        this.#sep[mode] = sep;
+    constructor(group, gallery, preview, sep, background, promptField) {
+        this.#group = group;
+        this.#gallery = gallery;
+        this.#preview = preview;
+        this.#sep = sep;
+        this.#background = background;
+        this.#promptField = promptField;
     }
 
-    /** @param {string} mode "t2i" | "i2i" */
-    static hideButtons(mode) {
-        const undo = this.#group[mode].querySelector("button[aria-label='Undo']");
+    /** @returns {HTMLDivElement[]} */
+    get #allRows() {
+        return this.#preview.querySelectorAll(".fc_mask_row");
+    }
+
+    hideButtons() {
+        const undo = this.#group.querySelector("button[aria-label='Undo']");
         if (undo == null)
             return;
 
         undo.style.display = "none";
 
-        const clear = this.#group[mode].querySelector("button[aria-label='Clear']");
+        const clear = this.#group.querySelector("button[aria-label='Clear']");
         clear.style.display = "none";
 
-        const remove = this.#group[mode].querySelector("button[aria-label='Remove Image']");
+        const remove = this.#group.querySelector("button[aria-label='Remove Image']");
         remove.style.display = "none";
 
-        const brush = this.#group[mode].querySelector("button[aria-label='Use brush']");
+        const brush = this.#group.querySelector("button[aria-label='Use brush']");
         brush.firstElementChild.style.width = "20px";
         brush.firstElementChild.style.height = "20px";
 
-        const color = this.#group[mode].querySelector("button[aria-label='Select brush color']");
+        const color = this.#group.querySelector("button[aria-label='Select brush color']");
         color.firstElementChild.style.width = "20px";
         color.firstElementChild.style.height = "20px";
 
@@ -45,32 +54,27 @@ class ForgeCoupleMaskHandler {
         brush.parentElement.parentElement.style.right = "var(--size-10)";
     }
 
-    /**
-     * After updating the masks, trigger a preview
-     * @param {string} mode "t2i" | "i2i"
-     */
-    static generatePreview(mode) {
-
-        const imgs = this.#gallery[mode].querySelectorAll("img");
+    generatePreview() {
+        const imgs = this.#gallery.querySelectorAll("img");
         const maskCount = imgs.length;
 
         // Clear Excess Rows
-        while (this.#div[mode].children.length > maskCount)
-            this.#div[mode].lastElementChild.remove();
+        while (this.#preview.children.length > maskCount)
+            this.#preview.lastElementChild.remove();
 
         // Append Insufficient Rows
-        while (this.#div[mode].children.length < maskCount) {
+        while (this.#preview.children.length < maskCount) {
             const row = document.createElement("div");
             row.classList.add("fc_mask_row");
-            this.#div[mode].appendChild(row);
+            this.#preview.appendChild(row);
         }
 
-        this.#populateRows(this.#div[mode].querySelectorAll(".fc_mask_row"), imgs);
-        this.#syncPrompts(mode, this.#div[mode].querySelectorAll(".fc_mask_row"));
+        this.#populateRows(this.#allRows, imgs);
+        this.syncPrompts(this.#allRows);
     }
 
-    /** @param {HTMLDivElement[]} row */
-    static #constructRow(row) {
+    /** @param {HTMLDivElement} row */
+    #constructRow(row) {
         if (row.hasOwnProperty("setup"))
             return;
 
@@ -96,7 +100,7 @@ class ForgeCoupleMaskHandler {
     }
 
     /** @param {HTMLDivElement[]} rows @param {HTMLImageElement[]} imgs */
-    static #populateRows(rows, imgs) {
+    #populateRows(rows, imgs) {
         const len = rows.length;
         console.assert(len === imgs.length);
 
@@ -106,17 +110,16 @@ class ForgeCoupleMaskHandler {
         }
     }
 
-    /** @param {string} mode @param {HTMLDivElement[]} rows */
-    static #syncPrompts(mode, rows) {
-        const prompt = document.getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`).querySelector("textarea").value;
+    syncPrompts() {
+        const prompt = this.#promptField.value;
 
-        var sep = this.#sep[mode].value.trim();
+        var sep = this.#sep.value.trim();
         if (!sep) sep = "\n";
 
         const prompts = prompt.split(sep).map(line => line.trim());
 
         const active = document.activeElement;
-        rows.forEach((row, i) => {
+        this.#allRows.forEach((row, i) => {
             const promptCell = row.txt;
 
             // Skip editing Cell

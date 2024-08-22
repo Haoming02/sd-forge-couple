@@ -51,6 +51,7 @@ def couple_UI(script, is_img2img: bool, title: str):
                     label="Global Effect",
                     value="None",
                     scale=3,
+                    elem_classes="fc_global_effect",
                 )
 
                 background_weight = gr.Slider(

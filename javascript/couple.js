@@ -23,17 +23,19 @@ class ForgeCouple {
     /** The \<input\> for internal updates */
     static entryField = { "t2i": undefined, "i2i": undefined };
 
+    /** The ForgeCoupleMaskHandler class */
+    static maskHandler = { "t2i": undefined, "i2i": undefined };
+
     /**
      * After updating the mappings, trigger a preview
      * @param {string} mode "t2i" | "i2i"
      */
     static preview(mode) {
+        var res = null;
+        var w = -1;
+        var h = -1;
 
         setTimeout(() => {
-            var res = null;
-            var w = -1;
-            var h = -1;
-
             if (mode === "t2i") {
                 w = parseInt(document.getElementById("txt2img_width").querySelector("input").value);
                 h = parseInt(document.getElementById("txt2img_height").querySelector("input").value);
@@ -50,9 +52,10 @@ class ForgeCouple {
                 }
             }
 
-            if (w > 128 && h > 128)
+            if (w > 100 && h > 100)
                 res = `${w}x${h}`;
-            else
+
+            if (!res)
                 return;
 
             this.previewResolution[mode].value = res;
@@ -60,7 +63,6 @@ class ForgeCouple {
 
             this.previewButton[mode].click();
         }, 100);
-
     }
 
     /**
@@ -165,6 +167,22 @@ class ForgeCouple {
 
     }
 
+    /**
+     * Remove Gradio Image Junks...
+     * @param {string} mode "t2i" | "i2i"
+     */
+    static hideButtons(mode) {
+        this.maskHandler[mode].hideButtons();
+    }
+
+    /**
+     * After editing masks, refresh the preview rows
+     * @param {string} mode "t2i" | "i2i"
+     */
+    static populateMasks(mode) {
+        this.maskHandler[mode].generatePreview();
+    }
+
     static setup() {
         ["t2i", "i2i"].forEach((mode) => {
             const ex = document.getElementById(`forge_couple_${mode}`);
@@ -174,6 +192,7 @@ class ForgeCouple {
             this.container[mode].appendChild(mapping_btns);
 
             const separator = ex.querySelector(".fc_separator").querySelector("input");
+            const promptField = document.getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`).querySelector("textarea");
 
             this.dataframe[mode] = new ForgeCoupleDataframe(this.container[mode], mode, separator);
 
@@ -205,19 +224,23 @@ class ForgeCouple {
             this.pasteField[mode] = ex.querySelector(".fc_paste_field").querySelector("textarea");
             this.entryField[mode] = ex.querySelector(".fc_entry_field").querySelector("textarea");
 
-            this.#registerButtons(ex, mode);
-            ForgeCoupleObserver.observe(
-                mode,
-                document.getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`).querySelector("textarea"),
-                () => { this.dataframe[mode].syncPrompt(); }
-            );
-
-            ForgeCoupleMaskHandler.setup(
-                mode,
+            this.maskHandler[mode] = new ForgeCoupleMaskHandler(
                 ex.querySelector(".fc_msk"),
                 ex.querySelector(".fc_msk_gal"),
                 ex.querySelector(".fc_masks"),
-                separator
+                separator,
+                ex.querySelector(".fc_global_effect"),
+                promptField
+            );
+
+            this.#registerButtons(ex, mode);
+            ForgeCoupleObserver.observe(
+                mode,
+                promptField,
+                () => {
+                    this.dataframe[mode].syncPrompt();
+                    this.maskHandler[mode].syncPrompts();
+                }
             );
         });
 

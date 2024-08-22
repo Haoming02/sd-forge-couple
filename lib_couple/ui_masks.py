@@ -42,7 +42,7 @@ class CoupleMaskData:
 
         msk_canvas.change(
             fn=None,
-            **js(f'() => {{ ForgeCoupleMaskHandler.hideButtons("{self.mode}"); }}'),
+            **js(f'() => {{ ForgeCouple.hideButtons("{self.mode}"); }}'),
         )
 
         mask_index = gr.Number(value=0, visible=False)
@@ -83,14 +83,14 @@ class CoupleMaskData:
             outputs=[msk_gallery, msk_preview],
         ).success(
             fn=None,
-            **js(f'() => {{ ForgeCoupleMaskHandler.generatePreview("{self.mode}"); }}'),
+            **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}'),
         )
 
         msk_btn_reset.click(
             fn=self._reset_masks, outputs=[msk_gallery, msk_preview]
         ).success(
             fn=None,
-            **js(f'() => {{ ForgeCoupleMaskHandler.generatePreview("{self.mode}"); }}'),
+            **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}'),
         )
 
         [
@@ -113,7 +113,7 @@ class CoupleMaskData:
             outputs=[msk_gallery, msk_preview, msk_canvas],
         ).success(
             fn=None,
-            **js(f'() => {{ ForgeCoupleMaskHandler.generatePreview("{self.mode}"); }}'),
+            **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}'),
         )
 
     def _mask_ui_4(self, btn, res, mode) -> list[gr.components.Component]:
@@ -168,8 +168,13 @@ class CoupleMaskData:
         preview = self._generate_preview()
         return [self.masks, preview]
 
-    def _delete_mask(self, index) -> list[list[Image.Image], Image.Image]:
-        return [gr.update(), gr.update()]
+    def _delete_mask(self, index: int) -> list[list[Image.Image], Image.Image]:
+        if index >= len(self.masks):
+            return [gr.update(), gr.update()]
+
+        self.masks.pop(index)
+        preview = self._generate_preview()
+        return [self.masks, preview]
 
     def _write_mask(
         self, img: None | dict | Image.Image
