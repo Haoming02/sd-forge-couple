@@ -240,6 +240,9 @@ class ForgeCouple {
                 ex.querySelector(".fc_global_effect"),
                 promptField,
                 ex.querySelector(".fc_msk_weights").querySelector("textarea"),
+                ex.querySelector(".fc_msk_op").querySelector("textarea"),
+                ex.querySelector(".fc_msk_op_btn"),
+                ex.querySelector(".fc_msk_io").querySelectorAll("button")[1]
             );
 
             this.#registerButtons(ex, mode);
