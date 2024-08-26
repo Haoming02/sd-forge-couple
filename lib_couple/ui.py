@@ -72,7 +72,7 @@ def couple_UI(script, is_img2img: bool, title: str):
                 background,
                 background_weight,
                 show_progress="hidden",
-            )
+            ).success(None, **js(f'() => {{ ForgeCouple.onBackgroundChange("{m}"); }}'))
 
         with gr.Group(visible=False, elem_classes="fc_adv") as adv_settings:
             with gr.Row(elem_classes="fc_mapping_btns"):

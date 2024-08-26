@@ -20,7 +20,7 @@ class ForgeCoupleDataframe {
 
     get #sep() {
         var sep = this.#separatorField.value.trim();
-        if (!sep) sep = "\n";
+        sep = (!sep) ? "\n" : sep.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
         return sep;
     }
 

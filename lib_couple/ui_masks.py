@@ -9,11 +9,17 @@ from .ui_funcs import COLORS
 class CoupleMaskData:
 
     def __init__(self, is_img2img: bool):
-        self.masks: list[Image.Image] = []
         self.mode: str = "i2i" if is_img2img else "t2i"
+        self.masks: list[Image.Image] = []
+        self.weights: list[float] = []
 
-    def get_masks(self) -> list[Image.Image]:
-        return self.masks
+    def get_masks(self) -> list[dict]:
+        count = len(self.masks)
+        assert count == len(self.weights)
+
+        return [
+            {"mask": self.masks[i], "weight": self.weights[i]} for i in range(count)
+        ]
 
     def mask_ui(self, *args):
         return self._mask_ui_4(*args) if is_gradio_4 else self._mask_ui_3(*args)
@@ -49,6 +55,7 @@ class CoupleMaskData:
 
         with gr.Row():
             msk_btn_save = gr.Button("Save", elem_classes="round-btn")
+            msk_btn_override = gr.Button("Override", elem_classes="round-btn")
             msk_btn_delete = gr.Button("Delete", elem_classes="round-btn")
 
         gr.HTML('<div class="fc_masks"></div>')
@@ -93,19 +100,8 @@ class CoupleMaskData:
             **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}'),
         )
 
-        [
-            setattr(comp, "do_not_save_to_config", True)
-            for comp in (
-                msk_btn_empty,
-                msk_canvas,
-                mask_index,
-                msk_btn_save,
-                msk_btn_delete,
-                msk_preview,
-                msk_gallery,
-                msk_btn_reset,
-            )
-        ]
+        weights_field = gr.Textbox(visible=False, elem_classes="fc_msk_weights")
+        weights_field.change(fn=self._write_weights, inputs=weights_field)
 
         btn.click(
             fn=self._refresh_resolution,
@@ -115,6 +111,21 @@ class CoupleMaskData:
             fn=None,
             **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}'),
         )
+
+        [
+            setattr(comp, "do_not_save_to_config", True)
+            for comp in (
+                msk_btn_empty,
+                msk_canvas,
+                mask_index,
+                msk_btn_save,
+                msk_btn_override,
+                msk_btn_delete,
+                msk_preview,
+                msk_gallery,
+                msk_btn_reset,
+            )
+        ]
 
     def _mask_ui_4(self, btn, res, mode) -> list[gr.components.Component]:
         raise NotImplementedError
@@ -142,7 +153,7 @@ class CoupleMaskData:
 
         for i, mask in enumerate(self.masks):
             color = Image.new("RGB", res, COLORS[i % 7])
-            alpha = Image.fromarray(np.asarray(mask).astype(np.uint8) * 192)
+            alpha = Image.fromarray(np.asarray(mask).astype(np.uint8) * 144)
             rgba = Image.merge("RGBA", [*color.split(), alpha.convert("L")])
             bg.paste(rgba, (0, 0), rgba)
 
@@ -195,3 +206,6 @@ class CoupleMaskData:
 
         preview = self._generate_preview()
         return [self.masks, preview]
+
+    def _write_weights(self, weights: str):
+        self.weights = [float(v) for v in weights.split(",")]

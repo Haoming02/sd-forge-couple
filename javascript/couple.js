@@ -183,6 +183,14 @@ class ForgeCouple {
         this.maskHandler[mode].generatePreview();
     }
 
+    /**
+     * After changing Global Effect, re-sync the prompts
+     * @param {string} mode "t2i" | "i2i"
+     */
+    static onBackgroundChange(mode) {
+        this.maskHandler[mode].syncPrompts();
+    }
+
     static setup() {
         ["t2i", "i2i"].forEach((mode) => {
             const ex = document.getElementById(`forge_couple_${mode}`);
@@ -230,7 +238,8 @@ class ForgeCouple {
                 ex.querySelector(".fc_masks"),
                 separator,
                 ex.querySelector(".fc_global_effect"),
-                promptField
+                promptField,
+                ex.querySelector(".fc_msk_weights").querySelector("textarea"),
             );
 
             this.#registerButtons(ex, mode);

@@ -70,6 +70,7 @@ class ForgeCouple(scripts.Script):
             return
 
         separator = "\n" if not separator.strip() else separator.strip()
+        separator = separator.replace("\\n", "\n").replace("\\t", "\t")
 
         # Webui & API Usages...
         if mode == "Mask":
@@ -199,12 +200,7 @@ class ForgeCouple(scripts.Script):
                 )
 
             case "Mask":
-                mapping = self.get_mask() or mapping
-                if not isinstance(mapping[0], dict):
-                    parsed = []
-                    for map in mapping:
-                        parsed.append({"mask": map, "weight": 1.0})
-                    mapping = parsed
+                mapping: list[dict] = self.get_mask() or mapping
 
                 ARGs = mask_mapping(
                     p.sd_model,

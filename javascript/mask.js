@@ -3,9 +3,17 @@ class ForgeCoupleMaskHandler {
     #group = undefined;
     #gallery = undefined;
     #preview = undefined;
-    #sep = undefined;
+    separatorField = undefined;
     #background = undefined;
     #promptField = undefined;
+    #weightField = undefined;
+
+    /** @returns {string} */
+    get #sep() {
+        var sep = this.separatorField.value.trim();
+        sep = (!sep) ? "\n" : sep.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
+        return sep;
+    }
 
     /**
      * @param {HTMLDivElement} group
@@ -15,13 +23,14 @@ class ForgeCoupleMaskHandler {
      * @param {HTMLInputElement} background
      * @param {HTMLTextAreaElement} promptField
      */
-    constructor(group, gallery, preview, sep, background, promptField) {
+    constructor(group, gallery, preview, sep, background, promptField, weightField) {
         this.#group = group;
         this.#gallery = gallery;
         this.#preview = preview;
-        this.#sep = sep;
+        this.separatorField = sep;
         this.#background = background;
         this.#promptField = promptField;
+        this.#weightField = weightField;
     }
 
     /** @returns {HTMLDivElement[]} */
@@ -70,7 +79,8 @@ class ForgeCoupleMaskHandler {
         }
 
         this.#populateRows(this.#allRows, imgs);
-        this.syncPrompts(this.#allRows);
+        this.syncPrompts();
+        this.parseWeights();
     }
 
     /** @param {HTMLDivElement} row */
@@ -89,12 +99,17 @@ class ForgeCoupleMaskHandler {
         row.appendChild(txt);
         row.txt = txt;
 
+        txt.value = "";
+        txt.addEventListener("blur", () => { this.#onSubmitPrompt(txt); });
+
         const weight = document.createElement("input");
         weight.setAttribute('style', 'width: 10%;');
         weight.setAttribute("type", "number");
         row.appendChild(weight);
         row.weight = weight;
+
         weight.value = Number(1.0).toFixed(2);
+        weight.addEventListener("blur", () => { this.#onSubmitWeight(weight); });
 
         row.setup = true;
     }
@@ -110,13 +125,35 @@ class ForgeCoupleMaskHandler {
         }
     }
 
+    /** @param {HTMLInputElement} field */
+    #onSubmitPrompt(field) {
+        const prompts = [];
+        this.#allRows.forEach((row) => {
+            prompts.push(row.txt.value);
+        });
+
+        this.#promptField.value = prompts.join(this.#sep);
+        updateInput(this.#promptField);
+    }
+
+    /** @param {HTMLInputElement} field */
+    #onSubmitWeight(field) {
+        const w = this.#clamp05(field.value);
+        field.value = Number(w).toFixed(2);
+        this.parseWeights();
+    }
+
     syncPrompts() {
         const prompt = this.#promptField.value;
+        var prompts = prompt.split(this.#sep).map(line => line.trim());
 
-        var sep = this.#sep.value.trim();
-        if (!sep) sep = "\n";
+        const radio = this.#background.querySelector('div.wrap>label.selected>span');
+        const background = radio.textContent;
 
-        const prompts = prompt.split(sep).map(line => line.trim());
+        if (background == "First Line")
+            prompts = prompts.slice(1);
+        else if (background == "Last Line")
+            prompts = prompts.slice(0, -1);
 
         const active = document.activeElement;
         this.#allRows.forEach((row, i) => {
@@ -131,5 +168,24 @@ class ForgeCoupleMaskHandler {
             else
                 promptCell.value = "";
         });
+    }
+
+    parseWeights() {
+        const weights = [];
+        this.#allRows.forEach((row) => {
+            weights.push(row.weight.value);
+        });
+
+        this.#weightField.value = weights.join(",");
+        updateInput(this.#weightField);
+    }
+
+    /** @param {number} v @returns {number} */
+    #clamp05(v) {
+        var val = parseFloat(v);
+        if (Number.isNaN(val))
+            val = 0.0;
+
+        return Math.min(Math.max(val, 0.0), 5.0);
     }
 }
