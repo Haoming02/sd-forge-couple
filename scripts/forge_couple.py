@@ -75,17 +75,13 @@ class ForgeCouple(scripts.Script):
         # Webui & API Usages...
         if mode == "Mask":
             mapping: list = self.get_mask() or mapping
+            assert isinstance(mapping[0], dict)
 
-        couples = []
+        couples: list[str] = []
 
         chunks = kwargs["prompts"][0].split(separator)
         for chunk in chunks:
             prompt = self.strip_networks(chunk).strip()
-
-            if not prompt.strip():
-                # Skip Empty Lines
-                continue
-
             couples.append(prompt)
 
         match mode:
@@ -132,15 +128,17 @@ class ForgeCouple(scripts.Script):
         p.extra_generation_params["forge_couple_mode"] = mode
 
         if mode == "Basic":
+            p.extra_generation_params["forge_couple_direction"] = direction
+        elif mode == "Advanced":
+            p.extra_generation_params["forge_couple_mapping"] = dumps(mapping)
+
+        if mode in ("Basic", "Mask"):
             p.extra_generation_params.update(
                 {
-                    "forge_couple_direction": direction,
                     "forge_couple_background": background,
                     "forge_couple_background_weight": background_weight,
                 }
             )
-        elif mode == "Advanced":
-            p.extra_generation_params["forge_couple_mapping"] = dumps(mapping)
         # ===== Infotext =====
 
         self.couples = couples

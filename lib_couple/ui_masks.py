@@ -17,6 +17,9 @@ class CoupleMaskData:
         count = len(self.masks)
         assert count == len(self.weights)
 
+        if count == 0:
+            return None
+
         return [
             {"mask": self.masks[i], "weight": self.weights[i]} for i in range(count)
         ]
