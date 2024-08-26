@@ -40,7 +40,7 @@ a cinematic photo of 2 men arguing, indoors, court room
 
 > As shown in the various examples, even if a region only contains 1 subject, it usually works better to still prompt for the total amount of subjects first.
 
-> **Note:**
+> **Note:** The effect of this Extension is still dependent on the prompt-adherence capability of the Checkpoint. If the checkpoint does not understand the composition, it still cannot generate the result correctly. Also, do not expect the composition to work every single time...
 
 <details>
 <summary><b>Index</b> (Click to Expand)</summary>
