@@ -132,6 +132,19 @@ class ForgeCoupleMaskHandler {
             prompts.push(row.txt.value);
         });
 
+        const radio = this.#background.querySelector('div.wrap>label.selected>span');
+        const background = radio.textContent;
+
+        if (background != "None") {
+            const existingPrompt = this.#promptField.value
+                .split(this.#sep).map(line => line.trim());
+
+            if (background == "First Line")
+                prompts.unshift(existingPrompt[0]);
+            else
+                prompts.push(existingPrompt[existingPrompt.length - 1]);
+        }
+
         this.#promptField.value = prompts.join(this.#sep);
         updateInput(this.#promptField);
     }

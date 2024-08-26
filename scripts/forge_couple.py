@@ -98,11 +98,10 @@ class ForgeCouple(scripts.Script):
                     self.couples = None
                     return
 
-                if len(couples) != len(mapping) + int(background != "None"):
-                    print(
-                        f"""\n[Couple] Number of Couples and Masks is not the same...
-                        \t[{len(couples)} / {len(mapping) + int( background != 'None')}]\n"""
-                    )
+                required: int = len(mapping) + int(background != "None")
+                if len(couples) != required:
+                    print("\n[Couple] Number of Couples and Masks is not the same...")
+                    print(f"\t[{len(couples)} / {required}]\n")
                     self.couples = None
                     return
 
@@ -118,7 +117,7 @@ class ForgeCouple(scripts.Script):
 
                 if len(couples) != len(mapping):
                     print("\n[Couple] Number of Couples and Mapping is not the same...")
-                    print(f"[{len(couples)} / {len(mapping)}]\n")
+                    print(f"\t[{len(couples)} / {len(mapping)}]\n")
                     self.couples = None
                     return
 
@@ -127,18 +126,20 @@ class ForgeCouple(scripts.Script):
         p.extra_generation_params["forge_couple_separator"] = separator
         p.extra_generation_params["forge_couple_mode"] = mode
 
-        if mode == "Basic":
-            p.extra_generation_params["forge_couple_direction"] = direction
-        elif mode == "Advanced":
+        if mode == "Advanced":
             p.extra_generation_params["forge_couple_mapping"] = dumps(mapping)
 
-        if mode in ("Basic", "Mask"):
+        else:
             p.extra_generation_params.update(
                 {
                     "forge_couple_background": background,
                     "forge_couple_background_weight": background_weight,
                 }
             )
+
+            if mode == "Basic":
+                p.extra_generation_params["forge_couple_direction"] = direction
+
         # ===== Infotext =====
 
         self.couples = couples
