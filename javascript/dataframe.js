@@ -112,11 +112,17 @@ class ForgeCoupleDataframe {
 
             updateInput(this.#promptField);
         } else {
-            var val = this.#clamp01(cell.textContent,
-                Array.from(cell.parentElement.children).indexOf(cell) === 4
-            );
-            val = Math.round(val / 0.01) * 0.01;
-            cell.textContent = Number(val).toFixed(2);
+            const isWeight = Array.from(cell.parentElement.children).indexOf(cell) === 4;
+            let val = cell.textContent.trim();
+
+            if (isWeight && val.startsWith('='))
+                cell.textContent = val;
+            else {
+                val = this.#clamp01(val, isWeight);
+                val = Math.round(val / 0.01) * 0.01;
+                cell.textContent = Number(val).toFixed(2);
+            }
+
             ForgeCouple.onSelect(this.#mode);
             ForgeCouple.onEntry(this.#mode);
         }
@@ -366,15 +372,16 @@ class ForgeCoupleDataframe {
         });
     }
 
-    /** @param {number} @param {boolean} w @returns {number} */
-    #clamp01(v, w) {
-        var val = parseFloat(v);
+    /** @param {number} v @param {boolean} isWeight @returns {number|string} */
+    #clamp01(v, isWeight) {
+        let val = parseFloat(v);
+
         if (Number.isNaN(val))
             val = 0.0;
 
         return Math.min(
-            Math.max(val, w ? -10.0 : 0.0),
-            w ? 10.0 : 1.0
+            Math.max(val, isWeight ? -10.0 : 0.0),
+            isWeight ? 10.0 : 1.0
         );
     }
 
