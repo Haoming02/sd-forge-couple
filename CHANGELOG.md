@@ -1,3 +1,6 @@
+### v2.0.4 - 2024 Aug. 26
+- Implement **Dynamic Weight Formulas in Advanced Mode**
+
 ### v2.0.3 - 2024 Aug.19
 - Minor **Optimization**
 

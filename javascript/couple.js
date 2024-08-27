@@ -111,7 +111,13 @@ class ForgeCouple {
 
         const vals = Array.from(rows, row => {
             return Array.from(row.querySelectorAll("td"))
-                .slice(0, -1).map(cell => parseFloat(cell.textContent));
+                .slice(0, -1).map((cell, index) => {
+                    if (index === 4) {
+                        const value = cell.textContent.trim();
+                        return value.startsWith('=') ? value : parseFloat(value);
+                    }
+                    return parseFloat(cell.textContent);
+                });
         });
 
         const json = JSON.stringify(vals);

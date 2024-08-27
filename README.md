@@ -90,6 +90,11 @@ Were these automated and equally-sized tiles not sufficient for your needs? Now 
 
 - **Entries:**
     - Each row contains a range for **x** axis, a range for **y** axis, a **weight**, as well as the corresponding **line** of prompt
+    - **weight** can be a float, or a formula for dynamic weight
+        - Dynamic weight formula starts with with **=**
+        - **x** and **y** are available as variables (case-sensitive, use lowercase)
+        - **eg.** two whole-image regions with weight `=x` and `=(1-x)` will linearly interpolate between prompts, moving across the image from left to right
+        - Common mathematical functions are also available in Dynamic weight formulas: **sin**, **cos**, **tan**, **exp**, **log**, **sqrt**, **abs**, **max**, **min**
     - The range should be within `0.0` ~ `1.0`, representing the **percentage** of the full width/height
         - **eg.** `0.0` to `1.0` would span across the entire axis
     - **x** axis is from left to right; **y** axis is from top to bottom
