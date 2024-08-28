@@ -13,7 +13,7 @@ try:
     from backend import memory_management
     is_classic = False
 
-except ModuleNotFoundError:
+except ImportError:
     is_classic = True
 
 
