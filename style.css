@@ -27,6 +27,10 @@
     display: flex;
 }
 
+.fc_adv .fc_preview_img {
+    overflow: visible !important;
+}
+
 .fc_adv .fc_preview_img .image-container {
     display: flex;
 }
