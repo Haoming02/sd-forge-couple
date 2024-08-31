@@ -1,6 +1,7 @@
 from json.decoder import JSONDecodeError
 from PIL import Image, ImageDraw
 from json import loads
+import gradio as gr
 
 DEFAULT_MAPPING = [[0.0, 0.5, 0.0, 1.0, 1.0], [0.5, 1.0, 0.0, 1.0, 1.0]]
 COLORS = ("red", "orange", "yellow", "green", "blue", "indigo", "violet")
@@ -13,16 +14,18 @@ def validate_mapping(data: list) -> bool:
             print("\n[Couple] Region range must be between 0.0 and 1.0...\n")
             return False
 
-        if x2 <= x1 or y2 <= y1:
+        if x2 < x1 or y2 < y1:
             print('\n[Couple] "to" value must be larger than "from" value...\n')
             return False
 
     return True
 
 
-def visualize_mapping(res: str, mapping: list) -> Image:
-    w, h = res.split("x")
-    p_WIDTH, p_HEIGHT = int(w), int(h)
+def visualize_mapping(mode: str, res: str, mapping: list) -> Image:
+    if mode != "Advanced":
+        return gr.update()
+
+    p_WIDTH, p_HEIGHT = [int(v) for v in res.split("x")]
 
     while p_WIDTH > 1024 or p_HEIGHT > 1024:
         p_WIDTH, p_HEIGHT = p_WIDTH // 2, p_HEIGHT // 2
@@ -57,6 +60,9 @@ def visualize_mapping(res: str, mapping: list) -> Image:
 
 
 def on_entry(data: str) -> list:
+    if not data.strip():
+        return gr.update()
+
     if ":" in data:
         print("\n[Couple] Old infotext is no longer supported...\n")
         return DEFAULT_MAPPING

@@ -1,20 +1,68 @@
 ﻿# SD Forge Attention Couple
 This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-diffusion-webui-forge), which allows you to ~~generate couples~~ target conditioning at different regions. No more color bleeds or mixed features!
 
-> Compatible with both old & new Forge
-
-> Supports **SD 1.5** and **SDXL** checkpoints, but not **Flux**...
+> Compatible with <ins>both</ins> **old** & **new** Forge
 
 > Does **not** work with [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
 
+> Supports <ins>both</ins> `SD 1.5` & `SDXL` checkpoints, but **not** `Flux`...
+
+## Showcase
+
+- Generate the following prompt using the [Juggernaut XL V7](https://civitai.com/models/133005/juggernaut-xl) checkpoint with same seed and parameters:
+
+```
+a cinematic photo of 2 men arguing, indoors, court room
+2 men, jesus christ, white robe, looking at each other, shouting
+2 men, santa claus, looking at each other, shouting
+```
+
+<table>
+    <thead align="center">
+        <tr>
+            <td>Extension</td>
+            <td><b>Disabled</b></td>
+            <td><b>Enabled</b></td>
+        </tr>
+    </thead>
+    <tbody align="center">
+        <tr>
+            <td>Result</td>
+            <td><img src="example/off.jpg" width=384></td>
+            <td><img src="example/on.jpg" width=384></td>
+        </tr>
+    </tbody>
+</table>
+
+- Notice the mixed features without the Extension; see the distinct "characters" when the Extension is enabled
+
 ## How to Use
 
-> As shown in the examples below, even if a region only contains 1 subject, it usually works better to prompt for the total amount of subjects first.
+> As shown in the various examples, even if a region only contains 1 subject, it usually works better to still prompt for the total amount of subjects first.
 
-The default **Basic** mode works by dividing the image into multiple "tiles," each corresponding to one <ins>line</ins> in the prompt. So if you want more regions, just prompt more lines.
+> **Note:** The effect of this Extension is still dependent on the prompt-adherence capability of the Checkpoint. If the checkpoint does not understand the composition, it still cannot generate the result correctly. Also, do not expect the composition to work every single time...
+
+<details>
+<summary><b>Index</b> (Click to Expand)</summary>
+
+- [Basic Mode](#basic-mode)
+    - [Tile Direction](#tile-direction)
+    - [Global Effect](#global-effect)
+- [Advanced Mode](#advanced-mode)
+- [Mask Mode](#mask-mode)
+- Misc.
+    - [Separator](#couple-separator)
+    - [LoRA](#lora-support)
+- [API](https://github.com/Haoming02/sd-forge-couple/wiki/API)
+
+</details>
+
+## Basic Mode
+
+The **Basic** mode works by dividing the image into multiple "tiles" where each tile corresponding to one [line](#couple-separator) of the positive prompt. Therefore, simply prompt more lines if you want more regions.
 
 <p align="center">
-<img src="example/00.jpg" width=384>
+<img src="example/basic.jpg" width=384>
 </p>
 
 ```
@@ -24,14 +72,14 @@ The default **Basic** mode works by dividing the image into multiple "tiles," ea
 
 ### Tile Direction
 
-In the **Basic** mode, you can also choose between dividing the image into columns or rows.
+In the **Basic** mode, you can choose between whether to divie the image into columns or rows.
 
 - **Horizontal:** First / Last line corresponds to the Left / Right region
 - **Vertical:** First / Last line corresponds to the Top / Bottom region
 
 <p align="center">
-<img src="example/03.jpg" width=384><br>
-<b>Direction:</b><code>Vertical</code>
+<img src="example/direction.jpg" width=384><br>
+<b>Direction</b> set to <code>Vertical</code>
 </p>
 
 ```
@@ -45,48 +93,15 @@ pavement, road
 
 ### Global Effect
 
-In the **Basic** mode, you can set either the **first line** or the **last line** of the **positive** prompt as the "background," affecting the entire image instead of just one region. Useful for specifying styles or quality tags used by **SD 1.5** and **Pony** checkpoints.
-
-<p align="center">
-<b><i>(examples using the same seed)</i></b><br>
-<img src="example/1-2.jpg" width=256>
- <img src="example/1-1.jpg" width=256><br>
-<b>extension:</b> <code>off</code> | <b>extension:</b> <code>on</code>
-</p>
-
-```
-a cinematic photo of 2 men arguing, indoors, court room
-2 men, jesus christ, white robe, looking at each other, shouting
-2 men, santa claus, looking at each other, shouting
-```
-
-### Couple Separator
-
-By default when the field is left empty, this Extension uses newline (`\n`) as the separator to determine "lines" of the prompts. You can also specify any word as the separator instead.
-
-### LoRA Support
-
-Using multiple LoRAs is possible, though it depends on how well each LoRA works together...
-
-LoRAs containing multiple subjects works easier and better in my experience.
-
-<p align="center">
-<img src="example/06.jpg" width=384>
-</p>
-
-```
-[high quality, best quality], 2girls, on stage, backlighting, [bloom, hdr], <lora:suzurena:0.72>
-2girls, miyama suzune, pink idol costume, feather hair ornament, holding hands, looking at viewer, smile, blush
-2girls, hanaoi rena, blue idol costume, feather hair ornament, holding hands, looking at viewer, shy, blush
-```
+In **Basic** and **Mask** modes, you can set either the **first** line or the **last** line of the positive prompt as the "background," affecting the entire image instead of just one region. Useful for specifying styles or quality tags used by **SD 1.5** and **Pony** checkpoints.
 
 <br>
 
-## Advanced Mapping
+## Advanced Mode
 
 Were these automated and equally-sized tiles not sufficient for your needs? Now you can manually specify each regions!
 
-> **Important:** The entire image **must** contain weight. The easiest way would be adding a region that covers the whole image *(like the **Global Effect** in **Basic**)*
+> **Important:** The entire image **must** contain weight. The easiest way would be adding a region that covers the whole image *(just like the **Global Effect** in **Basic**)*.
 
 - **Entries:**
     - Each row contains a range for **x** axis, a range for **y** axis, a **weight**, as well as the corresponding **line** of prompt
@@ -97,11 +112,11 @@ Were these automated and equally-sized tiles not sufficient for your needs? Now 
 
 - **Control:**
     - Click on a row to select it, highlighting its bounding box
-    - Click on the same row again to deselect it
+        - Click on the same row again to deselect it
     - When a row is selected, click the `🆕` button above / below to insert a new row above / below
-        - If holding `Shift`, it will insert a newline to the prompts as well
+        - If holding `Shift`, it will also insert a newline to the prompts
     - When a row is selected, click the `❌` button to delete it
-        - If holding `Shift`, it will **delete** the corresponding line of prompt
+        - If holding `Shift`, it will also **delete** the corresponding line of prompt
     - Click the `Default Mapping` button to reset the mappings
 
 - **Draggable Region:**
@@ -113,8 +128,10 @@ Were these automated and equally-sized tiles not sufficient for your needs? Now 
     - Click the `🗑` button to clear the background
 
 <p align="center">
-<img src="example/10.jpg" height=384>
-<img src="example/10s.jpg" height=384>
+<img src="example/adv_ui.jpg" width=384><br>
+Advanced Mode UI<br>
+<img src="example/adv_result.jpg" width=384><br>
+Generation Result
 </p>
 
 ```
@@ -127,8 +144,75 @@ sunset, golden hour, lens flare
 
 <br>
 
+## Mask Mode
+
+<p align="right"><i><b>New</b> 🔥</i></p>
+
+Were these bounding boxes still too rigid for you...? Now you can also manually draw the areas for each regions!
+
+> **Important:** The entire image **must** contain weight. The easiest way would be using the **Global Effect**.
+
+- **Canvas:**
+    - Click the **Create Empty Canvas** button to generate a blank canvas to draw on
+        - Use a **white** brush to paint the desired region
+    - Click the **Save Mask** button to save the image as a <ins>new</ins> layer of masks
+    - When a layer is selected:
+        - Click **Load Mask** to load the mask into canvas
+        - Click **Override Mask** to save the image and <ins>override</ins> the selected layer of masks
+    - Click the **Reset All Masks** button to clear all the data
+
+- **Entries:**
+    - Each row contains a **preview** of the layer, the corresponding **line** of prompt, and the **weight** for the layer
+    - Click the preview image to <ins>select</ins> the layer
+    - Use the arrow buttons to quickly re-order the layers
+    - Click the `❌` button to delete the layer
+
+<p align="center">
+<img src="example/mask_ui.jpg" width=512><br>
+Mask Mode UI<br>
+<img src="example/mask_result.jpg" width=512><br>
+Generation Result
+</p>
+
+```
+cinematic photo of a dungeon
+glowing lit lamps
+treasure chest
+```
+
+<br>
+
+## Couple Separator
+
+By default when the field is left empty, this Extension uses the newline character (`\n`) as the separator to determine "lines" of the prompts. You may also specify other words as the separator instead.
+
+## LoRA Support
+
+Using multiple LoRAs in different regions is possible, though it depends on how well the LoRAs work together...
+
+LoRA that contains multiple subjects works better in my experience.
+
+<p align="center">
+<img src="example/lora.jpg" width=384>
+</p>
+
+```
+[high quality, best quality], 2girls, on stage, backlighting, [bloom, hdr], <lora:suzurena:0.72>
+2girls, miyama suzune, pink idol costume, feather hair ornament, holding hands, looking at viewer, smile, blush
+2girls, hanaoi rena, blue idol costume, feather hair ornament, holding hands, looking at viewer, shy, blush
+```
+
+<br>
+
 ## API
 For usage with API, please refer to the [Wiki](https://github.com/Haoming02/sd-forge-couple/wiki/API)
+
+<hr>
+
+## To Do
+
+- [ ] Add a way to upload a background for **Mask** mode as reference
+- [ ] Add a way to transfer the **Advanced** / **Mask** data between `txt2img` / `img2img` tabs
 
 <hr>
 

@@ -1,3 +1,7 @@
+### v3.0.0 - 2024 Aug.26
+- Implement **Mask** mode
+- Minor **Optimization**
+
 ### v2.0.3 - 2024 Aug.19
 - Minor **Optimization**
 

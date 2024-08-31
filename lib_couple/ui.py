@@ -3,6 +3,7 @@ from PIL import Image
 import gradio as gr
 
 from .ui_funcs import DEFAULT_MAPPING, visualize_mapping, on_entry
+from .ui_masks import CoupleMaskData
 from .gr_version import js
 
 
@@ -18,7 +19,10 @@ def couple_UI(script, is_img2img: bool, title: str):
             enable = gr.Checkbox(label="Enable", elem_classes="fc_enable", scale=2)
 
             mode = gr.Radio(
-                ["Basic", "Advanced"], label="Region Assignment", value="Basic", scale=3
+                ["Basic", "Advanced", "Mask"],
+                label="Region Assignment",
+                value="Basic",
+                scale=3,
             )
 
             separator = gr.Textbox(
@@ -40,11 +44,14 @@ def couple_UI(script, is_img2img: bool, title: str):
                     scale=2,
                 )
 
+                placeholder = gr.Group(visible=False, elem_classes="fc_placeholder")
+
                 background = gr.Radio(
                     ["None", "First Line", "Last Line"],
                     label="Global Effect",
                     value="None",
                     scale=3,
+                    elem_classes="fc_global_effect",
                 )
 
                 background_weight = gr.Slider(
@@ -54,7 +61,18 @@ def couple_UI(script, is_img2img: bool, title: str):
                     value=0.5,
                     label="Global Effect Weight",
                     scale=1,
+                    interactive=False,
                 )
+
+            def on_background_change(choice: str):
+                return gr.update(interactive=(choice != "None"))
+
+            background.change(
+                on_background_change,
+                background,
+                background_weight,
+                show_progress="hidden",
+            ).success(None, **js(f'() => {{ ForgeCouple.onBackgroundChange("{m}"); }}'))
 
         with gr.Group(visible=False, elem_classes="fc_adv") as adv_settings:
             with gr.Row(elem_classes="fc_mapping_btns"):
@@ -143,26 +161,31 @@ def couple_UI(script, is_img2img: bool, title: str):
 
             preview_btn.click(
                 visualize_mapping,
-                [preview_res, mapping],
+                [mode, preview_res, mapping],
                 preview_img,
                 show_progress="hidden",
             ).success(None, **js(f'() => {{ ForgeCouple.updateColors("{m}"); }}'))
 
-        def on_mode_change(choice):
-            if choice == "Basic":
-                return [
-                    gr.update(visible=True),
-                    gr.update(visible=False),
-                ]
-            else:
-                return [
-                    gr.update(visible=False),
-                    gr.update(visible=True),
-                ]
+        with gr.Group(visible=False, elem_classes="fc_msk") as msk_settings:
+            couple_mask = CoupleMaskData(is_img2img)
+            couple_mask.mask_ui(preview_btn, preview_res, mode)
+            script.get_mask = couple_mask.get_masks
 
-        mode.change(on_mode_change, mode, [basic_settings, adv_settings]).success(
-            fn=None, **js(f'() => {{ ForgeCouple.preview("{m}"); }}')
-        )
+        def on_mode_change(choice: str):
+            return [
+                gr.update(visible=(choice in ("Basic", "Mask"))),
+                gr.update(visible=(choice == "Basic")),
+                gr.update(visible=(choice == "Advanced")),
+                gr.update(visible=(choice == "Mask")),
+                gr.update(visible=(choice == "Mask")),
+            ]
+
+        mode.change(
+            on_mode_change,
+            mode,
+            [basic_settings, direction, adv_settings, msk_settings, placeholder],
+            show_progress="hidden",
+        ).success(fn=None, **js(f'() => {{ ForgeCouple.preview("{m}"); }}'))
 
         script.paste_field_names = []
         script.infotext_fields = [
@@ -179,7 +202,14 @@ def couple_UI(script, is_img2img: bool, title: str):
             comp.do_not_save_to_config = True
             script.paste_field_names.append(name)
 
-        for comp in (mapping, preview_res):
+        for comp in (
+            placeholder,
+            mapping,
+            mapping_entry_field,
+            preview_img,
+            preview_res,
+            preview_btn,
+        ):
             comp.do_not_save_to_config = True
 
     return [

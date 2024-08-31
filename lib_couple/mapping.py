@@ -25,9 +25,7 @@ def basic_mapping(
 ):
 
     ARGs: dict = {}
-    IS_SDXL: bool = hasattr(
-        sd_model.forge_objects.unet.model.diffusion_model, "label_emb"
-    )
+    IS_SDXL: bool = sd_model.is_sdxl
 
     for tile in range(LINE_COUNT):
         mask = torch.zeros((HEIGHT, WIDTH))
@@ -69,9 +67,7 @@ def advanced_mapping(sd_model, couples: list, WIDTH: int, HEIGHT: int, mapping: 
     assert len(couples) == len(mapping)
 
     ARGs: dict = {}
-    IS_SDXL: bool = hasattr(
-        sd_model.forge_objects.unet.model.diffusion_model, "label_emb"
-    )
+    IS_SDXL: bool = sd_model.is_sdxl
 
     for tile_index, (x1, x2, y1, y2, w) in enumerate(mapping):
         mask = torch.zeros((HEIGHT, WIDTH))
@@ -98,9 +94,12 @@ def advanced_mapping(sd_model, couples: list, WIDTH: int, HEIGHT: int, mapping: 
 
 
 @torch.inference_mode()
-def b64image2tensor(img: str, WIDTH: int, HEIGHT: int) -> torch.Tensor:
-    image_bytes = decode(img)
-    image = Image.open(bIO(image_bytes)).convert("L")
+def b64image2tensor(img: str | Image.Image, WIDTH: int, HEIGHT: int) -> torch.Tensor:
+    if isinstance(img, str):
+        image_bytes = decode(img)
+        image = Image.open(bIO(image_bytes)).convert("L")
+    else:
+        image = img.convert("L")
 
     if image.width != WIDTH or image.height != HEIGHT:
         image = image.resize((WIDTH, HEIGHT), resample=Image.Resampling.NEAREST)
@@ -127,9 +126,7 @@ def mask_mapping(
     ]
 
     ARGs: dict = {}
-    IS_SDXL: bool = hasattr(
-        sd_model.forge_objects.unet.model.diffusion_model, "label_emb"
-    )
+    IS_SDXL: bool = sd_model.is_sdxl
 
     for layer in range(LINE_COUNT):
         mask = torch.zeros((HEIGHT, WIDTH))
@@ -142,20 +139,22 @@ def mask_mapping(
 
         # ===== Mask =====
         if background == "First Line":
-            if layer == 0:
-                mask = torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
-            else:
-                mask = mapping[layer - 1]
+            mask = (
+                mapping[layer - 1]
+                if layer > 0
+                else torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
+            )
+        elif background == "Last Line":
+            mask = (
+                mapping[layer]
+                if layer < LINE_COUNT - 1
+                else torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
+            )
         else:
             mask = mapping[layer]
         # ===== Mask =====
 
         ARGs[f"cond_{layer + 1}"] = pos_cond
         ARGs[f"mask_{layer + 1}"] = mask.unsqueeze(0) if mask.dim() == 2 else mask
-
-    if background == "Last Line":
-        ARGs[f"mask_{LINE_COUNT}"] = (
-            torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
-        ).unsqueeze(0)
 
     return ARGs

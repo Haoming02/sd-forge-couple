@@ -1,4 +1,5 @@
 from modules import scripts
+from typing import Callable
 from json import dumps
 import re
 
@@ -11,19 +12,19 @@ from lib_couple.mapping import (
 
 from lib_couple.ui import couple_UI
 from lib_couple.ui_funcs import validate_mapping
-
 from lib_couple.attention_couple import AttentionCouple
-forgeAttentionCouple = AttentionCouple()
-
-VERSION = "2.0.3"
-
 from lib_couple.gr_version import js
 
 
+VERSION = "3.0.0"
+
+
 class ForgeCouple(scripts.Script):
+    forgeAttentionCouple = AttentionCouple()
 
     def __init__(self):
         self.couples: list = None
+        self.get_mask: Callable = None
 
     def title(self):
         return "Forge Couple"
@@ -69,17 +70,18 @@ class ForgeCouple(scripts.Script):
             return
 
         separator = "\n" if not separator.strip() else separator.strip()
+        separator = separator.replace("\\n", "\n").replace("\\t", "\t")
 
-        couples = []
+        # Webui & API Usages...
+        if mode == "Mask":
+            mapping: list = self.get_mask() or mapping
+            assert isinstance(mapping[0], dict)
+
+        couples: list[str] = []
 
         chunks = kwargs["prompts"][0].split(separator)
         for chunk in chunks:
             prompt = self.strip_networks(chunk).strip()
-
-            if not prompt.strip():
-                # Skip Empty Lines
-                continue
-
             couples.append(prompt)
 
         match mode:
@@ -96,11 +98,10 @@ class ForgeCouple(scripts.Script):
                     self.couples = None
                     return
 
-                if len(couples) != len(mapping) + int(background != "None"):
-                    print(
-                        f"""\n[Couple] Number of Couples and Masks is not the same...
-                        \t[{len(couples)} / {len(mapping) + int( background != 'None')}]\n"""
-                    )
+                required: int = len(mapping) + int(background != "None")
+                if len(couples) != required:
+                    print("\n[Couple] Number of Couples and Masks is not the same...")
+                    print(f"\t[{len(couples)} / {required}]\n")
                     self.couples = None
                     return
 
@@ -116,7 +117,7 @@ class ForgeCouple(scripts.Script):
 
                 if len(couples) != len(mapping):
                     print("\n[Couple] Number of Couples and Mapping is not the same...")
-                    print(f"[{len(couples)} / {len(mapping)}]\n")
+                    print(f"\t[{len(couples)} / {len(mapping)}]\n")
                     self.couples = None
                     return
 
@@ -125,16 +126,20 @@ class ForgeCouple(scripts.Script):
         p.extra_generation_params["forge_couple_separator"] = separator
         p.extra_generation_params["forge_couple_mode"] = mode
 
-        if mode == "Basic":
+        if mode == "Advanced":
+            p.extra_generation_params["forge_couple_mapping"] = dumps(mapping)
+
+        else:
             p.extra_generation_params.update(
                 {
-                    "forge_couple_direction": direction,
                     "forge_couple_background": background,
                     "forge_couple_background_weight": background_weight,
                 }
             )
-        elif mode == "Advanced":
-            p.extra_generation_params["forge_couple_mapping"] = dumps(mapping)
+
+            if mode == "Basic":
+                p.extra_generation_params["forge_couple_direction"] = direction
+
         # ===== Infotext =====
 
         self.couples = couples
@@ -194,6 +199,8 @@ class ForgeCouple(scripts.Script):
                 )
 
             case "Mask":
+                mapping: list[dict] = self.get_mask() or mapping
+
                 ARGs = mask_mapping(
                     p.sd_model,
                     self.couples,
@@ -214,5 +221,5 @@ class ForgeCouple(scripts.Script):
         assert len(ARGs.keys()) // 2 == LINE_COUNT
 
         base_mask = empty_tensor(HEIGHT, WIDTH)
-        patched_unet = forgeAttentionCouple.patch_unet(unet, base_mask, ARGs)
+        patched_unet = self.forgeAttentionCouple.patch_unet(unet, base_mask, ARGs)
         p.sd_model.forge_objects.unet = patched_unet

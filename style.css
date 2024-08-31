@@ -6,6 +6,10 @@
     height: 100%;
 }
 
+.fc_bsc .fc_placeholder {
+    flex-grow: 2;
+}
+
 .fc_adv {
     flex-direction: row;
     justify-content: center;
@@ -21,6 +25,10 @@
     height: 512px;
     margin: auto;
     display: flex;
+}
+
+.fc_adv .fc_preview_img {
+    overflow: visible !important;
 }
 
 .fc_adv .fc_preview_img .image-container {
@@ -108,4 +116,91 @@
     font-family: "Consolas";
     border-radius: 0.5em !important;
     margin: auto;
+}
+
+.fc_msk button.round-btn {
+    border-radius: 1em;
+    margin: 0.5em;
+}
+
+.fc_msk .gradio-image {
+    height: 512px;
+    margin: auto;
+    display: flex;
+}
+
+.fc_msk .gradio-image.fc_msk_canvas {
+    width: 100%;
+}
+
+.fc_msk .gradio-image.fc_msk_preview {
+    width: 512px;
+}
+
+.fc_msk .gradio-image div.empty {
+    margin: auto;
+}
+
+.fc_msk .gradio-image img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    margin: auto !important;
+}
+
+.fc_msk .fc_mask_row {
+    display: flex;
+    position: relative;
+    flex-direction: row;
+    margin: 1em;
+    padding: 1em;
+    border-radius: 0.5em;
+    width: auto;
+    height: auto;
+    gap: 1em;
+    background: var(--border-color-accent);
+}
+
+.fc_msk .fc_mask_row.selected {
+    outline: 4px solid var(--button-primary-border-color);
+}
+
+.fc_msk .fc_mask_row input {
+    margin: auto;
+    border-radius: 0.5em;
+
+    border: var(--input-border-width) solid var(--input-border-color);
+    background: var(--input-background-fill);
+    color: var(--body-text-color);
+    font-weight: var(--input-text-weight);
+    font-size: var(--input-text-size);
+}
+
+.fc_msk .fc_mask_row img {
+    cursor: pointer;
+}
+
+.fc_msk .fc_mask_row button:not(.del) {
+    position: absolute;
+    width: 30%;
+    left: 35%;
+    background: var(--input-background-fill);
+    border-radius: 0.5em;
+    font-weight: bold;
+}
+
+.fc_msk .fc_mask_row button.up {
+    top: 8%;
+}
+
+.fc_msk .fc_mask_row button.down {
+    bottom: 4%;
+    transform: rotate(180deg);
+}
+
+.fc_msk .fc_mask_row button.del {
+    width: 10%;
+    background: var(--input-background-fill);
+    border-radius: 0.5em;
 }

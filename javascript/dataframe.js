@@ -20,7 +20,7 @@ class ForgeCoupleDataframe {
 
     get #sep() {
         var sep = this.#separatorField.value.trim();
-        if (!sep) sep = "\n";
+        sep = (!sep) ? "\n" : sep.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
         return sep;
     }
 
@@ -372,10 +372,7 @@ class ForgeCoupleDataframe {
         if (Number.isNaN(val))
             val = 0.0;
 
-        return Math.min(
-            Math.max(val, w ? -10.0 : 0.0),
-            w ? 10.0 : 1.0
-        );
+        return Math.min(Math.max(val, 0.0), w ? 5.0 : 1.0);
     }
 
 }
