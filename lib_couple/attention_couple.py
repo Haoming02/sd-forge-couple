@@ -74,6 +74,13 @@ class AttentionCouple:
             qs = torch.cat(qs, dim=0).to(q)
             ks = torch.cat(ks, dim=0).to(k)
 
+            if qs.size(0) % 2 == 1:
+                empty = torch.zeros_like(qs[0]).unsqueeze(0)
+                qs = torch.cat((qs, empty), dim=0)
+
+                empty2 = torch.zeros_like(ks[0]).unsqueeze(0)
+                ks = torch.cat((ks, empty2), dim=0)
+
             return qs, ks, ks
 
         @torch.inference_mode()
