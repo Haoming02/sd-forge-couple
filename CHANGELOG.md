@@ -1,3 +1,6 @@
+### v3.0.2 - 2024 Sep.05
+- Implement **Data Transfer** between Tabs
+
 ### v3.0.1 - 2024 Sep.05
 - Separate **Adv.** mode
 

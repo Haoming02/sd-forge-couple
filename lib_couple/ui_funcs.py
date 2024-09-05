@@ -1,6 +1,6 @@
 from json.decoder import JSONDecodeError
 from PIL import Image, ImageDraw
-from json import loads
+from json import dumps, loads
 import gradio as gr
 
 DEFAULT_MAPPING = [[0.0, 0.5, 0.0, 1.0, 1.0], [0.5, 1.0, 0.0, 1.0, 1.0]]
@@ -72,3 +72,14 @@ def on_entry(data: str) -> list:
     except JSONDecodeError:
         print("\n[Couple] Something went wrong while parsing advanced mapping...\n")
         return DEFAULT_MAPPING
+
+
+def on_pull(data: dict) -> str:
+    if not data:
+        return ""
+
+    try:
+        return dumps(data)
+    except JSONDecodeError:
+        print("\n[Couple] Something went wrong while parsing advanced mapping...\n")
+        return ""

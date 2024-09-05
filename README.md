@@ -212,7 +212,6 @@ For usage with API, please refer to the [Wiki](https://github.com/Haoming02/sd-f
 ## To Do
 
 - [ ] Add a way to upload a background for **Mask** mode as reference
-- [ ] Add a way to transfer the **Advanced** / **Mask** data between `txt2img` / `img2img` tabs
 
 <hr>
 

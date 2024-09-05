@@ -90,6 +90,10 @@ def advanced_ui(
         elem_classes="fc_preview",
     )
 
+    msk_btn_pull = gr.Button(
+        f"Pull from {'txt2img' if is_img2img else 'img2img'}", elem_classes="round-btn"
+    )
+
     preview_btn.click(
         visualize_mapping,
         [mode, preview_res, mapping],
@@ -103,7 +107,8 @@ def advanced_ui(
         preview_img,
         preview_res,
         preview_btn,
+        msk_btn_pull,
     ):
         comp.do_not_save_to_config = True
 
-    return preview_btn, preview_res, mapping_paste_field, mapping
+    return preview_btn, preview_res, mapping_paste_field, mapping, msk_btn_pull

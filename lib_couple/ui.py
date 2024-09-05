@@ -1,8 +1,49 @@
 from .ui_masks import CoupleMaskData
 from .ui_adv import advanced_ui
+from .ui_funcs import on_pull
 from .gr_version import js
 
 import gradio as gr
+
+
+class FC_DataTransfer:
+    """Handle sending data from t2i/i2i to i2i/t2i"""
+
+    T2I_MASK: CoupleMaskData = None
+    I2I_MASK: CoupleMaskData = None
+
+    T2I_ADV_DATA: gr.JSON = None
+    T2I_ADV_PASTE: gr.Textbox = None
+    T2I_ADV_PULL: gr.Button = None
+
+    I2I_ADV_DATA: gr.JSON = None
+    I2I_ADV_PASTE: gr.Textbox = None
+    I2I_ADV_PULL: gr.Button = None
+
+    @classmethod
+    def hook_adv(cls):
+        assert cls.T2I_ADV_DATA is not None
+        assert cls.T2I_ADV_PASTE is not None
+        assert cls.T2I_ADV_PULL is not None
+        assert cls.I2I_ADV_DATA is not None
+        assert cls.I2I_ADV_PASTE is not None
+        assert cls.I2I_ADV_PULL is not None
+
+        cls.I2I_ADV_PULL.click(
+            fn=on_pull, inputs=cls.T2I_ADV_DATA, outputs=cls.I2I_ADV_PASTE
+        )
+
+        cls.T2I_ADV_PULL.click(
+            fn=on_pull, inputs=cls.I2I_ADV_DATA, outputs=cls.T2I_ADV_PASTE
+        )
+
+    @classmethod
+    def hook_mask(cls):
+        assert cls.T2I_MASK is not None
+        assert cls.I2I_MASK is not None
+
+        cls.T2I_MASK.opposite = cls.I2I_MASK
+        cls.I2I_MASK.opposite = cls.T2I_MASK
 
 
 def couple_UI(script, is_img2img: bool, title: str):
@@ -74,14 +115,31 @@ def couple_UI(script, is_img2img: bool, title: str):
             ).success(None, **js(f'() => {{ ForgeCouple.onBackgroundChange("{m}"); }}'))
 
         with gr.Group(visible=False, elem_classes="fc_adv") as adv_settings:
-            preview_btn, preview_res, mapping_paste_field, mapping = advanced_ui(
-                is_img2img, m, mode
+            preview_btn, preview_res, mapping_paste_field, mapping, pull_btn = (
+                advanced_ui(is_img2img, m, mode)
             )
+
+            if is_img2img:
+                FC_DataTransfer.I2I_ADV_DATA = mapping
+                FC_DataTransfer.I2I_ADV_PASTE = mapping_paste_field
+                FC_DataTransfer.I2I_ADV_PULL = pull_btn
+                FC_DataTransfer.hook_adv()  # img2img always happer later than txt2img
+
+            else:
+                FC_DataTransfer.T2I_ADV_DATA = mapping
+                FC_DataTransfer.T2I_ADV_PASTE = mapping_paste_field
+                FC_DataTransfer.T2I_ADV_PULL = pull_btn
 
         with gr.Group(visible=False, elem_classes="fc_msk") as msk_settings:
             couple_mask = CoupleMaskData(is_img2img)
             couple_mask.mask_ui(preview_btn, preview_res, mode)
             script.get_mask = couple_mask.get_masks
+
+            if is_img2img:
+                FC_DataTransfer.I2I_MASK = couple_mask
+                FC_DataTransfer.hook_mask()  # img2img always happer later than txt2img
+            else:
+                FC_DataTransfer.T2I_MASK = couple_mask
 
         def on_mode_change(choice: str):
             return [

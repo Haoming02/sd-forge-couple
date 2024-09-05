@@ -17,10 +17,19 @@ class CoupleMaskData:
         self.mode: str = "i2i" if is_img2img else "t2i"
         self.masks: list[Image.Image] = []
         self.weights: list[float] = []
+        self.opposite: CoupleMaskData = None
 
         self.selected_index: int = -1
 
+    def pull_mask(self) -> list[dict]:
+        """Pull the masks from the opposite tab"""
+        if not (masks_data := self.opposite.get_masks()):
+            return []
+
+        return [data["mask"] for data in masks_data]
+
     def get_masks(self) -> list[dict]:
+        """Return the current masks as well as weights"""
         count = len(self.masks)
         assert count == len(self.weights)
 
@@ -106,6 +115,11 @@ class CoupleMaskData:
 
         msk_btn_reset = gr.Button("Reset All Masks", elem_classes="round-btn")
 
+        msk_btn_pull = gr.Button(
+            f"Pull from {'txt2img' if self.mode == 'i2i' else 'img2img'}",
+            elem_classes="round-btn",
+        )
+
         weights_field = gr.Textbox(visible=False, elem_classes="fc_msk_weights")
         # ===== Components ===== #
 
@@ -115,6 +129,14 @@ class CoupleMaskData:
         )
 
         msk_btn_empty.click(self._create_empty, res, msk_canvas)
+
+        msk_btn_pull.click(
+            self._pull_mask,
+            None,
+            [msk_gallery, msk_preview, msk_btn_load, msk_btn_override],
+        ).success(
+            fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
+        )
 
         msk_btn_save.click(
             self._write_mask,
@@ -166,6 +188,7 @@ class CoupleMaskData:
             setattr(comp, "do_not_save_to_config", True)
             for comp in (
                 msk_btn_empty,
+                msk_btn_pull,
                 msk_canvas,
                 msk_btn_save,
                 msk_btn_load,
@@ -224,6 +247,11 @@ class CoupleMaskData:
 
         msk_btn_reset = gr.Button("Reset All Masks", elem_classes="round-btn")
 
+        msk_btn_pull = gr.Button(
+            f"Pull from {'txt2img' if self.mode == 'i2i' else 'img2img'}",
+            elem_classes="round-btn",
+        )
+
         weights_field = gr.Textbox(visible=False, elem_classes="fc_msk_weights")
         # ===== Components ===== #
 
@@ -232,6 +260,14 @@ class CoupleMaskData:
             self._create_empty,
             res,
             [msk_canvas.background, msk_canvas.foreground],
+        )
+
+        msk_btn_pull.click(
+            self._pull_mask,
+            None,
+            [msk_gallery, msk_preview, msk_btn_load, msk_btn_override],
+        ).success(
+            fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
         )
 
         msk_btn_save.click(
@@ -284,6 +320,7 @@ class CoupleMaskData:
             setattr(comp, "do_not_save_to_config", True)
             for comp in (
                 msk_btn_empty,
+                msk_btn_pull,
                 msk_canvas,
                 msk_canvas.foreground,
                 msk_canvas.background,
@@ -466,6 +503,21 @@ class CoupleMaskData:
             ]
 
         self.masks.append(img.convert("1"))
+
+        preview = self._generate_preview()
+        return [
+            self.masks,
+            preview,
+            gr.update(interactive=False),
+            gr.update(interactive=False),
+        ]
+
+    def _pull_mask(self) -> list[list, Image.Image, bool, bool]:
+        """Pull masks from opposite tab"""
+
+        masks: list[Image.Image] = self.pull_mask()
+
+        self.masks = masks
 
         preview = self._generate_preview()
         return [
