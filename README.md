@@ -110,6 +110,8 @@ Were these automated and equally-sized tiles not sufficient for your needs? Now 
     - **x** axis is from left to right; **y** axis is from top to bottom
     - **2** *(to)* should be larger than **1** *(from)*
 
+> **Note:** The mapping data is not sent when using the `Send to img2img` function. Click the `Pull from txt2img` to manually transfer the data. *(vice versa)*
+
 - **Control:**
     - Click on a row to select it, highlighting its bounding box
         - Click on the same row again to deselect it
@@ -160,6 +162,8 @@ Were these bounding boxes still too rigid for you...? Now you can also manually 
         - Click **Load Mask** to load the mask into canvas
         - Click **Override Mask** to save the image and <ins>override</ins> the selected layer of masks
     - Click the **Reset All Masks** button to clear all the data
+
+> **Note:** The mask data is not sent when using the `Send to img2img` function. Click the `Pull from txt2img` to manually transfer the data. *(vice versa)*
 
 - **Entries:**
     - Each row contains a **preview** of the layer, the corresponding **line** of prompt, and the **weight** for the layer
