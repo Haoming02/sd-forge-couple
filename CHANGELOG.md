@@ -1,3 +1,6 @@
+### v3.0.1 - 2024 Sep.05
+- Separate **Adv.** mode
+
 ### v3.0.0 - 2024 Aug.26
 - Implement **Mask** mode
 - Minor **Optimization**
