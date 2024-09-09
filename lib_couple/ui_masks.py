@@ -67,15 +67,6 @@ class CoupleMaskData:
             elem_classes="fc_msk_canvas",
         )
 
-        gr.HTML(
-            """
-            <p align="center">
-            <sub>Adjust the brush size if you cannot see the cursor...</sub><br>
-            <sup><s>Blame Gradio</s></sup>
-            </p>
-            """
-        )
-
         with gr.Row(elem_classes="fc_msk_io"):
             msk_btn_save = gr.Button(
                 "Save Mask ", interactive=True, elem_classes="round-btn"
@@ -121,6 +112,8 @@ class CoupleMaskData:
         )
 
         weights_field = gr.Textbox(visible=False, elem_classes="fc_msk_weights")
+
+        dummy = gr.State()
         # ===== Components ===== #
 
         # ===== Events ===== #
@@ -128,7 +121,7 @@ class CoupleMaskData:
             fn=None, **js(f'() => {{ ForgeCouple.hideButtons("{self.mode}"); }}')
         )
 
-        msk_btn_empty.click(self._create_empty, res, msk_canvas)
+        msk_btn_empty.click(self._create_empty, res, [msk_canvas, dummy])
 
         msk_btn_pull.click(
             self._pull_mask,
@@ -177,7 +170,7 @@ class CoupleMaskData:
         btn.click(
             self._refresh_resolution,
             [res, mode],
-            [msk_gallery, msk_preview, msk_canvas],
+            [msk_gallery, msk_preview, msk_canvas, dummy],
         ).success(
             fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
         )
@@ -199,6 +192,7 @@ class CoupleMaskData:
                 msk_gallery,
                 msk_btn_reset,
                 weights_field,
+                dummy,
             )
         ]
 
@@ -350,11 +344,7 @@ class CoupleMaskData:
     def _create_empty(resolution: str) -> Image.Image:
         """Generate a blank black canvas"""
         w, h = CoupleMaskData._parse_resolution(resolution)
-
-        if is_gradio_4:
-            return [Image.new("RGB", (w, h)), None]
-        else:
-            return Image.new("RGB", (w, h))
+        return [Image.new("RGB", (w, h)), None]
 
     def _on_operation(self, op: str) -> list[list, Image.Image, bool, bool]:
         """Operations triggered from JavaScript"""
@@ -407,26 +397,17 @@ class CoupleMaskData:
     ) -> list[list, Image.Image, Image.Image]:
         """Refresh when width or height is changed"""
 
-        if is_gradio_4:
-            (canvas, _) = self._create_empty(resolution)
-        else:
-            canvas = self._create_empty(resolution)
+        if mode != "Mask":
+            return [gr.update(), gr.update(), None, None]
 
-        if mode != "Mask" or not self.masks:
-            if is_gradio_4:
-                return [gr.update(), gr.update(), canvas, None]
-            else:
-                return [gr.update(), gr.update(), canvas]
+        (canvas, _) = self._create_empty(resolution)
 
         w, h = self._parse_resolution(resolution)
 
         self.masks = [mask.resize((w, h)) for mask in self.masks]
         preview = self._generate_preview()
 
-        if is_gradio_4:
-            return [self.masks, preview, canvas, None]
-        else:
-            return [self.masks, preview, canvas]
+        return [self.masks, preview, canvas, None]
 
     def _reset_masks(self) -> list[list, Image.Image, bool, bool]:
         """Clear everything"""

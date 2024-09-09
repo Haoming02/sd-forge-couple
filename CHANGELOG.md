@@ -1,3 +1,6 @@
+### v3.1.0 - 2024 Sep.09
+- Fix `Mask` mode **Canvas**
+
 ### v3.0.2 - 2024 Sep.05
 - Implement **Data Transfer** between Tabs
 

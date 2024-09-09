@@ -52,7 +52,7 @@ class ForgeCoupleMaskHandler {
 
     hideButtons() {
         const undo = this.#group.querySelector("button[aria-label='Undo']");
-        if (undo == null)
+        if (undo == null || undo.style.display === "none")
             return;
 
         undo.style.display = "none";
