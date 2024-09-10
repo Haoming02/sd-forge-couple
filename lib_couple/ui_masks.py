@@ -7,7 +7,7 @@ from .ui_funcs import COLORS
 
 try:
     from modules_forge.forge_canvas.canvas import ForgeCanvas
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 
@@ -40,31 +40,34 @@ class CoupleMaskData:
             {"mask": self.masks[i], "weight": self.weights[i]} for i in range(count)
         ]
 
-    def mask_ui(self, *args):
-        return self._mask_ui_4(*args) if is_gradio_4 else self._mask_ui_3(*args)
-
-    def _mask_ui_3(self, btn, res, mode) -> list[gr.components.Component]:
-        """The UI for the "Classic" Forge based on Gradio 3.x"""
+    def mask_ui(self, btn, res, mode) -> list[gr.components.Component]:
 
         # ===== Components ===== #
         msk_btn_empty = gr.Button("Create Empty Canvas", elem_classes="round-btn")
 
         gr.HTML(
-            """
+            f"""
             <h2 align="center"><ins>Mask Canvas</ins></h2>
-            <p align="center"><b>[Important]</b> Do <b>NOT</b> upload / paste an image to here...</p>
+            {
+                '' if is_gradio_4 else
+                '<p align="center"><b>[Important]</b> Do <b>NOT</b> upload / paste an image to here...</p>'
+            }
             """
         )
 
-        msk_canvas = gr.Image(
-            show_label=False,
-            source="upload",
-            interactive=True,
-            type="pil",
-            tool="color-sketch",
-            image_mode="RGB",
-            brush_color="#ffffff",
-            elem_classes="fc_msk_canvas",
+        msk_canvas = (
+            ForgeCanvas(scribble_color="#FFFFFF", no_upload=True)
+            if is_gradio_4
+            else gr.Image(
+                show_label=False,
+                source="upload",
+                interactive=True,
+                type="pil",
+                tool="color-sketch",
+                image_mode="RGB",
+                brush_color="#ffffff",
+                elem_classes="fc_msk_canvas",
+            )
         )
 
         with gr.Row(elem_classes="fc_msk_io"):
@@ -113,147 +116,23 @@ class CoupleMaskData:
 
         weights_field = gr.Textbox(visible=False, elem_classes="fc_msk_weights")
 
-        dummy = gr.State()
+        dummy = None if is_gradio_4 else gr.State()
         # ===== Components ===== #
 
         # ===== Events ===== #
-        msk_canvas.change(
-            fn=None, **js(f'() => {{ ForgeCouple.hideButtons("{self.mode}"); }}')
-        )
-
-        msk_btn_empty.click(self._create_empty, res, [msk_canvas, dummy])
-
-        msk_btn_pull.click(
-            self._pull_mask,
-            None,
-            [msk_gallery, msk_preview, msk_btn_load, msk_btn_override],
-        ).success(
-            fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
-        )
-
-        msk_btn_save.click(
-            self._write_mask,
-            msk_canvas,
-            [msk_gallery, msk_preview, msk_btn_load, msk_btn_override],
-        ).success(
-            fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
-        )
-
-        msk_btn_override.click(
-            self._override_mask,
-            msk_canvas,
-            [msk_gallery, msk_preview, msk_btn_load, msk_btn_override],
-        ).success(
-            fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
-        )
-
-        msk_btn_load.click(self._load_mask, None, msk_canvas)
-
-        msk_btn_reset.click(
-            self._reset_masks,
-            None,
-            [msk_gallery, msk_preview, msk_btn_load, msk_btn_override],
-        ).success(
-            fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
-        )
-
-        weights_field.change(self._write_weights, weights_field)
-
-        operation_btn.click(
-            self._on_operation,
-            operation,
-            [msk_gallery, msk_preview, msk_btn_load, msk_btn_override],
-        ).success(
-            fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
-        )
-
-        btn.click(
-            self._refresh_resolution,
-            [res, mode],
-            [msk_gallery, msk_preview, msk_canvas, dummy],
-        ).success(
-            fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
-        )
-        # ===== Events ===== #
-
-        # ===== Pain ===== #
-        [
-            setattr(comp, "do_not_save_to_config", True)
-            for comp in (
-                msk_btn_empty,
-                msk_btn_pull,
-                msk_canvas,
-                msk_btn_save,
-                msk_btn_load,
-                msk_btn_override,
-                operation,
-                operation_btn,
-                msk_preview,
-                msk_gallery,
-                msk_btn_reset,
-                weights_field,
-                dummy,
-            )
-        ]
-
-    def _mask_ui_4(self, btn, res, mode) -> list[gr.components.Component]:
-        """The UI for the "Neo" Forge based on Gradio 4.x"""
-
-        # ===== Components ===== #
-        msk_btn_empty = gr.Button("Create Empty Canvas", elem_classes="round-btn")
-
-        msk_canvas = ForgeCanvas(scribble_color="#FFFFFF", no_upload=True)
-
-        with gr.Row(elem_classes="fc_msk_io"):
-            msk_btn_save = gr.Button(
-                "Save Mask ", interactive=True, elem_classes="round-btn"
-            )
-            msk_btn_load = gr.Button(
-                "Load Mask", interactive=False, elem_classes="round-btn"
-            )
-            msk_btn_override = gr.Button(
-                "Override Mask", interactive=False, elem_classes="round-btn"
+        if not is_gradio_4:
+            msk_canvas.change(
+                fn=None, **js(f'() => {{ ForgeCouple.hideButtons("{self.mode}"); }}')
             )
 
-        with gr.Row(visible=False):
-            operation = gr.Textbox(interactive=True, elem_classes="fc_msk_op")
-            operation_btn = gr.Button("op", elem_classes="fc_msk_op_btn")
-
-        gr.HTML('<div class="fc_masks"></div>')
-
-        msk_preview = gr.Image(
-            show_label=False,
-            image_mode="RGB",
-            type="pil",
-            interactive=False,
-            show_download_button=False,
-            elem_classes="fc_msk_preview",
-        )
-
-        msk_gallery = gr.Gallery(
-            show_label=False,
-            show_share_button=False,
-            show_download_button=False,
-            interactive=False,
-            visible=False,
-            elem_classes="fc_msk_gal",
-        )
-
-        msk_btn_reset = gr.Button("Reset All Masks", elem_classes="round-btn")
-
-        msk_btn_pull = gr.Button(
-            f"Pull from {'txt2img' if self.mode == 'i2i' else 'img2img'}",
-            elem_classes="round-btn",
-        )
-
-        weights_field = gr.Textbox(visible=False, elem_classes="fc_msk_weights")
-        # ===== Components ===== #
-
-        # ===== Events ===== #
         msk_btn_empty.click(
-            self._create_empty,
-            res,
-            [msk_canvas.background, msk_canvas.foreground],
+            fn=self._create_empty,
+            inputs=[res],
+            outputs=(
+                [msk_canvas.background, msk_canvas.foreground]
+                if is_gradio_4
+                else [msk_canvas, dummy]
+            ),
         )
 
         msk_btn_pull.click(
@@ -266,7 +145,7 @@ class CoupleMaskData:
 
         msk_btn_save.click(
             self._write_mask,
-            msk_canvas.foreground,
+            msk_canvas.foreground if is_gradio_4 else msk_canvas,
             [msk_gallery, msk_preview, msk_btn_load, msk_btn_override],
         ).success(
             fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
@@ -274,13 +153,15 @@ class CoupleMaskData:
 
         msk_btn_override.click(
             self._override_mask,
-            msk_canvas.foreground,
+            msk_canvas.foreground if is_gradio_4 else msk_canvas,
             [msk_gallery, msk_preview, msk_btn_load, msk_btn_override],
         ).success(
             fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
         )
 
-        msk_btn_load.click(self._load_mask, None, msk_canvas.foreground)
+        msk_btn_load.click(
+            self._load_mask, None, msk_canvas.foreground if is_gradio_4 else msk_canvas
+        )
 
         msk_btn_reset.click(
             self._reset_masks,
@@ -301,9 +182,13 @@ class CoupleMaskData:
         )
 
         btn.click(
-            self._refresh_resolution,
-            [res, mode],
-            [msk_gallery, msk_preview, msk_canvas.background, msk_canvas.foreground],
+            fn=self._refresh_resolution,
+            inputs=[res, mode],
+            outputs=(
+                [msk_gallery, msk_preview, msk_canvas.background, msk_canvas.foreground]
+                if is_gradio_4
+                else [msk_gallery, msk_preview, msk_canvas, dummy]
+            ),
         ).success(
             fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
         )
@@ -316,8 +201,6 @@ class CoupleMaskData:
                 msk_btn_empty,
                 msk_btn_pull,
                 msk_canvas,
-                msk_canvas.foreground,
-                msk_canvas.background,
                 msk_btn_save,
                 msk_btn_load,
                 msk_btn_override,
@@ -329,6 +212,12 @@ class CoupleMaskData:
                 weights_field,
             )
         ]
+
+        if is_gradio_4:
+            msk_canvas.foreground.do_not_save_to_config = True
+            msk_canvas.background.do_not_save_to_config = True
+        else:
+            dummy.do_not_save_to_config = True
 
     @staticmethod
     def _parse_resolution(resolution: str) -> tuple[int, int]:

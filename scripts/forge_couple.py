@@ -16,7 +16,7 @@ from lib_couple.attention_couple import AttentionCouple
 from lib_couple.gr_version import js
 
 
-VERSION = "3.1.1"
+VERSION = "3.1.2"
 
 
 class ForgeCouple(scripts.Script):

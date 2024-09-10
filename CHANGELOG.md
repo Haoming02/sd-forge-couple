@@ -1,3 +1,6 @@
+### v3.1.2 - 2024 Sep.10
+- Unify `Mask` mode **Gradio** versions
+
 ### v3.1.1 - 2024 Sep.10
 - Add **Tooltips**
 
