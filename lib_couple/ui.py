@@ -123,7 +123,7 @@ def couple_UI(script, is_img2img: bool, title: str):
                 FC_DataTransfer.I2I_ADV_DATA = mapping
                 FC_DataTransfer.I2I_ADV_PASTE = mapping_paste_field
                 FC_DataTransfer.I2I_ADV_PULL = pull_btn
-                FC_DataTransfer.hook_adv()  # img2img always happer later than txt2img
+                FC_DataTransfer.hook_adv()  # img2img always happen later than txt2img
 
             else:
                 FC_DataTransfer.T2I_ADV_DATA = mapping
@@ -137,7 +137,7 @@ def couple_UI(script, is_img2img: bool, title: str):
 
             if is_img2img:
                 FC_DataTransfer.I2I_MASK = couple_mask
-                FC_DataTransfer.hook_mask()  # img2img always happer later than txt2img
+                FC_DataTransfer.hook_mask()  # img2img always happen later than txt2img
             else:
                 FC_DataTransfer.T2I_MASK = couple_mask
 

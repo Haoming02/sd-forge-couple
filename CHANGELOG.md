@@ -1,3 +1,6 @@
+### v3.1.1 - 2024 Sep.10
+- Add **Tooltips**
+
 ### v3.1.0 - 2024 Sep.09
 - Fix `Mask` mode **Canvas**
 

@@ -202,7 +202,7 @@ class CoupleMaskData:
         # ===== Components ===== #
         msk_btn_empty = gr.Button("Create Empty Canvas", elem_classes="round-btn")
 
-        msk_canvas = ForgeCanvas(scribble_color="#FFFFFF")
+        msk_canvas = ForgeCanvas(scribble_color="#FFFFFF", no_upload=True)
 
         with gr.Row(elem_classes="fc_msk_io"):
             msk_btn_save = gr.Button(

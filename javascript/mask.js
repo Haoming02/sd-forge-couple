@@ -107,6 +107,7 @@ class ForgeCoupleMaskHandler {
 
         const img = document.createElement("img");
         img.setAttribute('style', 'width: 96px !important; height: 96px !important; object-fit: contain;');
+        img.title = "Select this Mask";
         row.appendChild(img);
         row.img = img;
 
@@ -124,6 +125,7 @@ class ForgeCoupleMaskHandler {
         const weight = document.createElement("input");
         weight.setAttribute('style', 'width: 10%;');
         weight.setAttribute("type", "number");
+        weight.title = "Weight";
         row.appendChild(weight);
         row.weight = weight;
 
@@ -133,6 +135,7 @@ class ForgeCoupleMaskHandler {
         const del = document.createElement("button");
         del.classList.add("del");
         del.textContent = "❌";
+        del.title = "Delete this Mask";
         row.appendChild(del);
 
         del.addEventListener("click", () => { this.#onDeleteRow(row); });
@@ -140,6 +143,7 @@ class ForgeCoupleMaskHandler {
         const up = document.createElement("button");
         up.classList.add("up");
         up.textContent = "^";
+        up.title = "Move this Layer Up";
         row.appendChild(up);
 
         up.addEventListener("click", () => { this.#onShiftRow(row, true); });
@@ -147,6 +151,7 @@ class ForgeCoupleMaskHandler {
         const down = document.createElement("button");
         down.classList.add("down");
         down.textContent = "^";
+        down.title = "Move this Layer Down";
         row.appendChild(down);
 
         down.addEventListener("click", () => { this.#onShiftRow(row, false); });
