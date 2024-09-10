@@ -209,3 +209,17 @@
     background: var(--input-background-fill);
     border-radius: 0.5em;
 }
+
+.fc_msk h2 {
+    margin-top: 1em !important;
+}
+
+.fc_msk div.fc_masks {
+    background: var(--panel-background-fill);
+    padding: 0.5em 0em;
+    border-radius: 2em;
+}
+
+.fc_msk .fc_msk_uploads .gradio-image div.image-container {
+    margin: auto;
+}

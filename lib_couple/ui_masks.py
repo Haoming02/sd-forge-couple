@@ -85,6 +85,8 @@ class CoupleMaskData:
             operation = gr.Textbox(interactive=True, elem_classes="fc_msk_op")
             operation_btn = gr.Button("op", elem_classes="fc_msk_op_btn")
 
+        gr.HTML('<h2 align="center"><ins>Mask Layers</ins></h2>')
+
         gr.HTML('<div class="fc_masks"></div>')
 
         gr.HTML('<h2 align="center"><ins>Mask Preview</ins></h2>')
@@ -117,6 +119,30 @@ class CoupleMaskData:
         weights_field = gr.Textbox(visible=False, elem_classes="fc_msk_weights")
 
         dummy = None if is_gradio_4 else gr.State()
+
+        with gr.Row(elem_classes="fc_msk_uploads"):
+            upload_background = gr.Image(
+                image_mode="RGBA",
+                label="Upload Background",
+                type="pil",
+                sources="upload",
+                show_download_button=False,
+                interactive=True,
+                height=256,
+                elem_id="fc_msk_upload_bg",
+            )
+
+            upload_mask = gr.Image(
+                image_mode="RGBA",
+                label="Upload Mask",
+                type="pil",
+                sources="upload",
+                show_download_button=False,
+                interactive=True,
+                height=256,
+                elem_id="fc_msk_upload_mask",
+            )
+
         # ===== Components ===== #
 
         # ===== Events ===== #
@@ -192,6 +218,24 @@ class CoupleMaskData:
         ).success(
             fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
         )
+
+        upload_background.upload(
+            fn=self._on_up_bg,
+            inputs=[res, upload_background],
+            outputs=[
+                msk_canvas.background if is_gradio_4 else msk_canvas,
+                upload_background,
+            ],
+        )
+
+        upload_mask.upload(
+            fn=self._on_up_mask,
+            inputs=[res, upload_mask],
+            outputs=[
+                msk_canvas.foreground if is_gradio_4 else msk_canvas,
+                upload_mask,
+            ],
+        )
         # ===== Events ===== #
 
         # ===== Pain ===== #
@@ -210,6 +254,8 @@ class CoupleMaskData:
                 msk_gallery,
                 msk_btn_reset,
                 weights_field,
+                upload_background,
+                upload_mask,
             )
         ]
 
@@ -234,6 +280,41 @@ class CoupleMaskData:
         """Generate a blank black canvas"""
         w, h = CoupleMaskData._parse_resolution(resolution)
         return [Image.new("RGB", (w, h)), None]
+
+    @staticmethod
+    def _on_up_bg(resolution: str, image: Image.Image) -> tuple[Image.Image, bool]:
+        """Resize the uploaded image"""
+        w, h = CoupleMaskData._parse_resolution(resolution)
+        image = image.resize((w, h))
+
+        matt = Image.new("RGBA", (w, h), "black")
+        matt.paste(image, (0, 0), image)
+        image = matt.convert("RGB")
+
+        array = np.asarray(image, dtype=np.int16)
+        array = np.clip(array - 64, 0, 255).astype(np.uint8)
+        image = Image.fromarray(array)
+
+        return [image, gr.update(value=None)]
+
+    @staticmethod
+    def _on_up_mask(resolution: str, image: Image.Image) -> tuple[Image.Image, bool]:
+        """Resize the uploaded image"""
+        w, h = CoupleMaskData._parse_resolution(resolution)
+        image = image.resize((w, h))
+
+        if is_gradio_4:  # Only keep the pure white Mask
+            image_array = np.array(image, dtype=np.uint8)
+            white_mask = (image_array[..., :3] == [255, 255, 255]).all(axis=-1)
+            image_array[~white_mask] = [0, 0, 0, 0]
+            image = Image.fromarray(image_array)
+
+        else:
+            matt = Image.new("RGBA", (w, h))
+            matt.paste(image, (0, 0), image)
+            image = matt.convert("RGB")
+
+        return [image, gr.update(value=None)]
 
     def _on_operation(self, op: str) -> list[list, Image.Image, bool, bool]:
         """Operations triggered from JavaScript"""
@@ -275,7 +356,7 @@ class CoupleMaskData:
 
         for i, mask in enumerate(self.masks):
             color = Image.new("RGB", res, COLORS[i % 7])
-            alpha = Image.fromarray(np.asarray(mask).astype(np.uint8) * 144)
+            alpha = Image.fromarray(np.asarray(mask, dtype=np.uint8) * 144)
             rgba = Image.merge("RGBA", [*color.split(), alpha.convert("L")])
             bg.paste(rgba, (0, 0), rgba)
 
@@ -330,6 +411,10 @@ class CoupleMaskData:
 
         assert isinstance(img, Image.Image)
 
+        array = np.asarray(img.convert("L"), dtype=np.uint8)
+        mask = np.where(array == 255, 255, 0)
+        img = Image.fromarray(mask.astype(np.uint8))
+
         if not bool(img.getbbox()):
             self.selected_index = -1
             return [
@@ -363,6 +448,10 @@ class CoupleMaskData:
             ]
 
         assert isinstance(img, Image.Image)
+
+        array = np.asarray(img.convert("L"), dtype=np.uint8)
+        mask = np.where(array == 255, 255, 0)
+        img = Image.fromarray(mask.astype(np.uint8))
 
         if not bool(img.getbbox()):
             return [

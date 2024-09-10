@@ -1,11 +1,11 @@
 ﻿# SD Forge Attention Couple
 This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-diffusion-webui-forge), which allows you to ~~generate couples~~ target conditioning at different regions. No more color bleeds or mixed features!
 
-> Compatible with <ins>both</ins> **old** & **new** Forge
+> Compatible with both old & new Forge
 
 > Does **not** work with [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
 
-> Supports <ins>both</ins> `SD 1.5` & `SDXL` checkpoints, but **not** `Flux`...
+> Supports both `SD 1.5` & `SDXL` checkpoints, but **not** `Flux`...
 
 ## Showcase
 
@@ -43,7 +43,7 @@ a cinematic photo of 2 men arguing, indoors, court room
 > **Note:** The effect of this Extension is still dependent on the prompt-adherence capability of the Checkpoint. If the checkpoint does not understand the composition, it still cannot generate the result correctly. Also, do not expect the composition to work every single time...
 
 <details>
-<summary><b>Index</b> (Click to Expand)</summary>
+<summary><b>Index</b></summary>
 
 - [Basic Mode](#basic-mode)
     - [Tile Direction](#tile-direction)
@@ -156,11 +156,12 @@ Were these bounding boxes still too rigid for you...? Now you can also manually 
 
 - **Canvas:**
     - Click the **Create Empty Canvas** button to generate a blank canvas to draw on
-        - Use a **white** brush to paint the desired region
+    - Only **pure white** `(255, 255, 255)` pixels count towards the mask, other colors are simply discarded
+        - This also means that other colors can function as the "eraser" for the mask
     - Click the **Save Mask** button to save the image as a <ins>new</ins> layer of masks
     - When a layer is selected:
         - Click **Load Mask** to load the mask into canvas
-        - Click **Override Mask** to save the image and <ins>override</ins> the selected layer of masks
+        - Click **Override Mask** to save the image and <ins>override</ins> the selected layer of mask
     - Click the **Reset All Masks** button to clear all the data
 
 > **Note:** The mask data is not sent when using the `Send to img2img` function. Click the `Pull from txt2img` to manually transfer the data. *(vice versa)*
@@ -170,6 +171,14 @@ Were these bounding boxes still too rigid for you...? Now you can also manually 
     - Click the preview image to <ins>select</ins> the layer
     - Use the arrow buttons to quickly re-order the layers
     - Click the `❌` button to delete the layer
+
+- **Uploads:**
+    - Use the `Upload Background` to upload an image as the reference to draw masks on
+        - The image will get dimmed, therefore it will **not** count towards the mask
+    - Use the `Upload Mask` to upload an image as a mask that can directly be saved
+        - Mainly for when you prepare the masks in external programs
+
+> **Note:** For `Gradio 3` *(Old Forge)* users, avoid pasting images, instead manually upload or simply drag & drop the images. Using `Ctrl + V` might send the image to the Canvas, thus breaking the Extension...
 
 <p align="center">
 <img src="example/mask_ui.jpg" width=512><br>
@@ -213,15 +222,10 @@ For usage with API, please refer to the [Wiki](https://github.com/Haoming02/sd-f
 
 <hr>
 
-## To Do
-
-- [ ] Add a way to upload a background for **Mask** mode as reference
-
-<hr>
-
 ## TypeError: 'NoneType'
 
-For people that get the following error:
+For users that get the following error:
+
 ```py
 RuntimeError: shape '[X, Y, 1]' is invalid for input of size Z
 shape '[X, Y, 1]' is invalid for input of size Z

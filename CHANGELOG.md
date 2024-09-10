@@ -1,5 +1,8 @@
+### v3.1.3 - 2024 Sep.10
+- Implement `Mask` mode image **Upload**
+
 ### v3.1.2 - 2024 Sep.10
-- Unify `Mask` mode **Gradio** versions
+- Unify `Mask` mode **Gradio** versions UI
 
 ### v3.1.1 - 2024 Sep.10
 - Add **Tooltips**
@@ -31,6 +34,8 @@
 - Use HTML `<table>` instead of Gradio `Dataframe`
 - Improved Visuals
 - Optimize Logics
+
+<br>
 
 ### v1.6.2 - 2024 Jul.29
 - Preparing for Revamping
@@ -90,7 +95,7 @@
 - Add **Row-Control Buttons** for Advanced Mapping
 
 ### v1.3.0 - 2024 Mar.30
-- Add **Advanced Mapping** *(manual regions)*
+- Add **Advanced Mapping**
 
 ### v1.2.1 - 2024 Mar.29
 - Add **Couple Separator** Option by. <ins>pamparamm</ins>
