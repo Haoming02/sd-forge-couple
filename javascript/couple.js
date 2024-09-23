@@ -250,7 +250,7 @@ class ForgeCouple {
                 mode,
                 promptField,
                 () => {
-                    this.dataframe[mode].syncPrompt();
+                    this.dataframe[mode].syncPrompts();
                     this.maskHandler[mode].syncPrompts();
                 }
             );

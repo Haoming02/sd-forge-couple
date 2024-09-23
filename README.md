@@ -95,6 +95,8 @@ pavement, road
 
 In **Basic** and **Mask** modes, you can set either the **first** line or the **last** line of the positive prompt as the "background," affecting the entire image instead of just one region. Useful for specifying styles or quality tags used by **SD 1.5** and **Pony** checkpoints.
 
+> This has **no** effect in **Advanced** mode
+
 <br>
 
 ## Advanced Mode
@@ -198,6 +200,17 @@ treasure chest
 ## Couple Separator
 
 By default when the field is left empty, this Extension uses the newline character (`\n`) as the separator to determine "lines" of the prompts. You may also specify other words as the separator instead.
+
+- To keep your custom separator in its own line, you can add `\n` before and after the word
+    - **eg.** `\nMySep\n`
+
+- Do **not** include space in the separator
+    - ` ` *(left empty)*: **OK**
+    - `abc` : **OK**
+    - `xyz\n` : **OK**
+    - `\n` : **OK**
+    - `\n\n` : **OK**
+    - `\n  \n` : **ERROR**
 
 ## LoRA Support
 

@@ -1,3 +1,6 @@
+### v3.2.0 - 2024 Sep.23
+- Improved **Separator** Sync
+
 ### v3.1.3 - 2024 Sep.10
 - Implement `Mask` mode image **Upload**
 

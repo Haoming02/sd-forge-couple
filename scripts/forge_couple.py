@@ -16,7 +16,7 @@ from lib_couple.attention_couple import AttentionCouple
 from lib_couple.gr_version import js
 
 
-VERSION = "3.1.3"
+VERSION = "3.2.0"
 
 
 class ForgeCouple(scripts.Script):
@@ -69,8 +69,15 @@ class ForgeCouple(scripts.Script):
         if not enable:
             return
 
-        separator = "\n" if not separator.strip() else separator.strip()
-        separator = separator.replace("\\n", "\n").replace("\\t", "\t")
+        separator = (
+            "\n"
+            if not separator.strip()
+            else "\n".join(
+                [part.strip() for part in (separator.replace("\\n", "\n").split("\n"))]
+            )
+        )
+
+        raw_separator = separator.replace("\n", "\\n")
 
         # Webui & API Usages...
         if mode == "Mask":
@@ -123,7 +130,7 @@ class ForgeCouple(scripts.Script):
 
         # ===== Infotext =====
         p.extra_generation_params["forge_couple"] = True
-        p.extra_generation_params["forge_couple_separator"] = separator
+        p.extra_generation_params["forge_couple_separator"] = raw_separator
         p.extra_generation_params["forge_couple_mode"] = mode
 
         if mode == "Advanced":

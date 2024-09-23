@@ -20,7 +20,7 @@ class ForgeCoupleDataframe {
 
     get #sep() {
         var sep = this.#separatorField.value.trim();
-        sep = (!sep) ? "\n" : sep.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
+        sep = (!sep) ? "\n" : sep.replace(/\\n/g, "\n").split("\n").map(c => c.trim()).join("\n");
         return sep;
     }
 
@@ -33,6 +33,7 @@ class ForgeCoupleDataframe {
         this.#promptField = document.getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`).querySelector("textarea");
         this.#separatorField = separator;
 
+        this.#separatorField.addEventListener("blur", () => { this.syncPrompts(); });
         const table = document.createElement('table');
 
 
@@ -154,7 +155,7 @@ class ForgeCoupleDataframe {
         this.#selection = -1;
         ForgeCouple.onSelect(this.#mode);
         ForgeCouple.onEntry(this.#mode);
-        this.syncPrompt();
+        this.syncPrompts();
     }
 
     reset() {
@@ -186,7 +187,7 @@ class ForgeCoupleDataframe {
         this.#selection = -1;
         ForgeCouple.onSelect(this.#mode);
         ForgeCouple.onEntry(this.#mode);
-        this.syncPrompt();
+        this.syncPrompts();
     }
 
     /** @returns {number[][]} */
@@ -255,7 +256,7 @@ class ForgeCoupleDataframe {
         this.#selection += 1;
         ForgeCouple.onSelect(this.#mode);
         ForgeCouple.onEntry(this.#mode);
-        this.syncPrompt();
+        this.syncPrompts();
     }
 
     /** @param {boolean} newline */
@@ -290,7 +291,7 @@ class ForgeCoupleDataframe {
 
         ForgeCouple.onSelect(this.#mode);
         ForgeCouple.onEntry(this.#mode);
-        this.syncPrompt();
+        this.syncPrompts();
     }
 
     /** @param {boolean} removeText */
@@ -324,7 +325,7 @@ class ForgeCoupleDataframe {
 
         ForgeCouple.onSelect(this.#mode);
         ForgeCouple.onEntry(this.#mode);
-        this.syncPrompt();
+        this.syncPrompts();
     }
 
     /** @returns {[string, Element]} */
@@ -345,7 +346,7 @@ class ForgeCoupleDataframe {
             return [ForgeCoupleDataframe.#color(this.#selection), rows[this.#selection]];
     }
 
-    syncPrompt() {
+    syncPrompts() {
         const prompt = this.#promptField.value;
 
         const prompts = prompt.split(this.#sep).map(line => line.trim());
@@ -360,7 +361,7 @@ class ForgeCoupleDataframe {
                 return;
 
             if (i < prompts.length)
-                promptCell.textContent = prompts[i];
+                promptCell.textContent = prompts[i].replace(/\n+/g, ", ").replace(/,+/g, ",");
             else
                 promptCell.textContent = "";
         });

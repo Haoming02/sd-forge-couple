@@ -3,7 +3,7 @@ class ForgeCoupleMaskHandler {
     #group = undefined;
     #gallery = undefined;
     #preview = undefined;
-    separatorField = undefined;
+    #separatorField = undefined;
     #background = undefined;
     #promptField = undefined;
     #weightField = undefined;
@@ -13,8 +13,8 @@ class ForgeCoupleMaskHandler {
 
     /** @returns {string} */
     get #sep() {
-        var sep = this.separatorField.value.trim();
-        sep = (!sep) ? "\n" : sep.replace(/\\n/g, "\n").replace(/\\t/g, "\t");
+        var sep = this.#separatorField.value.trim();
+        sep = (!sep) ? "\n" : sep.replace(/\\n/g, "\n").split("\n").map(c => c.trim()).join("\n");
         return sep;
     }
 
@@ -36,13 +36,15 @@ class ForgeCoupleMaskHandler {
         this.#group = group;
         this.#gallery = gallery;
         this.#preview = preview;
-        this.separatorField = sep;
+        this.#separatorField = sep;
         this.#background = background;
         this.#promptField = promptField;
         this.#weightField = weightField;
         this.#operationField = op;
         this.#operationButton = opButton;
         this.#loadButton = loadButton;
+
+        this.#separatorField.addEventListener("blur", () => { this.syncPrompts(); });
     }
 
     /** @returns {HTMLDivElement[]} */
@@ -180,18 +182,28 @@ class ForgeCoupleMaskHandler {
         const radio = this.#background.querySelector('div.wrap>label.selected>span');
         const background = radio.textContent;
 
-        if (background != "None") {
-            const existingPrompt = this.#promptField.value
-                .split(this.#sep).map(line => line.trim());
+        const existingPrompt = this.#promptField.value
+            .split(this.#sep).map(line => line.trim());
 
+        if (existingPrompt.length > 0) {
             if (background == "First Line")
-                prompts.unshift(existingPrompt[0]);
-            else
-                prompts.push(existingPrompt[existingPrompt.length - 1]);
+                prompts.unshift(existingPrompt.shift());
+            else if (background == "Last Line")
+                prompts.push(existingPrompt.pop());
         }
 
-        this.#promptField.value = prompts.join(this.#sep);
-        updateInput(this.#promptField);
+        const oldLen = existingPrompt.length;
+        const newLen = prompts.length;
+
+        if ((newLen >= oldLen) || (oldLen === 0)) {
+            this.#promptField.value = prompts.join(this.#sep);
+            updateInput(this.#promptField);
+        }
+        else {
+            const newPrompts = [...prompts, ...(existingPrompt.slice(newLen))];
+            this.#promptField.value = newPrompts.join(this.#sep);
+            updateInput(this.#promptField);
+        }
     }
 
     /** @param {HTMLInputElement} field */
@@ -260,7 +272,7 @@ class ForgeCoupleMaskHandler {
                 return;
 
             if (i < prompts.length)
-                promptCell.value = prompts[i];
+                promptCell.value = prompts[i].replace(/\n+/g, ", ").replace(/,+/g, ",");
             else
                 promptCell.value = "";
         });
