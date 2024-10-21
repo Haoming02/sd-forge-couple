@@ -1,11 +1,9 @@
 ﻿# SD Forge Attention Couple
 This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-diffusion-webui-forge), which allows you to ~~generate couples~~ target conditioning at different regions. No more color bleeds or mixed features!
 
-> Compatible with both old & new Forge
+> Compatible with both old & new Forge; Does **not** work with [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
 
-> Does **not** work with [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
-
-> Supports both `SD 1.5` & `SDXL` checkpoints, but **not** `Flux`...
+> Supports both `SD 1` & `SDXL` but **not** `Flux`
 
 ## Showcase
 
@@ -37,11 +35,13 @@ This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-
 
 ## How to Use
 
-> As shown in the various examples, even if a region only contains 1 subject, it usually works better to still prompt for the total amount of subjects first.
+> [!NOTE]
+> The effect of this Extension is dependent on the prompt-adherence capability of the Checkpoint. If the checkpoint does not understand the composition, it still cannot generate the result correctly.
 
-> **Note:** The effect of this Extension is still dependent on the prompt-adherence capability of the Checkpoint. If the checkpoint does not understand the composition, it still cannot generate the result correctly. Also, do not expect the composition to work every single time...
+> [!TIP]
+> As shown in the various examples, even if a region only contains 1 subject, it's usually still better to prompt for the total amount of subjects first.
 
-<details open>
+<details>
 <summary><h3>Index</h3></summary>
 
 - [Basic Mode](#basic-mode)
@@ -103,7 +103,8 @@ In **Basic** and **Mask** modes, you can set either the **first** line or the **
 
 Were these automated and equally-sized tiles not sufficient for your needs? Now you can manually specify each regions!
 
-> **Important:** The entire image **must** contain weight. The easiest way would be adding a region that covers the whole image *(just like the **Global Effect** in **Basic**)*.
+> [!IMPORTANT]
+> The entire image **must** contain weight. The easiest way would be adding a region that covers the whole image *(just like **Global Effect**)*.
 
 - **Entries:**
     - Each row contains a range for **x** axis, a range for **y** axis, a **weight**, as well as the corresponding **line** of prompt
@@ -112,7 +113,8 @@ Were these automated and equally-sized tiles not sufficient for your needs? Now 
     - **x** axis is from left to right; **y** axis is from top to bottom
     - **2** *(to)* should be larger than **1** *(from)*
 
-> **Note:** The mapping data is not sent when using the `Send to img2img` function. Click the `Pull from txt2img` to manually transfer the data. *(vice versa)*
+> [!NOTE]
+> The mapping data is not sent when using the `Send to img2img` function. Click the `Pull from txt2img` to manually transfer the data.
 
 - **Control:**
     - Click on a row to select it, highlighting its bounding box
@@ -152,7 +154,8 @@ sunset, golden hour, lens flare
 
 Were these bounding boxes still too rigid for you...? Now you can also manually draw the areas for each regions!
 
-> **Important:** The entire image **must** contain weight. The easiest way would be using the **Global Effect**.
+> [!IMPORTANT]
+> The entire image **must** contain weight. The easiest way would be using the **Global Effect**.
 
 - **Canvas:**
     - Click the **Create Empty Canvas** button to generate a blank canvas to draw on
@@ -164,7 +167,8 @@ Were these bounding boxes still too rigid for you...? Now you can also manually 
         - Click **Override Mask** to save the image and <ins>override</ins> the selected layer of mask
     - Click the **Reset All Masks** button to clear all the data
 
-> **Note:** The mask data is not sent when using the `Send to img2img` function. Click the `Pull from txt2img` to manually transfer the data. *(vice versa)*
+> [!NOTE]
+> The mask data is not sent when using the `Send to img2img` function. Click the `Pull from txt2img` to manually transfer the data.
 
 - **Entries:**
     - Each row contains a **preview** of the layer, the corresponding **line** of prompt, and the **weight** for the layer
@@ -178,7 +182,8 @@ Were these bounding boxes still too rigid for you...? Now you can also manually 
     - Use the `Upload Mask` to upload an image as a mask that can directly be saved
         - Mainly for when you prepare the masks in external programs
 
-> **Note:** For Classic Forge (`Gradio 3`) users, avoid pasting images. Instead manually upload or simply drag & drop the images. Using `Ctrl + V` might send the image to the Canvas, thus breaking the Extension...
+> [!WARNING]
+> For Classic Forge (`Gradio 3`) users, avoid pasting images. Instead manually upload or simply drag & drop the images. Using `Ctrl + V` might send the image to the Canvas, thus breaking the Extension...
 
 <p align="center">
 <img src="example/mask_ui.jpg" width=512><br>
