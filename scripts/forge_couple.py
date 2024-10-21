@@ -16,7 +16,7 @@ from lib_couple.attention_couple import AttentionCouple
 from lib_couple.gr_version import js
 
 
-VERSION = "3.2.0"
+VERSION = "3.2.1"
 
 
 class ForgeCouple(scripts.Script):
@@ -63,6 +63,10 @@ class ForgeCouple(scripts.Script):
         background: str,
         background_weight: float,
         mapping: list,
+        prepend_cmp: str,
+        prepend_ignore: str,
+        append_cmp: str,
+        append_ignore: str,
         *args,
         **kwargs,
     ):
@@ -147,6 +151,25 @@ class ForgeCouple(scripts.Script):
             if mode == "Basic":
                 p.extra_generation_params["forge_couple_direction"] = direction
 
+        prepend_cmp: str = prepend_cmp.strip()
+        append_cmp: str = append_cmp.strip()
+        l = len(couples)
+
+        if prepend_cmp:
+            p_ig: list[int] = [int(v) for v in prepend_ignore.split(",") if v.strip()]
+            for i in range(l):
+                if i not in p_ig:
+                    couples[i] = f"{prepend_cmp}{couples[i]}"
+            p.extra_generation_params["forge_couple_prepend_prompt"] = prepend_cmp
+            p.extra_generation_params["forge_couple_prepend_ignore"] = prepend_ignore
+
+        if append_cmp:
+            a_ig: list[int] = [int(v) for v in append_ignore.split(",") if v.strip()]
+            for i in range(l):
+                if i not in a_ig:
+                    couples[i] = f"{couples[i]}{append_cmp}"
+            p.extra_generation_params["forge_couple_append_prompt"] = append_cmp
+            p.extra_generation_params["forge_couple_append_ignore"] = append_ignore
         # ===== Infotext =====
 
         self.couples = couples

@@ -1,3 +1,6 @@
+### v3.2.1 - 2024 Oct.21
+- Implemented **Common Prompt**
+
 ### v3.2.0 - 2024 Sep.23
 - Improved **Separator** Sync
 

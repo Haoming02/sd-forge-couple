@@ -9,13 +9,12 @@ This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-
 
 ## Showcase
 
-- Generate the following prompt using the [Juggernaut XL V7](https://civitai.com/models/133005/juggernaut-xl) checkpoint with same seed and parameters:
-
-```
-a cinematic photo of 2 men arguing, indoors, court room
-2 men, jesus christ, white robe, looking at each other, shouting
-2 men, santa claus, looking at each other, shouting
-```
+- Generate the following prompt using [Juggernaut XL V7](https://civitai.com/models/133005/juggernaut-xl), with the same seed and parameters:
+    ```
+    a cinematic photo of 2 men arguing, indoors
+    2 men, jesus christ, white robe, looking at each other, shouting
+    2 men, santa claus, looking at each other, shouting
+    ```
 
 <table>
     <thead align="center">
@@ -28,13 +27,13 @@ a cinematic photo of 2 men arguing, indoors, court room
     <tbody align="center">
         <tr>
             <td>Result</td>
-            <td><img src="example/off.jpg" width=384></td>
-            <td><img src="example/on.jpg" width=384></td>
+            <td><img src="example/off.jpg" width=384><br>
+            Features mixed between characters</td>
+            <td><img src="example/on.jpg" width=384><br>
+            Distinct and separate characters</td>
         </tr>
     </tbody>
 </table>
-
-- Notice the mixed features without the Extension; see the distinct "characters" when the Extension is enabled
 
 ## How to Use
 
@@ -42,8 +41,8 @@ a cinematic photo of 2 men arguing, indoors, court room
 
 > **Note:** The effect of this Extension is still dependent on the prompt-adherence capability of the Checkpoint. If the checkpoint does not understand the composition, it still cannot generate the result correctly. Also, do not expect the composition to work every single time...
 
-<details>
-<summary><b>Index</b></summary>
+<details open>
+<summary><h3>Index</h3></summary>
 
 - [Basic Mode](#basic-mode)
     - [Tile Direction](#tile-direction)
@@ -52,6 +51,7 @@ a cinematic photo of 2 men arguing, indoors, court room
 - [Mask Mode](#mask-mode)
 - Misc.
     - [Separator](#couple-separator)
+    - [Common Prompts](#common-prompts)
     - [LoRA](#lora-support)
 - [API](https://github.com/Haoming02/sd-forge-couple/wiki/API)
 
@@ -150,8 +150,6 @@ sunset, golden hour, lens flare
 
 ## Mask Mode
 
-<p align="right"><i><b>New</b> 🔥</i></p>
-
 Were these bounding boxes still too rigid for you...? Now you can also manually draw the areas for each regions!
 
 > **Important:** The entire image **must** contain weight. The easiest way would be using the **Global Effect**.
@@ -180,7 +178,7 @@ Were these bounding boxes still too rigid for you...? Now you can also manually 
     - Use the `Upload Mask` to upload an image as a mask that can directly be saved
         - Mainly for when you prepare the masks in external programs
 
-> **Note:** For `Gradio 3` *(Old Forge)* users, avoid pasting images, instead manually upload or simply drag & drop the images. Using `Ctrl + V` might send the image to the Canvas, thus breaking the Extension...
+> **Note:** For Classic Forge (`Gradio 3`) users, avoid pasting images. Instead manually upload or simply drag & drop the images. Using `Ctrl + V` might send the image to the Canvas, thus breaking the Extension...
 
 <p align="center">
 <img src="example/mask_ui.jpg" width=512><br>
@@ -212,11 +210,39 @@ By default when the field is left empty, this Extension uses the newline charact
     - `\n\n` : **OK**
     - `\n  \n` : **ERROR**
 
+## Common Prompts
+
+If you have multiple characters that share the same poses or costumes, it would've been a chore to keep copying and pasting the same lines over and over again. Now you can simplify this process via the new **Common Prompts** feature at the bottom of the Extension:
+
+- Specify prompts that get inserted before *(`prepend`)* or added after *(`append`)* each line *(`couple`)*
+- Specify the lines that should be ignored *(mainly for skipping `background`)*
+
+So now, you only need to write the features of the characters in the main prompt~
+
+<p align="center">
+<img src="example/common.jpg" width=384>
+</p>
+
+- <b><ins>Main Prompt</ins></b>
+    ```
+    score_9, score_8_up, score_7_up, source_anime, high quality, best quality, masterpiece, 2girls, <lora:hasunosora_pony:0.8>,
+    murano sayaka, low twintails,
+    hinoshita kaho, medium hair
+    ```
+- <b><ins>Prepend</ins></b>
+    - **prompt:** `2girls,`
+    - **ignore:** `0`
+- <b><ins>Append</ins></b>
+    - **prompt:** `, brown dress, white sailor collar, neckerchief, standing, arms behind back, looking at viewer, smile, blush, classroom`
+    - **ignore:** `0`
+
+> This works for all **3** modes
+
 ## LoRA Support
 
 Using multiple LoRAs in different regions is possible, though it depends on how well the LoRAs work together...
 
-LoRA that contains multiple subjects works better in my experience.
+LoRA that contains multiple subjects seems to work better in my experience.
 
 <p align="center">
 <img src="example/lora.jpg" width=384>
