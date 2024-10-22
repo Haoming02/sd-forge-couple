@@ -16,7 +16,7 @@ from lib_couple.attention_couple import AttentionCouple
 from lib_couple.gr_version import js
 
 
-VERSION = "3.2.2"
+VERSION = "3.2.3"
 
 
 class ForgeCouple(scripts.Script):
@@ -44,14 +44,6 @@ class ForgeCouple(scripts.Script):
 
         elif elem_id in ("img2img_width", "img2img_height"):
             component.change(None, **js('() => { ForgeCouple.preview("i2i"); }'))
-
-    @staticmethod
-    def strip_networks(prompt: str) -> str:
-        """LoRAs are already parsed thus no longer needed"""
-        pattern = re.compile(r"<.*?>")
-        cleaned = re.sub(pattern, "", prompt)
-
-        return cleaned
 
     @staticmethod
     def parse_common_prompt(prompt: str, brackets: tuple[str]) -> str:
@@ -108,79 +100,72 @@ class ForgeCouple(scripts.Script):
             mapping: list = self.get_mask() or mapping
             assert isinstance(mapping[0], dict)
 
-        couples: list[str] = []
-        prompt: str = kwargs["prompts"][0]
+        prompts: str = kwargs["prompts"][0]
 
         if common_parser != "off":
-            prompt = self.parse_common_prompt(prompt, common_parser.split(" "))
+            prompts = self.parse_common_prompt(prompts, common_parser.split(" "))
 
             if common_debug:
                 print("\n\n[Forge Couple] Common Prompts Applied:")
-                print(prompt)
+                print(prompts)
                 print("\n")
 
-        chunks = prompt.split(separator)
-        for chunk in chunks:
-            prompt = self.strip_networks(chunk).strip()
-            couples.append(prompt)
+        couples: list[str] = [chunk.strip() for chunk in prompts.split(separator)]
 
         match mode:
             case "Basic":
                 if len(couples) < (3 - int(background == "None")):
-                    print("\n[Couple] Not Enough Lines in Prompt...")
-                    print(f"\t[{len(couples)} / {3 - int(background == 'None')}]\n")
                     self.couples = None
-                    return
+                    raise RuntimeError(
+                        "[Couple] Not Enough Lines in Prompt... "
+                        + f"[{len(couples)} / {3 - int(background == 'None')}]"
+                    )
 
             case "Mask":
                 if not mapping:
-                    print("\n[Couple] No Mapping...?\n")
                     self.couples = None
-                    return
+                    raise RuntimeError("[Couple] No Mapping...?")
 
                 required: int = len(mapping) + int(background != "None")
                 if len(couples) != required:
-                    print("\n[Couple] Number of Couples and Masks is not the same...")
-                    print(f"\t[{len(couples)} / {required}]\n")
                     self.couples = None
-                    return
+                    raise RuntimeError(
+                        "[Couple] Number of Couples and Masks is not the same... "
+                        + f"[{len(couples)} / {required}]"
+                    )
 
             case "Advanced":
                 if not mapping:
-                    print("\n[Couple] No Mapping...?\n")
                     self.couples = None
-                    return
+                    raise RuntimeError("[Couple] No Mapping...?")
 
                 if not validate_mapping(mapping):
                     self.couples = None
                     return
 
                 if len(couples) != len(mapping):
-                    print("\n[Couple] Number of Couples and Mapping is not the same...")
-                    print(f"\t[{len(couples)} / {len(mapping)}]\n")
                     self.couples = None
-                    return
+                    raise RuntimeError(
+                        "[Couple] Number of Couples and Mapping is not the same... "
+                        + f"[{len(couples)} / {len(mapping)}]"
+                    )
 
         # ===== Infotext =====
-        p.extra_generation_params["forge_couple"] = True
-        p.extra_generation_params["forge_couple_separator"] = raw_separator
-        p.extra_generation_params["forge_couple_mode"] = mode
+        fc_param: dict = {}
 
+        fc_param["forge_couple"] = True
+        fc_param["forge_couple_mode"] = mode
+        fc_param["forge_couple_separator"] = raw_separator
+        if mode == "Basic":
+            fc_param["forge_couple_direction"] = direction
         if mode == "Advanced":
-            p.extra_generation_params["forge_couple_mapping"] = dumps(mapping)
-
+            fc_param["forge_couple_mapping"] = dumps(mapping)
         else:
-            p.extra_generation_params.update(
-                {
-                    "forge_couple_background": background,
-                    "forge_couple_background_weight": background_weight,
-                }
-            )
+            fc_param["forge_couple_background"] = background
+            fc_param["forge_couple_background_weight"] = background_weight
+        fc_param["forge_couple_common_parser"] = common_parser
 
-            if mode == "Basic":
-                p.extra_generation_params["forge_couple_direction"] = direction
-
-        p.extra_generation_params["forge_couple_common_parser"] = common_parser
+        p.extra_generation_params.update(fc_param)
         # ===== Infotext =====
 
         self.couples = couples
