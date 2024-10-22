@@ -217,29 +217,34 @@ By default when the field is left empty, this Extension uses the newline charact
 
 ## Common Prompts
 
-If you have multiple characters that share the same poses or costumes, it would've been a chore to keep copying and pasting the same lines over and over again. Now you can simplify this process via the new **Common Prompts** feature at the bottom of the Extension:
+If you have multiple characters that share the same poses, expressions, or outfits, it would've been a chore to keep copying and pasting the same lines over and over again. Now, you can simplify this process via the new **Common Prompts** feature:
 
-- Specify prompts that get inserted before *(`prepend`)* or added after *(`append`)* each line *(`couple`)*
-- Specify the lines that should be ignored *(mainly for skipping `background`)*
+0. To enable, select a syntax between `{ }` or `< >` first
+1. First, define an unique key *(**eg.** `cloth`)*
+2. Second, follow up with a `:` *(**eg.** `cloth:`)*
+3. Third, follow up with your common prompts *(**eg.** `cloth:t-shirt, jacket, jeans`)*
+4. Then, surround the whole thing with your chosen brackets *(**eg.** `{cloth:t-shirt, jacket, jeans}`)*
+5. Finally, you can now use the key to recall the common prompts in other lines *(**ie.** `{cloth}`)*
 
-So now, you only need to write the features of the characters in the main prompt~
+- **TL;DR:** If you have `{foo:bar}` in your prompt, every occurrence of `{foo}` *(and the original `{foo:bar}`)* will be replaced with `bar` during the generation
+
+> [!IMPORTANT]
+> - The key has to be unique
+> - You can have multiple common prompts at the same time
+> - Each bracket can only contain one key
+
+> [!TIP]
+> You can enable `Debug` to check if it is working as intended in the console
 
 <p align="center">
 <img src="example/common.jpg" width=384>
 </p>
 
-- <b><ins>Main Prompt</ins></b>
-    ```
-    score_9, score_8_up, score_7_up, source_anime, high quality, best quality, masterpiece, 2girls, <lora:hasunosora_pony:0.8>,
-    murano sayaka, low twintails,
-    hinoshita kaho, medium hair
-    ```
-- <b><ins>Prepend</ins></b>
-    - **prompt:** `2girls,`
-    - **ignore:** `0`
-- <b><ins>Append</ins></b>
-    - **prompt:** `, brown dress, white sailor collar, neckerchief, standing, arms behind back, looking at viewer, smile, blush, classroom`
-    - **ignore:** `0`
+```
+score_9, score_8_up, score_7_up, source_anime, high quality, best quality, masterpiece, {subject:2girls}, <lora:hasunosora_pony:0.8>,
+{subject}, murano sayaka, low twintails, {cloth:brown dress, white sailor collar, neckerchief, standing, arms behind back, looking at viewer, smile, blush, classroom}
+{subject}, hinoshita kaho, medium hair, {cloth}
+```
 
 > This works for all **3** modes
 

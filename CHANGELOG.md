@@ -1,3 +1,6 @@
+### v3.2.2 - 2024 Oct.22
+- Reimagined **Common Prompt**
+
 ### v3.2.1 - 2024 Oct.21
 - Implemented **Common Prompt**
 

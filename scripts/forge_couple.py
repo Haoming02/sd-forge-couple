@@ -16,7 +16,7 @@ from lib_couple.attention_couple import AttentionCouple
 from lib_couple.gr_version import js
 
 
-VERSION = "3.2.1"
+VERSION = "3.2.2"
 
 
 class ForgeCouple(scripts.Script):
@@ -53,6 +53,28 @@ class ForgeCouple(scripts.Script):
 
         return cleaned
 
+    @staticmethod
+    def parse_common_prompt(prompt: str, brackets: tuple[str]) -> str:
+        common_prompts: dict[str, str] = {}
+        op, cs = brackets
+
+        pattern = rf"{op}([^{op}{cs}]+?):([^{op}{cs}]+?){cs}"
+        matches = list(re.finditer(pattern, prompt))
+        for m in matches:
+            key: str = m.group(1).strip()
+            val: str = m.group(2).strip()
+            prompt = prompt.replace(m.group(0), val)
+            common_prompts.update({key: val})
+
+        pattern = rf"{op}([^{op}{cs}]+?){cs}"
+        matches = list(re.finditer(pattern, prompt))
+        for m in matches:
+            key: str = m.group(1).strip()
+            if key in common_prompts:
+                prompt = prompt.replace(m.group(0), common_prompts[key])
+
+        return prompt
+
     def after_extra_networks_activate(
         self,
         p,
@@ -63,10 +85,8 @@ class ForgeCouple(scripts.Script):
         background: str,
         background_weight: float,
         mapping: list,
-        prepend_cmp: str,
-        prepend_ignore: str,
-        append_cmp: str,
-        append_ignore: str,
+        common_parser: str,
+        common_debug: bool,
         *args,
         **kwargs,
     ):
@@ -89,8 +109,17 @@ class ForgeCouple(scripts.Script):
             assert isinstance(mapping[0], dict)
 
         couples: list[str] = []
+        prompt: str = kwargs["prompts"][0]
 
-        chunks = kwargs["prompts"][0].split(separator)
+        if common_parser != "off":
+            prompt = self.parse_common_prompt(prompt, common_parser.split(" "))
+
+            if common_debug:
+                print("\n\n[Forge Couple] Common Prompts Applied:")
+                print(prompt)
+                print("\n")
+
+        chunks = prompt.split(separator)
         for chunk in chunks:
             prompt = self.strip_networks(chunk).strip()
             couples.append(prompt)
@@ -151,25 +180,7 @@ class ForgeCouple(scripts.Script):
             if mode == "Basic":
                 p.extra_generation_params["forge_couple_direction"] = direction
 
-        prepend_cmp: str = prepend_cmp.strip()
-        append_cmp: str = append_cmp.strip()
-        l = len(couples)
-
-        if prepend_cmp:
-            p_ig: list[int] = [int(v) for v in prepend_ignore.split(",") if v.strip()]
-            for i in range(l):
-                if i not in p_ig:
-                    couples[i] = f"{prepend_cmp}{couples[i]}"
-            p.extra_generation_params["forge_couple_prepend_prompt"] = prepend_cmp
-            p.extra_generation_params["forge_couple_prepend_ignore"] = prepend_ignore
-
-        if append_cmp:
-            a_ig: list[int] = [int(v) for v in append_ignore.split(",") if v.strip()]
-            for i in range(l):
-                if i not in a_ig:
-                    couples[i] = f"{couples[i]}{append_cmp}"
-            p.extra_generation_params["forge_couple_append_prompt"] = append_cmp
-            p.extra_generation_params["forge_couple_append_ignore"] = append_ignore
+        p.extra_generation_params["forge_couple_common_parser"] = common_parser
         # ===== Infotext =====
 
         self.couples = couples

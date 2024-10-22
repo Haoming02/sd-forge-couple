@@ -144,40 +144,14 @@ def couple_UI(script, is_img2img: bool, title: str):
         with gr.Accordion(
             label="Common Prompts",
             elem_id=f"forge_couple_cmp_{m}",
-            open=False,
+            open=True,
         ):
             with gr.Row():
-                prepend_cmp = gr.Textbox(
-                    label="Prepend Prompt",
-                    info="(prompts inserted before each couple)",
-                    lines=1,
-                    max_lines=1,
-                    scale=4,
+                common_parser = gr.Radio(
+                    ("off", "{ }", "< >"), label="Syntax", value="off", scale=4
                 )
-                prepend_ignore = gr.Textbox(
-                    label="Blacklist Line(s)",
-                    info="(zero-based index)",
-                    placeholder="0,",
-                    lines=1,
-                    max_lines=1,
-                    scale=1,
-                )
-            with gr.Row():
-                append_cmp = gr.Textbox(
-                    label="Append Prompt",
-                    info="(prompts added after each couple)",
-                    lines=1,
-                    max_lines=1,
-                    scale=4,
-                )
-                append_ignore = gr.Textbox(
-                    label="Blacklist Line(s)",
-                    info="(zero-based index)",
-                    placeholder="0,",
-                    lines=1,
-                    max_lines=1,
-                    scale=1,
-                )
+                common_debug = gr.Checkbox(False, label="Debug", scale=1)
+                common_debug.do_not_save_to_config = True
 
         def on_mode_change(choice: str):
             return [
@@ -204,10 +178,7 @@ def couple_UI(script, is_img2img: bool, title: str):
             (background, "forge_couple_background"),
             (background_weight, "forge_couple_background_weight"),
             (mapping_paste_field, "forge_couple_mapping"),
-            (prepend_cmp, "forge_couple_prepend_prompt"),
-            (prepend_ignore, "forge_couple_prepend_ignore"),
-            (append_cmp, "forge_couple_append_prompt"),
-            (append_ignore, "forge_couple_append_ignore"),
+            (common_parser, "forge_couple_common_parser"),
         ]
 
         for comp, name in script.infotext_fields:
@@ -222,8 +193,6 @@ def couple_UI(script, is_img2img: bool, title: str):
         background,
         background_weight,
         mapping,
-        prepend_cmp,
-        prepend_ignore,
-        append_cmp,
-        append_ignore,
+        common_parser,
+        common_debug,
     ]
