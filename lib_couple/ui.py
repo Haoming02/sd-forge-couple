@@ -55,7 +55,9 @@ def couple_UI(script, is_img2img: bool, title: str):
         open=False,
     ):
         with gr.Row():
-            enable = gr.Checkbox(label="Enable", elem_classes="fc_enable", scale=2)
+            with gr.Column(scale=2):
+                enable = gr.Checkbox(False, label="Enable")
+                disable_hr = gr.Checkbox(True, label="Compatibility")
 
             mode = gr.Radio(
                 ["Basic", "Advanced", "Mask"],
@@ -172,6 +174,7 @@ def couple_UI(script, is_img2img: bool, title: str):
         script.paste_field_names = []
         script.infotext_fields = [
             (enable, "forge_couple"),
+            (disable_hr, "forge_couple_compatibility"),
             (mode, "forge_couple_mode"),
             (separator, "forge_couple_separator"),
             (direction, "forge_couple_direction"),
@@ -187,6 +190,7 @@ def couple_UI(script, is_img2img: bool, title: str):
 
     return [
         enable,
+        disable_hr,
         mode,
         separator,
         direction,

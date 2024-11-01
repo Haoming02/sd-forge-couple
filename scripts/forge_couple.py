@@ -16,7 +16,7 @@ from lib_couple.attention_couple import AttentionCouple
 from lib_couple.gr_version import js
 
 
-VERSION = "3.2.3"
+VERSION = "3.3.0"
 
 
 class ForgeCouple(scripts.Script):
@@ -25,6 +25,7 @@ class ForgeCouple(scripts.Script):
     def __init__(self):
         self.couples: list = None
         self.get_mask: Callable = None
+        self.is_hr: bool = False
 
     def title(self):
         return "Forge Couple"
@@ -44,6 +45,12 @@ class ForgeCouple(scripts.Script):
 
         elif elem_id in ("img2img_width", "img2img_height"):
             component.change(None, **js('() => { ForgeCouple.preview("i2i"); }'))
+
+    def setup(self, *args, **kwargs):
+        self.is_hr = False
+
+    def before_hr(self, *args, **kwargs):
+        self.is_hr = True
 
     @staticmethod
     def parse_common_prompt(prompt: str, brackets: tuple[str]) -> str:
@@ -71,6 +78,7 @@ class ForgeCouple(scripts.Script):
         self,
         p,
         enable: bool,
+        disable_hr: bool,
         mode: str,
         separator: str,
         direction: str,
@@ -111,42 +119,37 @@ class ForgeCouple(scripts.Script):
                 print("\n")
 
         couples: list[str] = [chunk.strip() for chunk in prompts.split(separator)]
+        self.couples = None
 
         match mode:
             case "Basic":
                 if len(couples) < (3 - int(background == "None")):
-                    self.couples = None
                     raise RuntimeError(
-                        "[Couple] Not Enough Lines in Prompt... "
+                        "[Forge Couple] Not Enough Lines in Prompt... "
                         + f"[{len(couples)} / {3 - int(background == 'None')}]"
                     )
 
             case "Mask":
                 if not mapping:
-                    self.couples = None
-                    raise RuntimeError("[Couple] No Mapping...?")
+                    raise RuntimeError("[Forge Couple] No Mapping...?")
 
                 required: int = len(mapping) + int(background != "None")
                 if len(couples) != required:
-                    self.couples = None
                     raise RuntimeError(
-                        "[Couple] Number of Couples and Masks is not the same... "
+                        "[Forge Couple] Number of Couples and Masks is not the same... "
                         + f"[{len(couples)} / {required}]"
                     )
 
             case "Advanced":
                 if not mapping:
-                    self.couples = None
-                    raise RuntimeError("[Couple] No Mapping...?")
+                    raise RuntimeError("[Forge Couple] No Mapping...?")
 
                 if not validate_mapping(mapping):
-                    self.couples = None
                     return
 
                 if len(couples) != len(mapping):
-                    self.couples = None
                     raise RuntimeError(
-                        "[Couple] Number of Couples and Mapping is not the same... "
+                        "[Forge Couple] Number of Couples and Mapping is not the same... "
                         + f"[{len(couples)} / {len(mapping)}]"
                     )
 
@@ -154,6 +157,7 @@ class ForgeCouple(scripts.Script):
         fc_param: dict = {}
 
         fc_param["forge_couple"] = True
+        fc_param["forge_couple_compatibility"] = disable_hr
         fc_param["forge_couple_mode"] = mode
         fc_param["forge_couple_separator"] = raw_separator
         if mode == "Basic":
@@ -174,6 +178,7 @@ class ForgeCouple(scripts.Script):
         self,
         p,
         enable: bool,
+        disable_hr: bool,
         mode: str,
         separator: str,
         direction: str,
@@ -184,7 +189,10 @@ class ForgeCouple(scripts.Script):
         **kwargs,
     ):
 
-        if not enable or not self.couples:
+        if not enable or self.couples is None:
+            return
+
+        if disable_hr and self.is_hr:
             return
 
         # ===== Init =====

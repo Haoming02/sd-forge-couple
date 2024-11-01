@@ -50,6 +50,7 @@ This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-
 - [Advanced Mode](#advanced-mode)
 - [Mask Mode](#mask-mode)
 - Misc.
+    - [Compatibility](#compatibility-option)
     - [Separator](#couple-separator)
     - [Common Prompts](#common-prompts)
     - [LoRA](#lora-support)
@@ -199,6 +200,10 @@ treasure chest
 ```
 
 <br>
+
+## Compatibility Toggle
+
+When the option is enabled, this Extension will not function during the `Hires. Fix` pass to improve the compatibility with other Extensions. Has minimal impact on performance and results.
 
 ## Couple Separator
 

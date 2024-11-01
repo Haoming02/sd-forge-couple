@@ -2,10 +2,6 @@
     user-select: none;
 }
 
-.fc_enable>label {
-    height: 100%;
-}
-
 .fc_bsc .fc_placeholder {
     flex-grow: 2;
 }
