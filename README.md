@@ -50,7 +50,7 @@ This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-
 - [Advanced Mode](#advanced-mode)
 - [Mask Mode](#mask-mode)
 - Misc.
-    - [Compatibility](#compatibility-option)
+    - [Compatibility](#compatibility-toggle)
     - [Separator](#couple-separator)
     - [Common Prompts](#common-prompts)
     - [LoRA](#lora-support)
@@ -240,6 +240,9 @@ If you have multiple characters that share the same poses, expressions, or outfi
 
 > [!TIP]
 > You can enable `Debug` to check if it is working as intended in the console
+
+> [!NOTE]
+> Might be incompatible with Extensions that process prompts *(**eg.** [sd-dynamic-prompts](https://github.com/adieyal/sd-dynamic-prompts))*
 
 <p align="center">
 <img src="example/common.jpg" width=384>
