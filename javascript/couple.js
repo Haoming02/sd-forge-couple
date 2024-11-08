@@ -31,9 +31,9 @@ class ForgeCouple {
      * @param {string} mode "t2i" | "i2i"
      */
     static preview(mode) {
-        var res = null;
-        var w = -1;
-        var h = -1;
+        let res = null;
+        let w = -1;
+        let h = -1;
 
         setTimeout(() => {
             if (mode === "t2i") {

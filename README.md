@@ -277,6 +277,12 @@ LoRA that contains multiple subjects seems to work better in my experience.
 ## API
 For usage with API, please refer to the [Wiki](https://github.com/Haoming02/sd-forge-couple/wiki/API)
 
+> [!CAUTION]
+> The **Mask** mode is broken if you use the Webui with `--api` flag. So either: <br>
+> - Use the Webui alone <br>
+> **or** <br>
+> - Use the API alone with both `--api` and `--nowebui` flags
+
 <hr>
 
 ## TypeError: 'NoneType'

@@ -19,7 +19,7 @@ class ForgeCoupleDataframe {
     #separatorField = undefined;
 
     get #sep() {
-        var sep = this.#separatorField.value.trim();
+        let sep = this.#separatorField.value.trim();
         sep = (!sep) ? "\n" : sep.replace(/\\n/g, "\n").split("\n").map(c => c.trim()).join("\n");
         return sep;
     }
@@ -113,7 +113,7 @@ class ForgeCoupleDataframe {
 
             updateInput(this.#promptField);
         } else {
-            var val = this.#clamp01(cell.textContent,
+            let val = this.#clamp01(cell.textContent,
                 Array.from(cell.parentElement.children).indexOf(cell) === 4
             );
             val = Math.round(val / 0.01) * 0.01;
@@ -334,10 +334,13 @@ class ForgeCoupleDataframe {
 
         rows.forEach((row, i) => {
             const color = ForgeCoupleDataframe.#color(i);
-            const stripe = (this.#selection === i) ? "var(--table-row-focus)" :
-                `var(--table-${(i % 2 == 0) ? "odd" : "even"}-background-fill)`;
 
-            row.style.background = `linear-gradient(to right, ${stripe} 80%, ${color})`;
+            if (this.#selection === i)
+                row.style.background = `linear-gradient(to right, var(--table-row-focus) 80%, ${color})`;
+            else {
+                const stripe = `var(--table-${(i % 2 == 0) ? "odd" : "even"}-background-fill)`;
+                row.style.background = `linear-gradient(to right, ${stripe} 80%, ${color})`;
+            }
         });
 
         if (this.#selection < 0 || this.#selection > rows.length)
@@ -369,7 +372,7 @@ class ForgeCoupleDataframe {
 
     /** @param {number} @param {boolean} w @returns {number} */
     #clamp01(v, w) {
-        var val = parseFloat(v);
+        let val = parseFloat(v);
         if (Number.isNaN(val))
             val = 0.0;
 

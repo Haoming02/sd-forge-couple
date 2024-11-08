@@ -17,7 +17,7 @@ class CoupleMaskData:
         self.mode: str = "i2i" if is_img2img else "t2i"
         self.masks: list[Image.Image] = []
         self.weights: list[float] = []
-        self.opposite: CoupleMaskData = None
+        self.opposite: CoupleMaskData
 
         self.selected_index: int = -1
 
@@ -284,13 +284,13 @@ class CoupleMaskData:
         return (w, h)
 
     @staticmethod
-    def _create_empty(resolution: str) -> Image.Image:
+    def _create_empty(resolution: str) -> list[Image.Image, None]:
         """Generate a blank black canvas"""
         w, h = CoupleMaskData._parse_resolution(resolution)
         return [Image.new("RGB", (w, h)), None]
 
     @staticmethod
-    def _on_up_bg(resolution: str, image: Image.Image) -> tuple[Image.Image, bool]:
+    def _on_up_bg(resolution: str, image: Image.Image) -> list[Image.Image, bool]:
         """Resize the uploaded image"""
         w, h = CoupleMaskData._parse_resolution(resolution)
         image = image.resize((w, h))
@@ -306,7 +306,7 @@ class CoupleMaskData:
         return [image, gr.update(value=None)]
 
     @staticmethod
-    def _on_up_mask(resolution: str, image: Image.Image) -> tuple[Image.Image, bool]:
+    def _on_up_mask(resolution: str, image: Image.Image) -> list[Image.Image, bool]:
         """Resize the uploaded image"""
         w, h = CoupleMaskData._parse_resolution(resolution)
         image = image.resize((w, h))
@@ -372,7 +372,7 @@ class CoupleMaskData:
 
     def _refresh_resolution(
         self, resolution: str, mode: str
-    ) -> list[list, Image.Image, Image.Image]:
+    ) -> list[list, Image.Image, Image.Image, None]:
         """Refresh when width or height is changed"""
 
         if mode != "Mask":

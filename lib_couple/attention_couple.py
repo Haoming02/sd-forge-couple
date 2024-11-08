@@ -10,7 +10,7 @@ from modules.devices import get_optimal_device
 import torch
 
 try:
-    from backend import memory_management
+    from backend import memory_management  # noqa
     is_classic = False
 
 except ImportError:

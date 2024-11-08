@@ -7,104 +7,102 @@ import numpy as np
 import torch
 
 
-def empty_tensor(H: int, W: int):
-    return torch.zeros((H, W)).unsqueeze(0)
+def empty_tensor(h: int, w: int):
+    return torch.zeros((h, w)).unsqueeze(0)
 
 
 def basic_mapping(
     sd_model,
     couples: list,
-    WIDTH: int,
-    HEIGHT: int,
-    LINE_COUNT: int,
-    IS_HORIZONTAL: bool,
+    width: int,
+    height: int,
+    line_count: int,
+    is_horizontal: bool,
     background: str,
-    TILE_SIZE: int,
-    TILE_WEIGHT: float,
-    BG_WEIGHT: float,
-):
+    tile_size: int,
+    tile_weight: float,
+    bg_weight: float,
+) -> dict:
 
-    ARGs: dict = {}
-    IS_SDXL: bool = sd_model.is_sdxl
+    fc_args: dict = {}
 
-    for tile in range(LINE_COUNT):
-        mask = torch.zeros((HEIGHT, WIDTH))
-
+    for tile in range(line_count):
         # ===== Cond =====
-        texts = SdConditioning([couples[tile]], False, WIDTH, HEIGHT, None)
+        texts = SdConditioning([couples[tile]], False, width, height, None)
         cond = sd_model.get_learned_conditioning(texts)
-        pos_cond = [[cond["crossattn"]]] if IS_SDXL else [[cond]]
+        pos_cond = [[cond["crossattn"]]] if sd_model.is_sdxl else [[cond]]
+        fc_args[f"cond_{tile + 1}"] = pos_cond
         # ===== Cond =====
 
         # ===== Mask =====
+        mask = torch.zeros((height, width))
+
         if background == "First Line":
             if tile == 0:
-                mask = torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
+                mask = torch.ones((height, width)) * bg_weight
             else:
-                if IS_HORIZONTAL:
-                    mask[:, (tile - 1) * TILE_SIZE : tile * TILE_SIZE] = TILE_WEIGHT
+                if is_horizontal:
+                    mask[:, (tile - 1) * tile_size : tile * tile_size] = tile_weight
                 else:
-                    mask[(tile - 1) * TILE_SIZE : tile * TILE_SIZE, :] = TILE_WEIGHT
+                    mask[(tile - 1) * tile_size : tile * tile_size, :] = tile_weight
         else:
-            if IS_HORIZONTAL:
-                mask[:, tile * TILE_SIZE : (tile + 1) * TILE_SIZE] = TILE_WEIGHT
+            if is_horizontal:
+                mask[:, tile * tile_size : (tile + 1) * tile_size] = tile_weight
             else:
-                mask[tile * TILE_SIZE : (tile + 1) * TILE_SIZE, :] = TILE_WEIGHT
-        # ===== Mask =====
+                mask[tile * tile_size : (tile + 1) * tile_size, :] = tile_weight
 
-        ARGs[f"cond_{tile + 1}"] = pos_cond
-        ARGs[f"mask_{tile + 1}"] = mask.unsqueeze(0)
+        fc_args[f"mask_{tile + 1}"] = mask.unsqueeze(0)
+        # ===== Mask =====
 
     if background == "Last Line":
-        ARGs[f"mask_{LINE_COUNT}"] = (
-            torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
+        fc_args[f"mask_{line_count}"] = (
+            torch.ones((height, width)) * bg_weight
         ).unsqueeze(0)
 
-    return ARGs
+    return fc_args
 
 
-def advanced_mapping(sd_model, couples: list, WIDTH: int, HEIGHT: int, mapping: list):
+def advanced_mapping(
+    sd_model, couples: list, width: int, height: int, mapping: list
+) -> dict:
+
+    fc_args: dict = {}
     assert len(couples) == len(mapping)
 
-    ARGs: dict = {}
-    IS_SDXL: bool = sd_model.is_sdxl
-
     for tile_index, (x1, x2, y1, y2, w) in enumerate(mapping):
-        mask = torch.zeros((HEIGHT, WIDTH))
-
-        x_from = int(WIDTH * x1)
-        x_to = int(WIDTH * x2)
-        y_from = int(HEIGHT * y1)
-        y_to = int(HEIGHT * y2)
-
         # ===== Cond =====
-        texts = SdConditioning([couples[tile_index]], False, WIDTH, HEIGHT, None)
+        texts = SdConditioning([couples[tile_index]], False, width, height, None)
         cond = sd_model.get_learned_conditioning(texts)
-        pos_cond = [[cond["crossattn"]]] if IS_SDXL else [[cond]]
+        pos_cond = [[cond["crossattn"]]] if sd_model.is_sdxl else [[cond]]
+        fc_args[f"cond_{tile_index + 1}"] = pos_cond
         # ===== Cond =====
 
         # ===== Mask =====
+        x_from = int(width * x1)
+        x_to = int(width * x2)
+        y_from = int(height * y1)
+        y_to = int(height * y2)
+
+        mask = torch.zeros((height, width))
         mask[y_from:y_to, x_from:x_to] = w
+        fc_args[f"mask_{tile_index + 1}"] = mask.unsqueeze(0)
         # ===== Mask =====
 
-        ARGs[f"cond_{tile_index + 1}"] = pos_cond
-        ARGs[f"mask_{tile_index + 1}"] = mask.unsqueeze(0)
-
-    return ARGs
+    return fc_args
 
 
-@torch.inference_mode()
-def b64image2tensor(img: str | Image.Image, WIDTH: int, HEIGHT: int) -> torch.Tensor:
+@torch.no_grad()
+def b64image2tensor(img: str | Image.Image, width: int, height: int) -> torch.Tensor:
     if isinstance(img, str):
         image_bytes = decode(img)
         image = Image.open(bIO(image_bytes)).convert("L")
     else:
         image = img.convert("L")
 
-    if image.width != WIDTH or image.height != HEIGHT:
-        image = image.resize((WIDTH, HEIGHT), resample=Image.Resampling.NEAREST)
+    if image.size != (width, height):
+        image = image.resize((width, height), resample=Image.Resampling.NEAREST)
 
-    image = np.array(image).astype(np.float32) / 255.0
+    image = np.asarray(image, dtype=np.float32) / 255.0
     image = torch.from_numpy(image).unsqueeze(0)
 
     return image
@@ -113,48 +111,47 @@ def b64image2tensor(img: str | Image.Image, WIDTH: int, HEIGHT: int) -> torch.Te
 def mask_mapping(
     sd_model,
     couples: list,
-    WIDTH: int,
-    HEIGHT: int,
-    LINE_COUNT: int,
+    width: int,
+    height: int,
+    line_count: int,
     mapping: list[dict],
     background: str,
-    BG_WEIGHT: float,
-):
+    bg_weight: float,
+) -> dict:
 
-    mapping = [
-        b64image2tensor(m["mask"], WIDTH, HEIGHT) * float(m["weight"]) for m in mapping
+    fc_args: dict = {}
+
+    mapping: list[torch.Tensor] = [
+        b64image2tensor(m["mask"], width, height) * float(m["weight"]) for m in mapping
     ]
 
-    ARGs: dict = {}
-    IS_SDXL: bool = sd_model.is_sdxl
-
-    for layer in range(LINE_COUNT):
-        mask = torch.zeros((HEIGHT, WIDTH))
-
+    for layer in range(line_count):
         # ===== Cond =====
-        texts = SdConditioning([couples[layer]], False, WIDTH, HEIGHT, None)
+        texts = SdConditioning([couples[layer]], False, width, height, None)
         cond = sd_model.get_learned_conditioning(texts)
-        pos_cond = [[cond["crossattn"]]] if IS_SDXL else [[cond]]
+        pos_cond = [[cond["crossattn"]]] if sd_model.is_sdxl else [[cond]]
+        fc_args[f"cond_{layer + 1}"] = pos_cond
         # ===== Cond =====
 
         # ===== Mask =====
+        mask = torch.zeros((height, width))
+
         if background == "First Line":
             mask = (
                 mapping[layer - 1]
                 if layer > 0
-                else torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
+                else torch.ones((height, width)) * bg_weight
             )
         elif background == "Last Line":
             mask = (
                 mapping[layer]
-                if layer < LINE_COUNT - 1
-                else torch.ones((HEIGHT, WIDTH)) * BG_WEIGHT
+                if layer < line_count - 1
+                else torch.ones((height, width)) * bg_weight
             )
         else:
             mask = mapping[layer]
+
+        fc_args[f"mask_{layer + 1}"] = mask.unsqueeze(0) if mask.dim() == 2 else mask
         # ===== Mask =====
 
-        ARGs[f"cond_{layer + 1}"] = pos_cond
-        ARGs[f"mask_{layer + 1}"] = mask.unsqueeze(0) if mask.dim() == 2 else mask
-
-    return ARGs
+    return fc_args

@@ -6,28 +6,32 @@ from .gr_version import js
 import gradio as gr
 
 
-class FC_DataTransfer:
+class CoupleDataTransfer:
     """Handle sending data from t2i/i2i to i2i/t2i"""
 
-    T2I_MASK: CoupleMaskData = None
-    I2I_MASK: CoupleMaskData = None
+    T2I_MASK: CoupleMaskData
+    I2I_MASK: CoupleMaskData
 
-    T2I_ADV_DATA: gr.JSON = None
-    T2I_ADV_PASTE: gr.Textbox = None
-    T2I_ADV_PULL: gr.Button = None
+    T2I_ADV_DATA: gr.JSON
+    T2I_ADV_PASTE: gr.Textbox
+    T2I_ADV_PULL: gr.Button
 
-    I2I_ADV_DATA: gr.JSON = None
-    I2I_ADV_PASTE: gr.Textbox = None
-    I2I_ADV_PULL: gr.Button = None
+    I2I_ADV_DATA: gr.JSON
+    I2I_ADV_PASTE: gr.Textbox
+    I2I_ADV_PULL: gr.Button
 
     @classmethod
     def hook_adv(cls):
-        assert cls.T2I_ADV_DATA is not None
-        assert cls.T2I_ADV_PASTE is not None
-        assert cls.T2I_ADV_PULL is not None
-        assert cls.I2I_ADV_DATA is not None
-        assert cls.I2I_ADV_PASTE is not None
-        assert cls.I2I_ADV_PULL is not None
+        assert not any(
+            [
+                cls.T2I_ADV_DATA is None,
+                cls.T2I_ADV_PASTE is None,
+                cls.T2I_ADV_PULL is None,
+                cls.I2I_ADV_DATA is None,
+                cls.I2I_ADV_PASTE is None,
+                cls.I2I_ADV_PULL is None,
+            ]
+        )
 
         cls.I2I_ADV_PULL.click(
             fn=on_pull, inputs=cls.T2I_ADV_DATA, outputs=cls.I2I_ADV_PASTE
@@ -46,7 +50,7 @@ class FC_DataTransfer:
         cls.I2I_MASK.opposite = cls.T2I_MASK
 
 
-def couple_UI(script, is_img2img: bool, title: str):
+def couple_ui(script, is_img2img: bool, title: str):
     m: str = "i2i" if is_img2img else "t2i"
 
     with gr.Accordion(
@@ -122,15 +126,15 @@ def couple_UI(script, is_img2img: bool, title: str):
             )
 
             if is_img2img:
-                FC_DataTransfer.I2I_ADV_DATA = mapping
-                FC_DataTransfer.I2I_ADV_PASTE = mapping_paste_field
-                FC_DataTransfer.I2I_ADV_PULL = pull_btn
-                FC_DataTransfer.hook_adv()  # img2img always happen later than txt2img
+                CoupleDataTransfer.I2I_ADV_DATA = mapping
+                CoupleDataTransfer.I2I_ADV_PASTE = mapping_paste_field
+                CoupleDataTransfer.I2I_ADV_PULL = pull_btn
+                CoupleDataTransfer.hook_adv()  # img2img always happens after txt2img
 
             else:
-                FC_DataTransfer.T2I_ADV_DATA = mapping
-                FC_DataTransfer.T2I_ADV_PASTE = mapping_paste_field
-                FC_DataTransfer.T2I_ADV_PULL = pull_btn
+                CoupleDataTransfer.T2I_ADV_DATA = mapping
+                CoupleDataTransfer.T2I_ADV_PASTE = mapping_paste_field
+                CoupleDataTransfer.T2I_ADV_PULL = pull_btn
 
         with gr.Group(visible=False, elem_classes="fc_msk") as msk_settings:
             couple_mask = CoupleMaskData(is_img2img)
@@ -138,19 +142,19 @@ def couple_UI(script, is_img2img: bool, title: str):
             script.get_mask = couple_mask.get_masks
 
             if is_img2img:
-                FC_DataTransfer.I2I_MASK = couple_mask
-                FC_DataTransfer.hook_mask()  # img2img always happen later than txt2img
+                CoupleDataTransfer.I2I_MASK = couple_mask
+                CoupleDataTransfer.hook_mask()  # img2img always happens after txt2img
             else:
-                FC_DataTransfer.T2I_MASK = couple_mask
+                CoupleDataTransfer.T2I_MASK = couple_mask
 
         with gr.Accordion(
             label="Common Prompts",
             elem_id=f"forge_couple_cmp_{m}",
-            open=True,
+            open=False,
         ):
             with gr.Row():
                 common_parser = gr.Radio(
-                    ("off", "{ }", "< >"), label="Syntax", value="off", scale=4
+                    ("off", "{ }", "< >"), label="Syntax", value="{ }", scale=4
                 )
                 common_debug = gr.Checkbox(False, label="Debug", scale=1)
                 common_debug.do_not_save_to_config = True

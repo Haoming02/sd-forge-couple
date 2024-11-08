@@ -8,7 +8,7 @@ import gradio as gr
 
 def advanced_ui(
     is_img2img: bool, m: str, mode: gr.Radio
-) -> list[gr.components.Component]:
+) -> tuple[gr.components.Component]:
 
     with gr.Row(elem_classes="fc_mapping_btns"):
         gr.Button("Default Mapping", elem_classes="fc_reset_btn")

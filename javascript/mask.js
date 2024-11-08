@@ -13,7 +13,7 @@ class ForgeCoupleMaskHandler {
 
     /** @returns {string} */
     get #sep() {
-        var sep = this.#separatorField.value.trim();
+        let sep = this.#separatorField.value.trim();
         sep = (!sep) ? "\n" : sep.replace(/\\n/g, "\n").split("\n").map(c => c.trim()).join("\n");
         return sep;
     }
@@ -253,7 +253,7 @@ class ForgeCoupleMaskHandler {
 
     syncPrompts() {
         const prompt = this.#promptField.value;
-        var prompts = prompt.split(this.#sep).map(line => line.trim());
+        let prompts = prompt.split(this.#sep).map(line => line.trim());
 
         const radio = this.#background.querySelector('div.wrap>label.selected>span');
         const background = radio.textContent;
@@ -290,7 +290,7 @@ class ForgeCoupleMaskHandler {
 
     /** @param {number} v @returns {number} */
     #clamp05(v) {
-        var val = parseFloat(v);
+        let val = parseFloat(v);
         if (Number.isNaN(val))
             val = 0.0;
 

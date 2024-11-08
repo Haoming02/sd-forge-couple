@@ -1,3 +1,6 @@
+### v3.3.1 - 2024 Nov.08
+- Linting
+
 ### v3.3.0 - 2024 Nov.01
 - Add **Compatibility** Mode
 

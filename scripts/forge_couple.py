@@ -10,21 +10,21 @@ from lib_couple.mapping import (
     mask_mapping,
 )
 
-from lib_couple.ui import couple_UI
+from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
 from lib_couple.attention_couple import AttentionCouple
 from lib_couple.gr_version import js
 
 
-VERSION = "3.3.0"
+VERSION = "3.3.1"
 
 
 class ForgeCouple(scripts.Script):
     forgeAttentionCouple = AttentionCouple()
 
     def __init__(self):
-        self.couples: list = None
-        self.get_mask: Callable = None
+        self.couples: list
+        self.get_mask: Callable
         self.is_hr: bool = False
 
     def title(self):
@@ -34,7 +34,7 @@ class ForgeCouple(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
-        return couple_UI(self, is_img2img, f"{self.title()} v{VERSION}")
+        return couple_ui(self, is_img2img, f"{self.title()} v{VERSION}")
 
     def after_component(self, component, **kwargs):
         if not (elem_id := kwargs.get("elem_id", None)):
@@ -90,6 +90,7 @@ class ForgeCouple(scripts.Script):
         *args,
         **kwargs,
     ):
+        self.couples = None
         if not enable:
             return
 
@@ -119,7 +120,6 @@ class ForgeCouple(scripts.Script):
                 print("\n")
 
         couples: list[str] = [chunk.strip() for chunk in prompts.split(separator)]
-        self.couples = None
 
         match mode:
             case "Basic":
@@ -219,7 +219,7 @@ class ForgeCouple(scripts.Script):
         # ===== Tiles =====
         match mode:
             case "Basic":
-                ARGs = basic_mapping(
+                fc_args = basic_mapping(
                     p.sd_model,
                     self.couples,
                     WIDTH,
@@ -235,7 +235,7 @@ class ForgeCouple(scripts.Script):
             case "Mask":
                 mapping: list[dict] = self.get_mask() or mapping
 
-                ARGs = mask_mapping(
+                fc_args = mask_mapping(
                     p.sd_model,
                     self.couples,
                     WIDTH,
@@ -247,13 +247,13 @@ class ForgeCouple(scripts.Script):
                 )
 
             case "Advanced":
-                ARGs = advanced_mapping(
+                fc_args = advanced_mapping(
                     p.sd_model, self.couples, WIDTH, HEIGHT, mapping
                 )
         # ===== Tiles =====
 
-        assert len(ARGs.keys()) // 2 == LINE_COUNT
+        assert len(fc_args.keys()) // 2 == LINE_COUNT
 
         base_mask = empty_tensor(HEIGHT, WIDTH)
-        patched_unet = self.forgeAttentionCouple.patch_unet(unet, base_mask, ARGs)
+        patched_unet = self.forgeAttentionCouple.patch_unet(unet, base_mask, fc_args)
         p.sd_model.forge_objects.unet = patched_unet

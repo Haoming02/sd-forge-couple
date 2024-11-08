@@ -21,34 +21,34 @@ def validate_mapping(data: list) -> bool:
     return True
 
 
-def visualize_mapping(mode: str, res: str, mapping: list) -> Image:
+def visualize_mapping(mode: str, res: str, mapping: list) -> Image.Image:
     if mode != "Advanced":
         return gr.update()
 
-    p_WIDTH, p_HEIGHT = [int(v) for v in res.split("x")]
+    p_width, p_height = [int(v) for v in res.split("x")]
 
-    while p_WIDTH > 1024 or p_HEIGHT > 1024:
-        p_WIDTH, p_HEIGHT = p_WIDTH // 2, p_HEIGHT // 2
+    while p_width > 1024 or p_height > 1024:
+        p_width, p_height = p_width // 2, p_height // 2
 
-    while p_WIDTH < 512 and p_HEIGHT < 512:
-        p_WIDTH, p_HEIGHT = p_WIDTH * 2, p_HEIGHT * 2
+    while p_width < 512 and p_height < 512:
+        p_width, p_height = p_width * 2, p_height * 2
 
-    matt = Image.new("RGBA", (p_WIDTH, p_HEIGHT), (0, 0, 0, 64))
+    matt = Image.new("RGBA", (p_width, p_height), (0, 0, 0, 64))
 
     if not (validate_mapping(mapping)):
         return matt
 
-    line_width = int(max(min(p_WIDTH, p_HEIGHT) / 128, 4.0))
+    line_width = int(max(min(p_width, p_height) / 128, 4.0))
 
     draw = ImageDraw.Draw(matt)
 
     for tile_index, (x1, x2, y1, y2, w) in enumerate(mapping):
         color_index = tile_index % len(COLORS)
 
-        x_from = int(p_WIDTH * x1)
-        x_to = int(p_WIDTH * x2)
-        y_from = int(p_HEIGHT * y1)
-        y_to = int(p_HEIGHT * y2)
+        x_from = int(p_width * x1)
+        x_to = int(p_width * x2)
+        y_from = int(p_height * y1)
+        y_to = int(p_height * y2)
 
         draw.rectangle(
             ((x_from, y_from), (x_to, y_to)),

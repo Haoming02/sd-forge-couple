@@ -10,8 +10,8 @@ class ForgeCoupleImageLoader {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            var width = img.width;
-            var height = img.height;
+            let width = img.width;
+            let height = img.height;
 
             while (width > this.#maxDim || height > this.#maxDim) {
                 width = parseInt(width / 2);
