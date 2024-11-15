@@ -59,7 +59,7 @@ def couple_ui(script, is_img2img: bool, title: str):
         open=False,
     ):
         with gr.Row():
-            with gr.Column(scale=2):
+            with gr.Column(elem_classes="fc-checkbox", scale=2):
                 enable = gr.Checkbox(False, label="Enable")
                 disable_hr = gr.Checkbox(True, label="Compatibility")
 

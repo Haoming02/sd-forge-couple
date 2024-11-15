@@ -2,6 +2,10 @@
     user-select: none;
 }
 
+#forge_couple_t2i .fc-checkbox, #forge_couple_i2i .fc-checkbox {
+    min-width: unset !important;
+}
+
 .fc_bsc .fc_placeholder {
     flex-grow: 2;
 }
@@ -48,6 +52,15 @@
     min-width: unset !important;
     left: calc(100% + 4px);
     position: absolute;
+}
+
+.fc_adv .style-rows {
+    align-items: end;
+    gap: 1em;
+}
+
+.fc_adv .style-rows button {
+    border-radius: 0.5em;
 }
 
 .fc_bbox {

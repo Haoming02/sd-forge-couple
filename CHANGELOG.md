@@ -1,3 +1,6 @@
+### v3.3.2 - 2024 Nov.15
+- Implement **Presets** for **Adv.** mode
+
 ### v3.3.1 - 2024 Nov.08
 - Linting
 
@@ -37,6 +40,8 @@
 ### v3.0.0 - 2024 Aug.26
 - Implement **Mask** mode
 - Minor **Optimization**
+
+<br>
 
 ### v2.0.3 - 2024 Aug.19
 - Minor **Optimization**
