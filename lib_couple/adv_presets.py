@@ -19,7 +19,7 @@ class PresetManager:
 
         else:
             with open(PRESET_FILE, "w+", encoding="utf-8") as json_file:
-                json_file.write("")
+                json_file.write("{}")
             print("[Forge Couple] Creating Empty Presets...")
 
     @classmethod
