@@ -1,3 +1,4 @@
+from json.decoder import JSONDecodeError
 from modules import scripts
 from json import load, dump
 import gradio as gr
@@ -14,8 +15,11 @@ class PresetManager:
     def load_presets(cls):
         if os.path.isfile(PRESET_FILE):
             with open(PRESET_FILE, "r", encoding="utf-8") as json_file:
-                cls.presets = load(json_file)
-                print("[Forge Couple] Presets Loaded...")
+                try:
+                    cls.presets = load(json_file)
+                    print("[Forge Couple] Presets Loaded...")
+                except JSONDecodeError:
+                    print("\n[Forge Couple] Failed to load presets...\n")
 
         else:
             with open(PRESET_FILE, "w+", encoding="utf-8") as json_file:
