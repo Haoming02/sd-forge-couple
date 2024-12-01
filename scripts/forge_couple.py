@@ -16,7 +16,7 @@ from lib_couple.attention_couple import AttentionCouple
 from lib_couple.gr_version import js
 
 
-VERSION = "3.3.2"
+VERSION = "3.3.3"
 
 
 class ForgeCouple(scripts.Script):
@@ -25,6 +25,7 @@ class ForgeCouple(scripts.Script):
     def __init__(self):
         self.couples: list
         self.get_mask: Callable
+        self.cached_unet: Callable
         self.is_hr: bool = False
 
     def title(self):
@@ -195,8 +196,12 @@ class ForgeCouple(scripts.Script):
         if disable_hr and self.is_hr:
             return
 
+        if getattr(p, "_ad_inner", False):
+            return
+
         # ===== Init =====
         unet = p.sd_model.forge_objects.unet
+        self.cached_unet = unet
 
         WIDTH: int = p.width
         HEIGHT: int = p.height
@@ -257,3 +262,10 @@ class ForgeCouple(scripts.Script):
         base_mask = empty_tensor(HEIGHT, WIDTH)
         patched_unet = self.forgeAttentionCouple.patch_unet(unet, base_mask, fc_args)
         p.sd_model.forge_objects.unet = patched_unet
+        # print("\nPatched UNet\n")
+
+    def postprocess(self, p, *args, **kwargs):
+        if getattr(self, "cached_unet", None) is not None:
+            p.sd_model.forge_objects.unet = self.cached_unet
+            # print("\nRestored UNet\n")
+            self.cached_unet = None
