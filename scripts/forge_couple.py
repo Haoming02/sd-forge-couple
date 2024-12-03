@@ -12,18 +12,21 @@ from lib_couple.mapping import (
 
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
+from lib_couple.gr_version import js, is_gradio_4
 from lib_couple.attention_couple import AttentionCouple
 from lib_couple.logging import logger
-from lib_couple.gr_version import js
+
+if is_gradio_4:
+    from lib_couple.regional_flux import FluxRegionalConds
 
 
 VERSION = "3.3.4"
 
 
 class ForgeCouple(scripts.Script):
-    forgeAttentionCouple = AttentionCouple()
 
     def __init__(self):
+        self.flux_prompts: list[str]
         self.couples: list
         self.get_mask: Callable
         self.cached_unet: Callable
@@ -53,6 +56,14 @@ class ForgeCouple(scripts.Script):
 
     def before_hr(self, *args, **kwargs):
         self.is_hr = True
+
+    def process(self, p, enable: bool, *args, **kwargs):
+        if not (is_gradio_4 and enable):
+            return
+
+        self.flux_prompts = getattr(p, "all_prompts", [])
+        logger.debug(f"Cached Prompt:\n{self.flux_prompts[0]}")
+        setattr(p, "all_prompts", ["a photo"])
 
     @staticmethod
     def parse_common_prompt(prompt: str, brackets: tuple[str]) -> str:
@@ -111,7 +122,7 @@ class ForgeCouple(scripts.Script):
             mapping: list = self.get_mask() or mapping
             assert isinstance(mapping[0], dict)
 
-        prompts: str = kwargs["prompts"][0]
+        prompts: str = self.flux_prompts[0] if is_gradio_4 else kwargs["prompts"][0]
 
         if common_parser != "off":
             prompts = self.parse_common_prompt(prompts, common_parser.split(" "))
@@ -257,8 +268,13 @@ class ForgeCouple(scripts.Script):
 
         assert len(fc_args.keys()) // 2 == LINE_COUNT
 
-        base_mask = empty_tensor(HEIGHT, WIDTH)
-        patched_unet = self.forgeAttentionCouple.patch_unet(unet, base_mask, fc_args)
+        if is_gradio_4 and not p.sd_model.is_webui_legacy_model():
+            flux_args = FluxRegionalConds.convert(fc_args)
+            patched_unet = FluxRegionalConds.patch(unet, flux_args, HEIGHT, WIDTH)
+        else:
+            base_mask = empty_tensor(HEIGHT, WIDTH)
+            patched_unet = AttentionCouple.patch_unet(unet, base_mask, fc_args)
+
         p.sd_model.forge_objects.unet = patched_unet
         logger.debug("Patched UNet")
 

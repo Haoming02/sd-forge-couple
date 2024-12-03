@@ -11,6 +11,21 @@ def empty_tensor(h: int, w: int):
     return torch.zeros((h, w)).unsqueeze(0)
 
 
+def text2cond(sd_model, texts):
+    cond = sd_model.get_learned_conditioning(texts)
+    if (
+        hasattr(sd_model, "is_webui_legacy_model")
+        and not sd_model.is_webui_legacy_model()
+    ):
+        return cond["crossattn"]
+    if sd_model.is_sd1:
+        return [[cond]]
+    elif sd_model.is_sdxl:
+        return [[cond["crossattn"]]]
+    else:
+        raise NotImplementedError("Unknown Architecture")
+
+
 def basic_mapping(
     sd_model,
     couples: list,
@@ -29,9 +44,7 @@ def basic_mapping(
     for tile in range(line_count):
         # ===== Cond =====
         texts = SdConditioning([couples[tile]], False, width, height, None)
-        cond = sd_model.get_learned_conditioning(texts)
-        pos_cond = [[cond["crossattn"]]] if sd_model.is_sdxl else [[cond]]
-        fc_args[f"cond_{tile + 1}"] = pos_cond
+        fc_args[f"cond_{tile + 1}"] = text2cond(sd_model, texts)
         # ===== Cond =====
 
         # ===== Mask =====
@@ -72,9 +85,7 @@ def advanced_mapping(
     for tile_index, (x1, x2, y1, y2, w) in enumerate(mapping):
         # ===== Cond =====
         texts = SdConditioning([couples[tile_index]], False, width, height, None)
-        cond = sd_model.get_learned_conditioning(texts)
-        pos_cond = [[cond["crossattn"]]] if sd_model.is_sdxl else [[cond]]
-        fc_args[f"cond_{tile_index + 1}"] = pos_cond
+        fc_args[f"cond_{tile_index + 1}"] = text2cond(sd_model, texts)
         # ===== Cond =====
 
         # ===== Mask =====
@@ -128,9 +139,7 @@ def mask_mapping(
     for layer in range(line_count):
         # ===== Cond =====
         texts = SdConditioning([couples[layer]], False, width, height, None)
-        cond = sd_model.get_learned_conditioning(texts)
-        pos_cond = [[cond["crossattn"]]] if sd_model.is_sdxl else [[cond]]
-        fc_args[f"cond_{layer + 1}"] = pos_cond
+        fc_args[f"cond_{layer + 1}"] = text2cond(sd_model, texts)
         # ===== Cond =====
 
         # ===== Mask =====

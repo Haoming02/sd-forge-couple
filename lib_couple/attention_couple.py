@@ -20,9 +20,11 @@ else:
 
 
 class AttentionCouple:
+    batch_size: int = -1
 
+    @classmethod
     @torch.inference_mode()
-    def patch_unet(self, model, base_mask, kwargs: dict):
+    def patch_unet(cls, model, base_mask, kwargs: dict):
 
         new_model = model.clone()
 
@@ -55,13 +57,13 @@ class AttentionCouple:
             assert k.mean() == v.mean(), "k and v must be the same"
             cond_or_unconds = extra_options["cond_or_uncond"]
             num_chunks = len(cond_or_unconds)
-            self.batch_size = q.shape[0] // num_chunks
+            cls.batch_size = q.shape[0] // num_chunks
             q_chunks = q.chunk(num_chunks, dim=0)
             k_chunks = k.chunk(num_chunks, dim=0)
             lcm_tokens = lcm_for_list(num_tokens + [k.shape[1]])
             conds_tensor = torch.cat(
                 [
-                    cond.repeat(self.batch_size, lcm_tokens // num_tokens[i], 1)
+                    cond.repeat(cls.batch_size, lcm_tokens // num_tokens[i], 1)
                     for i, cond in enumerate(conds)
                 ],
                 dim=0,
@@ -93,21 +95,21 @@ class AttentionCouple:
         def attn2_output_patch(out, extra_options):
             cond_or_unconds = extra_options["cond_or_uncond"]
             mask_downsample = get_mask(
-                mask, self.batch_size, out.shape[1], extra_options["original_shape"]
+                mask, cls.batch_size, out.shape[1], extra_options["original_shape"]
             )
             outputs = []
             pos = 0
             for cond_or_uncond in cond_or_unconds:
                 if cond_or_uncond == 1:  # uncond
-                    outputs.append(out[pos : pos + self.batch_size])
-                    pos += self.batch_size
+                    outputs.append(out[pos : pos + cls.batch_size])
+                    pos += cls.batch_size
                 else:
                     masked_output = (
-                        out[pos : pos + num_conds * self.batch_size] * mask_downsample
-                    ).view(num_conds, self.batch_size, out.shape[1], out.shape[2])
+                        out[pos : pos + num_conds * cls.batch_size] * mask_downsample
+                    ).view(num_conds, cls.batch_size, out.shape[1], out.shape[2])
                     masked_output = masked_output.sum(dim=0)
                     outputs.append(masked_output)
-                    pos += num_conds * self.batch_size
+                    pos += num_conds * cls.batch_size
             return torch.cat(outputs, dim=0)
 
         new_model.set_model_attn2_patch(attn2_patch)

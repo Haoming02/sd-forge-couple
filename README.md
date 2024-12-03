@@ -1,9 +1,13 @@
-﻿# SD Forge Attention Couple
+﻿# [12/03] Flux Status
+- Does not raise Errors :)
+- Does **not** work :(
+
+# SD Forge Attention Couple
 This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-diffusion-webui-forge), which allows you to ~~generate couples~~ target conditioning at different regions. No more color bleeds or mixed features!
 
 > Compatible with both old & new Forge; Does **not** work with [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
 
-> Supports both `SD 1` & `SDXL` but **not** `Flux`
+> Supports `SD1`, `SDXL`, and `Flux`
 
 ## Showcase
 
@@ -307,4 +311,5 @@ shape '[X, Y, 1]' is invalid for input of size Z
 
 ## Special Thanks
 - Credits to the original author, **[laksjdjf](https://github.com/laksjdjf)**, whose [ComfyUI Node](https://github.com/laksjdjf/cgem156-ComfyUI/tree/main/scripts/attention_couple) I used to port into Forge
+- Credits to the original author, **[logtd](https://github.com/logtd)**, whose [ComfyUI Node](https://github.com/logtd/ComfyUI-Fluxtapoz/tree/main) I used to port into Forge
 - Also check out <ins>arcusmaximus</ins>'s alternative approach to [draggable-box-ui](https://github.com/arcusmaximus/sd-forge-couple/tree/draggable-box-ui)
