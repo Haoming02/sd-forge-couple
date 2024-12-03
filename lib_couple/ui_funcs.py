@@ -3,19 +3,26 @@ from PIL import Image, ImageDraw
 from json import dumps, loads
 import gradio as gr
 
+from lib_couple.logging import logger
+
 DEFAULT_MAPPING = [[0.0, 0.5, 0.0, 1.0, 1.0], [0.5, 1.0, 0.0, 1.0, 1.0]]
 COLORS = ("red", "orange", "yellow", "green", "blue", "indigo", "violet")
 
 
 def validate_mapping(data: list) -> bool:
     for x1, x2, y1, y2, w in data:
+        try:
+            float(w)
+        except ValueError:
+            logger.error('Invalid "weight"...')
+            return False
 
         if not all(0.0 <= v <= 1.0 for v in (x1, x2, y1, y2)):
-            print("\n[Couple] Region range must be between 0.0 and 1.0...\n")
+            logger.error("Region range must be between 0.0 and 1.0...")
             return False
 
         if x2 < x1 or y2 < y1:
-            print('\n[Couple] "to" value must be larger than "from" value...\n')
+            logger.error('"to" value must be larger than "from" value...')
             return False
 
     return True
@@ -64,13 +71,13 @@ def on_entry(data: str) -> list:
         return gr.update()
 
     if ":" in data:
-        print("\n[Couple] Old infotext is no longer supported...\n")
+        logger.error("Old infotext is no longer supported...")
         return DEFAULT_MAPPING
 
     try:
         return loads(data)
     except JSONDecodeError:
-        print("\n[Couple] Something went wrong while parsing advanced mapping...\n")
+        logger.error("Something went wrong while parsing advanced mapping...")
         return DEFAULT_MAPPING
 
 
@@ -81,5 +88,5 @@ def on_pull(data: dict) -> str:
     try:
         return dumps(data)
     except JSONDecodeError:
-        print("\n[Couple] Something went wrong while parsing advanced mapping...\n")
+        logger.error("Something went wrong while parsing advanced mapping...")
         return ""

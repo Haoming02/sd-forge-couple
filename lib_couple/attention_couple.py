@@ -9,12 +9,14 @@ from .attention_masks import get_mask, lcm_for_list
 from modules.devices import get_optimal_device
 import torch
 
+from lib_couple.logging import logger
+
 try:
     from backend import memory_management  # noqa
-    is_classic = False
-
 except ImportError:
     is_classic = True
+else:
+    is_classic = False
 
 
 class AttentionCouple:
@@ -35,7 +37,11 @@ class AttentionCouple:
 
         mask = [base_mask] + [kwargs[f"mask_{i}"] for i in range(1, num_conds)]
         mask = torch.stack(mask, dim=0).to(device, dtype=dtype)
-        assert mask.sum(dim=0).min() > 0, "[Couple] Masks contain non-filled areas..."
+
+        if mask.sum(dim=0).min() <= 0:
+            logger.error("Mask contains non-filled areas...")
+            mask += 1e-8
+
         mask = mask / mask.sum(dim=0, keepdim=True)
 
         conds = [
@@ -46,7 +52,7 @@ class AttentionCouple:
 
         @torch.inference_mode()
         def attn2_patch(q, k, v, extra_options):
-            assert k.mean() == v.mean(), "k and v must be the same."
+            assert k.mean() == v.mean(), "k and v must be the same"
             cond_or_unconds = extra_options["cond_or_uncond"]
             num_chunks = len(cond_or_unconds)
             self.batch_size = q.shape[0] // num_chunks

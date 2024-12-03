@@ -1,3 +1,6 @@
+### v3.3.4 - 2024 Dec.03
+- Implement **Logger**
+
 ### v3.3.3 - 2024 Dec.01
 - Improved **Compatibility**
 

@@ -4,7 +4,7 @@ from .ui_funcs import DEFAULT_MAPPING, visualize_mapping, on_entry
 from .adv_presets import PresetManager
 from .gr_version import js
 
-from json import loads, dumps
+from json import dumps
 from PIL import Image
 import gradio as gr
 

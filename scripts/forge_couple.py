@@ -13,10 +13,11 @@ from lib_couple.mapping import (
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
 from lib_couple.attention_couple import AttentionCouple
+from lib_couple.logging import logger
 from lib_couple.gr_version import js
 
 
-VERSION = "3.3.3"
+VERSION = "3.3.4"
 
 
 class ForgeCouple(scripts.Script):
@@ -116,43 +117,40 @@ class ForgeCouple(scripts.Script):
             prompts = self.parse_common_prompt(prompts, common_parser.split(" "))
 
             if common_debug:
-                print("\n\n[Forge Couple] Common Prompts Applied:")
-                print(prompts)
-                print("\n")
+                logger.info(f"[Common Prompts Debug]\n{prompts}\n")
 
         couples: list[str] = [chunk.strip() for chunk in prompts.split(separator)]
 
         match mode:
             case "Basic":
                 if len(couples) < (3 - int(background == "None")):
-                    raise RuntimeError(
-                        "[Forge Couple] Not Enough Lines in Prompt... "
-                        + f"[{len(couples)} / {3 - int(background == 'None')}]"
-                    )
+                    ratio = f"{len(couples)} / {3 - int(background == 'None')}"
+                    logger.error(f"Not Enough Lines in Prompt... [{ratio}]")
+                    return
 
             case "Mask":
                 if not mapping:
-                    raise RuntimeError("[Forge Couple] No Mapping...?")
+                    logger.error("No Mapping...?")
+                    return
 
                 required: int = len(mapping) + int(background != "None")
                 if len(couples) != required:
-                    raise RuntimeError(
-                        "[Forge Couple] Number of Couples and Masks is not the same... "
-                        + f"[{len(couples)} / {required}]"
-                    )
+                    ratio = f"{len(couples)} / {required}"
+                    logger.error(f"Number of Couples and Masks mismatched... [{ratio}]")
+                    return
 
             case "Advanced":
                 if not mapping:
-                    raise RuntimeError("[Forge Couple] No Mapping...?")
+                    logger.error("No Mapping...?")
+                    return
 
                 if not validate_mapping(mapping):
                     return
 
                 if len(couples) != len(mapping):
-                    raise RuntimeError(
-                        "[Forge Couple] Number of Couples and Mapping is not the same... "
-                        + f"[{len(couples)} / {len(mapping)}]"
-                    )
+                    ratio = f"{len(couples)} / {len(mapping)}"
+                    logger.error(f"Number of Couples and Masks mismatched... [{ratio}]")
+                    return
 
         # ===== Infotext =====
         fc_param: dict = {}
@@ -262,10 +260,10 @@ class ForgeCouple(scripts.Script):
         base_mask = empty_tensor(HEIGHT, WIDTH)
         patched_unet = self.forgeAttentionCouple.patch_unet(unet, base_mask, fc_args)
         p.sd_model.forge_objects.unet = patched_unet
-        # print("\nPatched UNet\n")
+        logger.debug("Patched UNet")
 
     def postprocess(self, p, *args, **kwargs):
         if getattr(self, "cached_unet", None) is not None:
             p.sd_model.forge_objects.unet = self.cached_unet
-            # print("\nRestored UNet\n")
+            logger.debug("Restored UNet")
             self.cached_unet = None
