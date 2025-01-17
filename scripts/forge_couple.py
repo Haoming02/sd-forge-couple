@@ -17,7 +17,7 @@ from lib_couple.logging import logger
 from lib_couple.gr_version import js
 
 
-VERSION = "3.3.4"
+VERSION = "3.4.0"
 
 
 class ForgeCouple(scripts.Script):

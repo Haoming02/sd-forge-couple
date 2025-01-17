@@ -3,22 +3,23 @@ from .ui_adv import advanced_ui
 from .ui_funcs import on_pull
 from .gr_version import js
 
+from typing import Optional
 import gradio as gr
 
 
 class CoupleDataTransfer:
     """Handle sending data from t2i/i2i to i2i/t2i"""
 
-    T2I_MASK: CoupleMaskData
-    I2I_MASK: CoupleMaskData
+    T2I_MASK: Optional[CoupleMaskData] = None
+    I2I_MASK: Optional[CoupleMaskData] = None
 
-    T2I_ADV_DATA: gr.JSON
-    T2I_ADV_PASTE: gr.Textbox
-    T2I_ADV_PULL: gr.Button
+    T2I_ADV_DATA: Optional[gr.JSON] = None
+    T2I_ADV_PASTE: Optional[gr.Textbox] = None
+    T2I_ADV_PULL: Optional[gr.Button] = None
 
-    I2I_ADV_DATA: gr.JSON
-    I2I_ADV_PASTE: gr.Textbox
-    I2I_ADV_PULL: gr.Button
+    I2I_ADV_DATA: Optional[gr.JSON] = None
+    I2I_ADV_PASTE: Optional[gr.Textbox] = None
+    I2I_ADV_PULL: Optional[gr.Button] = None
 
     @classmethod
     def hook_adv(cls):
@@ -48,6 +49,16 @@ class CoupleDataTransfer:
 
         cls.T2I_MASK.opposite = cls.I2I_MASK
         cls.I2I_MASK.opposite = cls.T2I_MASK
+
+    @classmethod
+    def webui_setup_done(cls) -> bool:
+        return all(
+            [
+                getattr(CoupleDataTransfer, attr) is not None
+                for attr in dir(CoupleDataTransfer)
+                if not attr.startswith("__")
+            ]
+        )
 
 
 def couple_ui(script, is_img2img: bool, title: str):
@@ -125,27 +136,29 @@ def couple_ui(script, is_img2img: bool, title: str):
                 advanced_ui(is_img2img, m, mode)
             )
 
-            if is_img2img:
-                CoupleDataTransfer.I2I_ADV_DATA = mapping
-                CoupleDataTransfer.I2I_ADV_PASTE = mapping_paste_field
-                CoupleDataTransfer.I2I_ADV_PULL = pull_btn
-                CoupleDataTransfer.hook_adv()  # img2img always happens after txt2img
+            if not CoupleDataTransfer.webui_setup_done():
+                if is_img2img:
+                    CoupleDataTransfer.I2I_ADV_DATA = mapping
+                    CoupleDataTransfer.I2I_ADV_PASTE = mapping_paste_field
+                    CoupleDataTransfer.I2I_ADV_PULL = pull_btn
+                    CoupleDataTransfer.hook_adv()  # img2img always happens after txt2img
 
-            else:
-                CoupleDataTransfer.T2I_ADV_DATA = mapping
-                CoupleDataTransfer.T2I_ADV_PASTE = mapping_paste_field
-                CoupleDataTransfer.T2I_ADV_PULL = pull_btn
+                else:
+                    CoupleDataTransfer.T2I_ADV_DATA = mapping
+                    CoupleDataTransfer.T2I_ADV_PASTE = mapping_paste_field
+                    CoupleDataTransfer.T2I_ADV_PULL = pull_btn
 
         with gr.Group(visible=False, elem_classes="fc_msk") as msk_settings:
             couple_mask = CoupleMaskData(is_img2img)
             couple_mask.mask_ui(preview_btn, preview_res, mode)
-            script.get_mask = couple_mask.get_masks
 
-            if is_img2img:
-                CoupleDataTransfer.I2I_MASK = couple_mask
-                CoupleDataTransfer.hook_mask()  # img2img always happens after txt2img
-            else:
-                CoupleDataTransfer.T2I_MASK = couple_mask
+            if not CoupleDataTransfer.webui_setup_done():
+                script.get_mask = couple_mask.get_masks
+                if is_img2img:
+                    CoupleDataTransfer.I2I_MASK = couple_mask
+                    CoupleDataTransfer.hook_mask()  # img2img always happens after txt2img
+                else:
+                    CoupleDataTransfer.T2I_MASK = couple_mask
 
         with gr.Accordion(
             label="Common Prompts",

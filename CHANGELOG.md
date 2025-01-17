@@ -1,3 +1,6 @@
+### v3.4.0 - 2025 Jan.17
+- Fix **Mask** Issue under **API**
+
 ### v3.3.4 - 2024 Dec.03
 - Implement **Logger**
 
