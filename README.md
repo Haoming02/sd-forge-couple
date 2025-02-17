@@ -1,34 +1,27 @@
 ﻿# SD Forge Attention Couple
-This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-diffusion-webui-forge), which allows you to ~~generate couples~~ target conditioning at different regions. No more color bleeds or mixed features!
+This is an Extension for the Forge Webui, which allows you to ~~generate couples~~ target conditioning at different regions. No more color bleeds or mixed features!
 
-> Compatible with both old & new Forge; Does **not** work with [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
+> Support [Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge), [reForge](https://github.com/Panchovix/stable-diffusion-webui-reForge), and [Forge Classic](https://github.com/Haoming02/sd-webui-forge-classic); but **not** [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
 
-> Supports both `SD 1` & `SDXL` but **not** `Flux`
+> Support both `SD1` & `SDXL`; but **not** `SD3` or `Flux`
 
 ## Showcase
 
-- Generate the following prompt using [Juggernaut XL V7](https://civitai.com/models/133005/juggernaut-xl), with the same seed and parameters:
-    ```
-    a cinematic photo of 2 men arguing, indoors
-    2 men, jesus christ, white robe, looking at each other, shouting
-    2 men, santa claus, looking at each other, shouting
-    ```
+- Trying to generate "jesus christ arguing with santa claus"
 
 <table>
     <thead align="center">
         <tr>
-            <td>Extension</td>
-            <td><b>Disabled</b></td>
-            <td><b>Enabled</b></td>
+            <th><b>with</b> Forge Couple</th>
+            <th><b>without</b> Forge Couple</th>
         </tr>
     </thead>
     <tbody align="center">
         <tr>
-            <td>Result</td>
-            <td><img src="example/off.jpg" width=384><br>
-            Features mixed between characters</td>
-            <td><img src="example/on.jpg" width=384><br>
-            Distinct and separate characters</td>
+            <td><img src="example/on.jpg" width=384>
+            <br>Distinct and separate characters</td>
+            <td><img src="example/off.jpg" width=384>
+            <br>Features mixed between characters</td>
         </tr>
     </tbody>
 </table>
@@ -36,34 +29,40 @@ This is an Extension for the [Forge Webui](https://github.com/lllyasviel/stable-
 ## How to Use
 
 > [!NOTE]
-> The effect of this Extension is dependent on the prompt-adherence capability of the Checkpoint. If the checkpoint does not understand the composition, it still cannot generate the result correctly.
+> The effect of this Extension is dependent on the prompt-adherence capability of each Checkpoint. If the checkpoint does not understand the composition, it still cannot generate the result properly.
+
+> [!NOTE]
+> Consider this Extension as a really advanced LLM: The regions are still only "suggestions," don't expect the results to absolutely follow the regions, and the masks are not pixel-perfect either.
 
 > [!TIP]
 > As shown in the various examples, even if a region only contains 1 subject, it's usually still better to prompt for the total amount of subjects first.
 
-<details>
-<summary><h3>Index</h3></summary>
+<details open>
+<summary><h4>Index</h4></summary>
 
 - [Basic Mode](#basic-mode)
     - [Tile Direction](#tile-direction)
-    - [Global Effect](#global-effect)
 - [Advanced Mode](#advanced-mode)
 - [Mask Mode](#mask-mode)
-- Misc.
+- [Misc.](#other-parameters)
+    - [Global Effect](#global-effect)
     - [Compatibility](#compatibility-toggle)
     - [Separator](#couple-separator)
     - [Common Prompts](#common-prompts)
     - [LoRA](#lora-support)
 - [API](https://github.com/Haoming02/sd-forge-couple/wiki/API)
+- [FAQ](#troubleshooting)
 
 </details>
 
-## Basic Mode
+<br>
 
-The **Basic** mode works by dividing the image into multiple "tiles" where each tile corresponding to one [line](#couple-separator) of the positive prompt. Therefore, simply prompt more lines if you want more regions.
+### Basic Mode
+
+The **Basic** mode works by dividing the image into multiple "tiles" where each tile corresponds to a "**[line](#couple-separator)**" of the positive prompt. Therefore, simply prompt more lines to generate more regions.
 
 <p align="center">
-<img src="example/basic.jpg" width=384>
+<img src="example/basic.jpg" width=512>
 </p>
 
 ```
@@ -71,16 +70,16 @@ The **Basic** mode works by dividing the image into multiple "tiles" where each 
 2girls, black long hair, red eyes, dark school uniform, standing, crossed arms, looking away
 ```
 
-### Tile Direction
+#### Tile Direction
 
-In the **Basic** mode, you can choose between whether to divie the image into columns or rows.
+In the **Basic** mode *(only)*, you can choose dividing the image into columns or rows.
 
-- **Horizontal:** First / Last line corresponds to the Left / Right region
-- **Vertical:** First / Last line corresponds to the Top / Bottom region
+- **Horizontal:** First / Last line corresponds to the Left / Right -most region
+- **Vertical:** First / Last line corresponds to the Top / Bottom -most region
 
 <p align="center">
-<img src="example/direction.jpg" width=384><br>
-<b>Direction</b> set to <code>Vertical</code>
+<img src="example/direction.jpg" width=512><br>
+<code>Vertical</code> <b>Direction</b>
 </p>
 
 ```
@@ -92,36 +91,30 @@ beach, sand
 pavement, road
 ```
 
-### Global Effect
-
-In **Basic** and **Mask** modes, you can set either the **first** line or the **last** line of the positive prompt as the "background," affecting the entire image instead of just one region. Useful for specifying styles or quality tags used by **SD 1.5** and **Pony** checkpoints.
-
-> This has **no** effect in **Advanced** mode
-
 <br>
 
-## Advanced Mode
+### Advanced Mode
 
 Were these automated and equally-sized tiles not sufficient for your needs? Now you can manually specify each regions!
 
 > [!IMPORTANT]
-> The entire image **must** contain weight. The easiest way would be adding a region that covers the whole image *(just like **Global Effect**)*.
+> The entire image **must** contain weights
 
 - **Entries:**
     - Each row contains a range for **x** axis, a range for **y** axis, a **weight**, as well as the corresponding **line** of prompt
-    - The range should be within `0.0` ~ `1.0`, representing the **percentage** of the full width/height
-        - **eg.** `0.0` to `1.0` would span across the entire axis
-    - **x** axis is from left to right; **y** axis is from top to bottom
-    - **2** *(to)* should be larger than **1** *(from)*
+        - **x** axis is from left to right; **y** axis is from top to bottom
+    - The range should be within `0.0` ~ `1.0`, representing the **percentage** of the full width/height *(**eg.** `0.0` to `1.0` would span across the entire axis)*
+    - The weight is capped at `0.0` ~ `5.0`
+    - The prompt is only for quick reference; in case it went out of sync, the actual generation is still based on the prompt field
 
 > [!NOTE]
-> The mapping data is not sent when using the `Send to img2img` function. Click the `Pull from txt2img` to manually transfer the data.
+> The mapping data is not sent when using the `Send to img2img` function, click the `Pull from txt2img` to manually transfer the data
 
 - **Control:**
     - Click on a row to select it, highlighting its bounding box
         - Click on the same row again to deselect it
     - When a row is selected, click the `🆕` button above / below to insert a new row above / below
-        - If holding `Shift`, it will also insert a newline to the prompts
+        - If holding `Shift`, it will also insert a new empty line to the prompts
     - When a row is selected, click the `❌` button to delete it
         - If holding `Shift`, it will also **delete** the corresponding line of prompt
     - Click the `Default Mapping` button to reset the mappings
@@ -135,9 +128,12 @@ Were these automated and equally-sized tiles not sufficient for your needs? Now 
     - Click the `🗑` button to clear the background
 
 <p align="center">
-<img src="example/adv_ui.jpg" width=384><br>
-Advanced Mode UI<br>
-<img src="example/adv_result.jpg" width=384><br>
+<img src="example/adv_ui.jpg" width=512><br>
+Advanced Mode UI
+</p>
+
+<p align="center">
+<img src="example/adv_result.jpg" width=512><br>
 Generation Result
 </p>
 
@@ -151,17 +147,17 @@ sunset, golden hour, lens flare
 
 <br>
 
-## Mask Mode
+### Mask Mode
 
 Were these bounding boxes still too rigid for you...? Now you can also manually draw the areas for each regions!
 
 > [!IMPORTANT]
-> The entire image **must** contain weight. The easiest way would be using the **Global Effect**.
+> The entire image **must** contain weights
 
 - **Canvas:**
     - Click the **Create Empty Canvas** button to generate a blank canvas to draw on
     - Only **pure white** `(255, 255, 255)` pixels count towards the mask, other colors are simply discarded
-        - This also means that other colors can function as the "eraser" for the mask
+        - This also means you can use other colors as the "eraser"
     - Click the **Save Mask** button to save the image as a <ins>new</ins> layer of masks
     - When a layer is selected:
         - Click **Load Mask** to load the mask into canvas
@@ -169,26 +165,33 @@ Were these bounding boxes still too rigid for you...? Now you can also manually 
     - Click the **Reset All Masks** button to clear all the data
 
 > [!NOTE]
-> The mask data is not sent when using the `Send to img2img` function. Click the `Pull from txt2img` to manually transfer the data.
+> The mask data is not sent when using the `Send to img2img` function, click the `Pull from txt2img` to manually transfer the data
 
 - **Entries:**
     - Each row contains a **preview** of the layer, the corresponding **line** of prompt, and the **weight** for the layer
+        - The prompt is only for quick reference; in case it went out of sync, the actual generation is still based on the prompt field
     - Click the preview image to <ins>select</ins> the layer
     - Use the arrow buttons to quickly re-order the layers
     - Click the `❌` button to delete the layer
 
 - **Uploads:**
-    - Use the `Upload Background` to upload an image as the reference to draw masks on
-        - The image will get dimmed, therefore it will **not** count towards the mask
+    - Use the `Upload Background` to upload an image as reference to draw masks on
+        - The image will be darkened, thus **not** counting towards the mask
     - Use the `Upload Mask` to upload an image as a mask that can directly be saved
         - Mainly for when you prepare the masks in external programs
 
+> [!TIP]
+> Do not draw a mask that is too small, having just a dot of conditioning wouldn't do much...
+
 > [!WARNING]
-> For Classic Forge (`Gradio 3`) users, avoid pasting images. Instead manually upload or simply drag & drop the images. Using `Ctrl + V` might send the image to the Canvas, thus breaking the Extension...
+> For Forge Classic (`Gradio 3`) users, avoid pasting images. Instead manually upload or simply drag & drop the images. Using `Ctrl + V` might send the image to the Canvas, thus breaking the Extension...
 
 <p align="center">
 <img src="example/mask_ui.jpg" width=512><br>
-Mask Mode UI<br>
+Mask Mode UI
+</p>
+
+<p align="center">
 <img src="example/mask_result.jpg" width=512><br>
 Generation Result
 </p>
@@ -201,28 +204,36 @@ treasure chest
 
 <br>
 
-## Compatibility Toggle
+## Other Parameters
+> These options are shared across all 3 modes
 
-When the option is enabled, this Extension will not function during the `Hires. Fix` pass to improve the compatibility with other Extensions. Has minimal impact on performance and results.
+### Global Effect
 
-## Couple Separator
+In **Basic** and **Mask** modes *(only)*, you can set either the **first** line or the **last** line of the positive prompt as the "background," affecting the entire image instead of just one region. Useful for specifying styles or quality tags.
+
+### Compatibility Toggle
+
+When the option is enabled, this Extension will not function during the `Hires. Fix` pass to improve the compatibility with other Extensions. *(Recommended)*
+
+> [!IMPORTANT]
+> This Extension currently does **not** support `Hires. fix` prompts...
+
+### Couple Separator
 
 By default when the field is left empty, this Extension uses the newline character (`\n`) as the separator to determine "lines" of the prompts. You may also specify other words as the separator instead.
 
-- To keep your custom separator in its own line, you can add `\n` before and after the word
+- To keep the custom separator within its own line, you can add `\n` before and after the word
     - **eg.** `\nMySep\n`
 
-- Do **not** include space in the separator
-    - ` ` *(left empty)*: **OK**
-    - `abc` : **OK**
-    - `xyz\n` : **OK**
-    - `\n` : **OK**
-    - `\n\n` : **OK**
-    - `\n  \n` : **ERROR**
+- <ins>Examples</ins>
+    - ` ` *(left empty)*
+    - `foo`
+    - `\nbar\n`
+    - `\n\n`
 
-## Common Prompts
+### Common Prompts
 
-If you have multiple characters that share the same poses, expressions, or outfits, it would've been a chore to keep copying and pasting the same lines over and over again. Now, you can simplify this process via the new **Common Prompts** feature:
+If you have multiple characters that share the same outfits, poses, or expressions, you can now simplify the process via **Common Prompts** - No more copying and pasting the same lines over and over!
 
 0. To enable, select a syntax between `{ }` or `< >` first
 1. First, define an unique key *(**eg.** `cloth`)*
@@ -235,17 +246,14 @@ If you have multiple characters that share the same poses, expressions, or outfi
 
 > [!IMPORTANT]
 > - The key has to be unique
-> - You can have multiple common prompts at the same time
+> - You can have more than 1 common prompt at the same time
 > - Each bracket can only contain one key
 
 > [!TIP]
 > You can enable `Debug` to check if it is working as intended in the console
 
-> [!NOTE]
-> Might be incompatible with Extensions that process prompts *(**eg.** [sd-dynamic-prompts](https://github.com/adieyal/sd-dynamic-prompts))*
-
 <p align="center">
-<img src="example/common.jpg" width=384>
+<img src="example/common.jpg" width=512>
 </p>
 
 ```
@@ -254,32 +262,41 @@ score_9, score_8_up, score_7_up, source_anime, high quality, best quality, maste
 {subject}, hinoshita kaho, medium hair, {cloth}
 ```
 
-> This works for all **3** modes
+### LoRA Support
 
-## LoRA Support
-
-Using multiple LoRAs in different regions is possible, though it depends on how well the LoRAs work together...
-
-LoRA that contains multiple subjects seems to work better in my experience.
-
-<p align="center">
-<img src="example/lora.jpg" width=384>
-</p>
-
-```
-[high quality, best quality], 2girls, on stage, backlighting, [bloom, hdr], <lora:suzurena:0.72>
-2girls, miyama suzune, pink idol costume, feather hair ornament, holding hands, looking at viewer, smile, blush
-2girls, hanaoi rena, blue idol costume, feather hair ornament, holding hands, looking at viewer, shy, blush
-```
+LoRA that contains multiple subjects is easier to generate multiple characters. Using different LoRAs in different regions is also possible, though it depends on how well the LoRAs' concepts work together...
 
 <br>
 
 ## API
-For usage with API, please refer to the [Wiki](https://github.com/Haoming02/sd-forge-couple/wiki/API)
+For usages with API, please refer to the [Wiki](https://github.com/Haoming02/sd-forge-couple/wiki/API) *(Outdated; W.I.P)*
 
-<hr>
+<br>
 
-## TypeError: 'NoneType'
+## Troubleshooting
+> **F**requently **A**sked **Q**uestions
+
+- **Generation gets interrupted at 1st step**
+    - In `Forge`, when raising an Error from an Extension, it only gets caught while the generation continues, leading to `ForgeCouple` failing "silently." To work around this, `ForgeCouple` now interrupts the generation when an error occurs. Check the Console logs to see what went wrong...
+
+- **Not Enough Lines in Prompt**
+    - In **Basic** mode, you need at least **2** lines of prompts for it to tile; **3** in case you enable **Global Effect**
+
+- **Number of Couples and Masks mismatched**
+    - Similarly, the number of lines in prompts should match the number of regions defined in **Advanced** and **Mask** modes
+
+> [!IMPORTANT]
+> Empty lines are still counted; ensure you do not leave an empty line at the end; if you want to have an empty line between each region for clarity, adjust the **Couple Separator**
+
+- **Image must contain weights on all pixels**
+    - As mentioned in [Advanced](#advanced-mode) and [Mask](#mask-mode), the entire image must contain weights. This error occurs when you didn't fill the whole image. The easiest way to achieve this:
+        - **Advanced:** Create a layer that covers the entire image *(**ie.** `0.0, 1.0, 0.0, 1.0`)*
+        - **Mask:** Use the **Global Effect**
+
+- **Incompatible Extension**
+    - Certain Extensions, such as [sd-dynamic-prompts](https://github.com/adieyal/sd-dynamic-prompts), will also process the prompts before/during generation. These may break the **Couple Separator** and/or **Common Prompts** as a result.
+
+### TypeError: 'NoneType'
 
 For users that get the following error:
 
@@ -300,5 +317,4 @@ shape '[X, Y, 1]' is invalid for input of size Z
 <hr>
 
 ## Special Thanks
-- Credits to the original author, **[laksjdjf](https://github.com/laksjdjf)**, whose [ComfyUI Node](https://github.com/laksjdjf/cgem156-ComfyUI/tree/main/scripts/attention_couple) I used to port into Forge
-- Also check out <ins>arcusmaximus</ins>'s alternative approach to [draggable-box-ui](https://github.com/arcusmaximus/sd-forge-couple/tree/draggable-box-ui)
+- Credits to the original author, **[laksjdjf](https://github.com/laksjdjf)**, whose [ComfyUI Node](https://github.com/laksjdjf/cgem156-ComfyUI/tree/main/scripts/attention_couple) I referenced to port into Forge

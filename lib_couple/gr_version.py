@@ -1,10 +1,7 @@
-import gradio as gr
+from gradio import __version__ as gradio_version
 
-is_gradio_4: bool = int(str(gr.__version__).split(".")[0]) == 4
+is_gradio_4: bool = int(gradio_version.split(".")[0]) > 3
 
 
 def js(func: str) -> dict:
-    if is_gradio_4:
-        return {"js": func}
-    else:
-        return {"_js": func}
+    return {("js" if is_gradio_4 else "_js"): func}

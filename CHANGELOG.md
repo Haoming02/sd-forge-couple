@@ -1,3 +1,10 @@
+### v3.5.0 - 2025 Feb.17
+- Interrupt on **Error**
+- Format `import`
+- Revised **Separator** Logics
+- Revised **Background** Logics
+- Minor **Optimization**
+
 ### v3.4.0 - 2025 Jan.17
 - Fix **Mask** Issue under **API**
 

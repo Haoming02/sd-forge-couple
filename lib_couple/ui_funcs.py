@@ -1,7 +1,8 @@
-from json.decoder import JSONDecodeError
-from PIL import Image, ImageDraw
 from json import dumps, loads
+from json.decoder import JSONDecodeError
+
 import gradio as gr
+from PIL import Image, ImageDraw
 
 from lib_couple.logging import logger
 
@@ -9,20 +10,23 @@ DEFAULT_MAPPING = [[0.0, 0.5, 0.0, 1.0, 1.0], [0.5, 1.0, 0.0, 1.0, 1.0]]
 COLORS = ("red", "orange", "yellow", "green", "blue", "indigo", "violet")
 
 
-def validate_mapping(data: list) -> bool:
+def validate_mapping(data: list, log: bool = False) -> bool:
     for x1, x2, y1, y2, w in data:
         try:
             float(w)
         except ValueError:
-            logger.error('Invalid "weight"...')
+            if log:
+                logger.error('Invalid "weight"...')
             return False
 
         if not all(0.0 <= v <= 1.0 for v in (x1, x2, y1, y2)):
-            logger.error("Region range must be between 0.0 and 1.0...")
+            if log:
+                logger.error("Region range must be between 0.0 and 1.0...")
             return False
 
         if x2 < x1 or y2 < y1:
-            logger.error('"to" value must be larger than "from" value...')
+            if log:
+                logger.error('"to" value must be larger than "from" value...')
             return False
 
     return True

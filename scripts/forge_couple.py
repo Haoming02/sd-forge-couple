@@ -1,23 +1,22 @@
-from modules import scripts
-from typing import Callable
-from json import dumps
 import re
+from json import dumps
+from typing import Callable
 
+from modules import scripts, shared
+
+from lib_couple.attention_couple import AttentionCouple
+from lib_couple.gr_version import js
+from lib_couple.logging import logger
 from lib_couple.mapping import (
-    empty_tensor,
-    basic_mapping,
     advanced_mapping,
+    basic_mapping,
+    empty_tensor,
     mask_mapping,
 )
-
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
-from lib_couple.attention_couple import AttentionCouple
-from lib_couple.logging import logger
-from lib_couple.gr_version import js
 
-
-VERSION = "3.4.0"
+VERSION = "3.5.0"
 
 
 class ForgeCouple(scripts.Script):
@@ -26,8 +25,13 @@ class ForgeCouple(scripts.Script):
     def __init__(self):
         self.couples: list
         self.get_mask: Callable
-        self.cached_unet: Callable
-        self.is_hr: bool = False
+        self.is_hr: bool
+
+        self.valid: bool
+        """
+        Since raising error within `after_extra_networks_activate` does NOT interrupt the generation,
+        the only way is to forcefully interrupt during `process_before_every_sampling`...
+        """
 
     def title(self):
         return "Forge Couple"
@@ -39,14 +43,11 @@ class ForgeCouple(scripts.Script):
         return couple_ui(self, is_img2img, f"{self.title()} v{VERSION}")
 
     def after_component(self, component, **kwargs):
-        if not (elem_id := kwargs.get("elem_id", None)):
-            return
-
-        if elem_id in ("txt2img_width", "txt2img_height"):
-            component.change(None, **js('() => { ForgeCouple.preview("t2i"); }'))
-
-        elif elem_id in ("img2img_width", "img2img_height"):
-            component.change(None, **js('() => { ForgeCouple.preview("i2i"); }'))
+        if (elem_id := kwargs.get("elem_id", None)) is not None:
+            if elem_id in ("txt2img_width", "txt2img_height"):
+                component.change(None, **js('() => { ForgeCouple.preview("t2i"); }'))
+            elif elem_id in ("img2img_width", "img2img_height"):
+                component.change(None, **js('() => { ForgeCouple.preview("i2i"); }'))
 
     def setup(self, *args, **kwargs):
         self.is_hr = False
@@ -76,6 +77,11 @@ class ForgeCouple(scripts.Script):
 
         return prompt
 
+    def invalidate(self, p):
+        self.valid = False
+        p.extra_generation_params.update({"forge_couple": "ERROR"})
+        shared.state.interrupt()
+
     def after_extra_networks_activate(
         self,
         p,
@@ -96,26 +102,14 @@ class ForgeCouple(scripts.Script):
         if not enable:
             return
 
-        separator = (
-            "\n"
-            if not separator.strip()
-            else "\n".join(
-                [part.strip() for part in (separator.replace("\\n", "\n").split("\n"))]
-            )
-        )
-
-        raw_separator = separator.replace("\n", "\\n")
-
-        # Webui & API Usages...
-        if mode == "Mask":
-            mapping: list = self.get_mask() or mapping
-            assert isinstance(mapping[0], dict)
+        separator = separator.replace("\\n", "\n").replace("\\t", " ")
+        if not separator.strip():
+            separator = "\n"
 
         prompts: str = kwargs["prompts"][0]
 
-        if common_parser != "off":
+        if common_parser in ("{ }", "< >"):
             prompts = self.parse_common_prompt(prompts, common_parser.split(" "))
-
             if common_debug:
                 logger.info(f"[Common Prompts Debug]\n{prompts}\n")
 
@@ -126,30 +120,39 @@ class ForgeCouple(scripts.Script):
                 if len(couples) < (3 - int(background == "None")):
                     ratio = f"{len(couples)} / {3 - int(background == 'None')}"
                     logger.error(f"Not Enough Lines in Prompt... [{ratio}]")
+                    self.invalidate(p)
                     return
 
             case "Mask":
+                mapping: list = self.get_mask() or mapping
+                assert isinstance(mapping[0], dict)
                 if not mapping:
                     logger.error("No Mapping...?")
+                    self.invalidate(p)
                     return
 
                 required: int = len(mapping) + int(background != "None")
                 if len(couples) != required:
                     ratio = f"{len(couples)} / {required}"
                     logger.error(f"Number of Couples and Masks mismatched... [{ratio}]")
+                    self.invalidate(p)
                     return
 
             case "Advanced":
+                assert isinstance(mapping[0], list)
                 if not mapping:
                     logger.error("No Mapping...?")
+                    self.invalidate(p)
                     return
 
-                if not validate_mapping(mapping):
+                if not validate_mapping(mapping, True):
+                    self.invalidate(p)
                     return
 
                 if len(couples) != len(mapping):
                     ratio = f"{len(couples)} / {len(mapping)}"
                     logger.error(f"Number of Couples and Masks mismatched... [{ratio}]")
+                    self.invalidate(p)
                     return
 
         # ===== Infotext =====
@@ -158,7 +161,7 @@ class ForgeCouple(scripts.Script):
         fc_param["forge_couple"] = True
         fc_param["forge_couple_compatibility"] = disable_hr
         fc_param["forge_couple_mode"] = mode
-        fc_param["forge_couple_separator"] = raw_separator
+        fc_param["forge_couple_separator"] = separator.replace("\n", "\\n")
         if mode == "Basic":
             fc_param["forge_couple_direction"] = direction
         if mode == "Advanced":
@@ -172,6 +175,7 @@ class ForgeCouple(scripts.Script):
         # ===== Infotext =====
 
         self.couples = couples
+        self.valid = True
 
     def process_before_every_sampling(
         self,
@@ -188,7 +192,7 @@ class ForgeCouple(scripts.Script):
         **kwargs,
     ):
 
-        if not enable or self.couples is None:
+        if (not enable) or (self.couples is None) or (not self.valid):
             return
 
         if disable_hr and self.is_hr:
@@ -199,7 +203,6 @@ class ForgeCouple(scripts.Script):
 
         # ===== Init =====
         unet = p.sd_model.forge_objects.unet
-        self.cached_unet = unet
 
         WIDTH: int = p.width
         HEIGHT: int = p.height
@@ -259,11 +262,7 @@ class ForgeCouple(scripts.Script):
 
         base_mask = empty_tensor(HEIGHT, WIDTH)
         patched_unet = self.forgeAttentionCouple.patch_unet(unet, base_mask, fc_args)
-        p.sd_model.forge_objects.unet = patched_unet
-        logger.debug("Patched UNet")
-
-    def postprocess(self, p, *args, **kwargs):
-        if getattr(self, "cached_unet", None) is not None:
-            p.sd_model.forge_objects.unet = self.cached_unet
-            logger.debug("Restored UNet")
-            self.cached_unet = None
+        if patched_unet is None:
+            self.invalidate(p)
+        else:
+            p.sd_model.forge_objects.unet = patched_unet

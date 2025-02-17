@@ -1,10 +1,10 @@
-from modules.prompt_parser import SdConditioning
-
 from base64 import b64decode as decode
 from io import BytesIO as bIO
-from PIL import Image
+
 import numpy as np
 import torch
+from modules.prompt_parser import SdConditioning
+from PIL import Image
 
 
 def empty_tensor(h: int, w: int):

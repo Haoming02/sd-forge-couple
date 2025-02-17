@@ -2,8 +2,8 @@
 # lllyasviel/stable-diffusion-webui-forge/.../sd_forge_controlnet/lib_controlnet/logging.py #
 # ========================================================================================= #
 
-import logging
 import copy
+import logging
 import sys
 
 

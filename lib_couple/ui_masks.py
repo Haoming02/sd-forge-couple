@@ -1,8 +1,8 @@
-from PIL import Image
 import gradio as gr
 import numpy as np
+from PIL import Image
 
-from .gr_version import js, is_gradio_4
+from .gr_version import is_gradio_4, js
 from .ui_funcs import COLORS
 
 try:

@@ -5,11 +5,12 @@ https://github.com/laksjdjf/cgem156-ComfyUI/blob/main/scripts/attention_couple/n
 Modified by. Haoming02 to work with Forge
 """
 
-from .attention_masks import get_mask, lcm_for_list
-from modules.devices import get_optimal_device
 import torch
+from modules.devices import get_optimal_device
 
 from lib_couple.logging import logger
+
+from .attention_masks import get_mask, lcm_for_list
 
 try:
     from backend import memory_management  # noqa
@@ -38,9 +39,9 @@ class AttentionCouple:
         mask = [base_mask] + [kwargs[f"mask_{i}"] for i in range(1, num_conds)]
         mask = torch.stack(mask, dim=0).to(device, dtype=dtype)
 
-        if mask.sum(dim=0).min() <= 0:
-            logger.error("Mask contains non-filled areas...")
-            mask += 1e-8
+        if mask.sum(dim=0).min().item() <= 0.0:
+            logger.error("Image must contain weights on all pixels...")
+            return None
 
         mask = mask / mask.sum(dim=0, keepdim=True)
 
@@ -52,7 +53,7 @@ class AttentionCouple:
 
         @torch.inference_mode()
         def attn2_patch(q, k, v, extra_options):
-            assert k.mean() == v.mean(), "k and v must be the same"
+            assert torch.allclose(k, v), "k and v should be the same"
             cond_or_unconds = extra_options["cond_or_uncond"]
             num_chunks = len(cond_or_unconds)
             self.batch_size = q.shape[0] // num_chunks
@@ -83,9 +84,8 @@ class AttentionCouple:
             if qs.size(0) % 2 == 1:
                 empty = torch.zeros_like(qs[0]).unsqueeze(0)
                 qs = torch.cat((qs, empty), dim=0)
-
-                empty2 = torch.zeros_like(ks[0]).unsqueeze(0)
-                ks = torch.cat((ks, empty2), dim=0)
+                empty = torch.zeros_like(ks[0]).unsqueeze(0)
+                ks = torch.cat((ks, empty), dim=0)
 
             return qs, ks, ks
 

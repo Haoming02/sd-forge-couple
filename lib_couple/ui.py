@@ -1,10 +1,11 @@
-from .ui_masks import CoupleMaskData
+from typing import Optional
+
+import gradio as gr
+
+from .gr_version import js
 from .ui_adv import advanced_ui
 from .ui_funcs import on_pull
-from .gr_version import js
-
-from typing import Optional
-import gradio as gr
+from .ui_masks import CoupleMaskData
 
 
 class CoupleDataTransfer:

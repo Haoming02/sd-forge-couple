@@ -1,8 +1,7 @@
 class ForgeCoupleImageLoader {
+    static #maxDim = 1024 * 1024;
 
-    static #maxDim = 1024;
-
-    /** @param {string} filepath @param {method} callback */
+    /** @param {string} filepath @param {Function} callback */
     static #path2url(filepath, callback) {
         const img = new Image();
 
@@ -13,18 +12,18 @@ class ForgeCoupleImageLoader {
             let width = img.width;
             let height = img.height;
 
-            while (width > this.#maxDim || height > this.#maxDim) {
-                width = parseInt(width / 2);
-                height = parseInt(height / 2);
+            while (width * height > this.#maxDim) {
+                width = Math.round(width / 2);
+                height = Math.round(height / 2);
             }
 
             canvas.width = width;
             canvas.height = height;
 
             ctx.drawImage(img, 0, 0, width, height);
-            const resizedDataUrl = canvas.toDataURL('image/jpeg');
+            const resizedDataURL = canvas.toDataURL('image/jpeg');
 
-            callback(resizedDataUrl);
+            callback(resizedDataURL);
         };
 
         img.src = filepath;
@@ -32,14 +31,12 @@ class ForgeCoupleImageLoader {
 
     /** @param {Element} image @param {Element[]} btns */
     static setup(image, btns) {
-
         const [load, load_i2i, clear] = (btns.length === 3) ? btns : [btns[0], null, btns[1]];
 
         const img_upload = document.createElement("input");
         img_upload.setAttribute("type", "file");
         img_upload.setAttribute("accept", "image/*");
-
-        load.onclick = () => { img_upload.click(); };
+        img_upload.style.display = "none";
 
         img_upload.onchange = (event) => {
             const file = event.target.files[0];
@@ -55,22 +52,20 @@ class ForgeCoupleImageLoader {
             }
         };
 
-        if (load_i2i != null) {
-            load_i2i.onclick = () => {
-                const src = document.getElementById("img2img_image").querySelector("img")?.src;
-                if (src != null) {
-                    this.#path2url(src, (new_src) => {
-                        image.style.backgroundImage = `url("${new_src}")`;
-                    });
-                }
-            };
-        }
-
+        image.parentElement.appendChild(img_upload);
+        load.onclick = () => { img_upload.click(); };
         clear.onclick = () => { image.style.backgroundImage = "none"; };
 
-        image.parentElement.appendChild(img_upload);
-        img_upload.style.display = "none";
+        if (load_i2i == null)
+            return;
 
+        load_i2i.onclick = () => {
+            const src = document.getElementById("img2img_image").querySelector("img")?.src;
+            if (src != null) {
+                this.#path2url(src, (new_src) => {
+                    image.style.backgroundImage = `url("${new_src}")`;
+                });
+            }
+        };
     }
-
 }

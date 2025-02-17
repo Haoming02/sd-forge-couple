@@ -3,8 +3,9 @@ Credit: laksjdjf
 https://github.com/laksjdjf/cgem156-ComfyUI/blob/main/scripts/attention_couple/node.py
 """
 
-import torch.nn.functional as F
 import math
+
+from torch.nn.functional import interpolate
 
 
 def repeat_div(value: int, iterations: int) -> int:
@@ -30,7 +31,7 @@ def get_mask(mask, batch_size, num_tokens, original_shape):
     size = (repeat_div(image_height, scale), repeat_div(image_width, scale))
 
     num_conds = mask.shape[0]
-    mask_downsample = F.interpolate(mask, size=size, mode="nearest")
+    mask_downsample = interpolate(mask, size=size, mode="nearest")
     mask_downsample = mask_downsample.view(num_conds, num_tokens, 1).repeat_interleave(
         batch_size, dim=0
     )

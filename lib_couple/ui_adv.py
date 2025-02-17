@@ -1,13 +1,12 @@
-from modules.ui_components import ToolButton
+from json import dumps
 
-from .ui_funcs import DEFAULT_MAPPING, visualize_mapping, on_entry
+import gradio as gr
+from modules.ui_components import ToolButton
+from PIL import Image
+
 from .adv_presets import PresetManager
 from .gr_version import js
-
-from json import dumps
-from PIL import Image
-import gradio as gr
-
+from .ui_funcs import DEFAULT_MAPPING, on_entry, visualize_mapping
 
 PresetManager.load_presets()
 

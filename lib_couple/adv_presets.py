@@ -1,7 +1,8 @@
-from modules import scripts
-from json import load, dump
-import gradio as gr
 import os
+from json import dump, load
+
+import gradio as gr
+from modules import scripts
 
 from lib_couple.logging import logger
 
@@ -17,14 +18,14 @@ class PresetManager:
             try:
                 with open(PRESET_FILE, "r", encoding="utf-8") as json_file:
                     cls.presets = load(json_file)
-                    logger.info("Presets Loaded...")
             except Exception:
-                logger.error("Failed to load presets...")
-
+                logger.error("Failed to load Adv. Presets...")
+            else:
+                logger.info("Loaded Adv. Presets...")
         else:
-            logger.info("Creating Empty Presets...")
             with open(PRESET_FILE, "w+", encoding="utf-8") as json_file:
                 dump({}, json_file)
+            logger.info("Creating new empty Adv. Presets...")
 
     @classmethod
     def list_preset(cls) -> list[str]:
@@ -32,9 +33,7 @@ class PresetManager:
 
     @classmethod
     def get_preset(cls, preset_name: str) -> None | dict:
-        preset: dict = cls.presets.get(preset_name, None)
-
-        if preset is None:
+        if (preset := cls.presets.get(preset_name, None)) is None:
             logger.error(f'Preset "{preset_name}" was not found...')
             return None
 
