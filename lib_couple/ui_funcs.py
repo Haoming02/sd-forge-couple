@@ -12,12 +12,11 @@ COLORS = ("red", "orange", "yellow", "green", "blue", "indigo", "violet")
 
 def validate_mapping(data: list, log: bool = False) -> bool:
     for x1, x2, y1, y2, w in data:
-        try:
-            float(w)
-        except ValueError:
-            if log:
-                logger.error('Invalid "weight"...')
-            return False
+        for v in (x1, x2, y1, y2, w):
+            if not (isinstance(v, float) or isinstance(v, int)):
+                if log:
+                    logger.error('Mappings must be "float"...')
+                return False
 
         if not all(0.0 <= v <= 1.0 for v in (x1, x2, y1, y2)):
             if log:
@@ -34,14 +33,14 @@ def validate_mapping(data: list, log: bool = False) -> bool:
 
 def visualize_mapping(mode: str, res: str, mapping: list) -> Image.Image:
     if mode != "Advanced":
-        return gr.update()
+        return gr.skip()
 
     p_width, p_height = [int(v) for v in res.split("x")]
 
-    while p_width > 1024 or p_height > 1024:
+    while p_width * p_height > 1024 * 1024:
         p_width, p_height = p_width // 2, p_height // 2
 
-    while p_width < 512 and p_height < 512:
+    while p_width * p_height < 512 * 512:
         p_width, p_height = p_width * 2, p_height * 2
 
     matt = Image.new("RGBA", (p_width, p_height), (0, 0, 0, 64))
@@ -54,13 +53,12 @@ def visualize_mapping(mode: str, res: str, mapping: list) -> Image.Image:
     draw = ImageDraw.Draw(matt)
 
     for tile_index, (x1, x2, y1, y2, w) in enumerate(mapping):
-        color_index = tile_index % len(COLORS)
-
         x_from = int(p_width * x1)
         x_to = int(p_width * x2)
         y_from = int(p_height * y1)
         y_to = int(p_height * y2)
 
+        color_index = tile_index % 7
         draw.rectangle(
             ((x_from, y_from), (x_to, y_to)),
             outline=COLORS[color_index],
@@ -70,13 +68,9 @@ def visualize_mapping(mode: str, res: str, mapping: list) -> Image.Image:
     return matt
 
 
-def on_entry(data: str) -> list:
+def on_entry(data: str) -> list[list]:
     if not data.strip():
-        return gr.update()
-
-    if ":" in data:
-        logger.error("Old infotext is no longer supported...")
-        return DEFAULT_MAPPING
+        return gr.skip()
 
     try:
         return loads(data)

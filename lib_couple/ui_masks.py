@@ -24,8 +24,10 @@ class CoupleMaskData:
     def pull_mask(self) -> list[dict]:
         """Pull the masks from the opposite tab"""
         if not (masks_data := self.opposite.get_masks()):
+            self.weights = []
             return []
 
+        self.weights = [1.0 for _ in masks_data]
         return [data["mask"] for data in masks_data]
 
     def get_masks(self) -> list[dict]:
@@ -348,8 +350,8 @@ class CoupleMaskData:
             mask_update = False
 
         return [
-            self.masks if mask_update else gr.update(),
-            self._generate_preview() if mask_update else gr.update(),
+            self.masks if mask_update else gr.skip(),
+            self._generate_preview() if mask_update else gr.skip(),
             gr.update(interactive=(self.selected_index >= 0)),
             gr.update(interactive=(self.selected_index >= 0)),
         ]
@@ -376,7 +378,7 @@ class CoupleMaskData:
         """Refresh when width or height is changed"""
 
         if mode != "Mask":
-            return [gr.update(), gr.update(), None, None]
+            return [gr.skip(), gr.skip(), None, None]
 
         (canvas, _) = self._create_empty(resolution)
 
@@ -412,7 +414,7 @@ class CoupleMaskData:
             self.selected_index = -1
             return [
                 self.masks,
-                gr.update(),
+                gr.skip(),
                 gr.update(interactive=False),
                 gr.update(interactive=False),
             ]
@@ -427,7 +429,7 @@ class CoupleMaskData:
             self.selected_index = -1
             return [
                 self.masks,
-                gr.update(),
+                gr.skip(),
                 gr.update(interactive=False),
                 gr.update(interactive=False),
             ]
@@ -450,7 +452,7 @@ class CoupleMaskData:
         if img is None:
             return [
                 self.masks,
-                gr.update(),
+                gr.skip(),
                 gr.update(interactive=False),
                 gr.update(interactive=False),
             ]
@@ -464,7 +466,7 @@ class CoupleMaskData:
         if not bool(img.getbbox()):
             return [
                 self.masks,
-                gr.update(),
+                gr.skip(),
                 gr.update(interactive=False),
                 gr.update(interactive=False),
             ]
@@ -482,9 +484,7 @@ class CoupleMaskData:
     def _pull_mask(self) -> list[list, Image.Image, bool, bool]:
         """Pull masks from opposite tab"""
 
-        masks: list[Image.Image] = self.pull_mask()
-
-        self.masks = masks
+        self.masks: list[Image.Image] = self.pull_mask()
 
         preview = self._generate_preview()
         return [

@@ -16,7 +16,7 @@ from lib_couple.mapping import (
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
 
-VERSION = "3.5.0"
+VERSION = "3.5.1"
 
 
 class ForgeCouple(scripts.Script):

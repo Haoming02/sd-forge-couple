@@ -22,6 +22,9 @@ class CoupleDataTransfer:
     I2I_ADV_PASTE: Optional[gr.Textbox] = None
     I2I_ADV_PULL: Optional[gr.Button] = None
 
+    A_HOOKED: bool = False
+    M_HOOKED: bool = False
+
     @classmethod
     def hook_adv(cls):
         assert not any(
@@ -43,6 +46,8 @@ class CoupleDataTransfer:
             fn=on_pull, inputs=cls.I2I_ADV_DATA, outputs=cls.T2I_ADV_PASTE
         )
 
+        cls.A_HOOKED = True
+
     @classmethod
     def hook_mask(cls):
         assert cls.T2I_MASK is not None
@@ -51,15 +56,11 @@ class CoupleDataTransfer:
         cls.T2I_MASK.opposite = cls.I2I_MASK
         cls.I2I_MASK.opposite = cls.T2I_MASK
 
+        cls.M_HOOKED = True
+
     @classmethod
     def webui_setup_done(cls) -> bool:
-        return all(
-            [
-                getattr(CoupleDataTransfer, attr) is not None
-                for attr in dir(CoupleDataTransfer)
-                if not attr.startswith("__")
-            ]
-        )
+        return cls.A_HOOKED and cls.M_HOOKED
 
 
 def couple_ui(script, is_img2img: bool, title: str):

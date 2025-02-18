@@ -164,7 +164,6 @@ class ForgeCoupleMaskHandler {
     /** @param {HTMLDivElement[]} rows @param {HTMLImageElement[]} imgs */
     #populateRows(rows, imgs) {
         const len = rows.length;
-        console.assert(len === imgs.length);
 
         for (let i = 0; i < len; i++) {
             this.#constructRow(rows[i]);

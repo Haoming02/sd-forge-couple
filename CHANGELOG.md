@@ -1,3 +1,6 @@
+### v3.5.1 - 2025 Feb.18
+- Minor **Optimization**
+
 ### v3.5.0 - 2025 Feb.17
 - Interrupt on **Error**
 - Format `import`

@@ -108,7 +108,7 @@ Were these automated and equally-sized tiles not sufficient for your needs? Now 
     - The prompt is only for quick reference; in case it went out of sync, the actual generation is still based on the prompt field
 
 > [!NOTE]
-> The mapping data is not sent when using the `Send to img2img` function, click the `Pull from txt2img` to manually transfer the data
+> The mappings are not sent when using the `Send to img2img` function, click the `Pull from txt2img` to manually transfer the mappings
 
 - **Control:**
     - Click on a row to select it, highlighting its bounding box
@@ -165,7 +165,7 @@ Were these bounding boxes still too rigid for you...? Now you can also manually 
     - Click the **Reset All Masks** button to clear all the data
 
 > [!NOTE]
-> The mask data is not sent when using the `Send to img2img` function, click the `Pull from txt2img` to manually transfer the data
+> The masks are not sent when using the `Send to img2img` function, click the `Pull from txt2img` to manually transfer the masks *(the `weights` are not sent...)*
 
 - **Entries:**
     - Each row contains a **preview** of the layer, the corresponding **line** of prompt, and the **weight** for the layer
@@ -269,7 +269,7 @@ LoRA that contains multiple subjects is easier to generate multiple characters. 
 <br>
 
 ## API
-For usages with API, please refer to the [Wiki](https://github.com/Haoming02/sd-forge-couple/wiki/API) *(Outdated; W.I.P)*
+For usages with API, please refer to the [Wiki](https://github.com/Haoming02/sd-forge-couple/wiki/API)
 
 <br>
 
