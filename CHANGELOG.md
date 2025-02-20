@@ -1,3 +1,6 @@
+### v3.5.2 - 2025 Feb.20
+- Implement **Setting** to hide **Presets**
+
 ### v3.5.1 - 2025 Feb.18
 - Minor **Optimization**
 

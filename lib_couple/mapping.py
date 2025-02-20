@@ -23,7 +23,6 @@ def basic_mapping(
     tile_weight: float,
     bg_weight: float,
 ) -> dict:
-
     fc_args: dict = {}
 
     for tile in range(line_count):
@@ -65,7 +64,6 @@ def basic_mapping(
 def advanced_mapping(
     sd_model, couples: list, width: int, height: int, mapping: list
 ) -> dict:
-
     fc_args: dict = {}
     assert len(couples) == len(mapping)
 
@@ -118,7 +116,6 @@ def mask_mapping(
     background: str,
     bg_weight: float,
 ) -> dict:
-
     fc_args: dict = {}
 
     mapping: list[torch.Tensor] = [

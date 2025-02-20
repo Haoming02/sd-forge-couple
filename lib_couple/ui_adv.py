@@ -1,20 +1,55 @@
 from json import dumps
 
 import gradio as gr
+from modules.shared import opts
 from modules.ui_components import ToolButton
 from PIL import Image
 
-from .adv_presets import PresetManager
 from .gr_version import js
 from .ui_funcs import DEFAULT_MAPPING, on_entry, visualize_mapping
 
-PresetManager.load_presets()
+show_presets = not getattr(opts, "fc_no_presets", False)
+
+if show_presets:
+    from .adv_presets import PresetManager
+
+    PresetManager.load_presets()
+
+    def __presets_ui() -> tuple[gr.components.Component]:
+        with gr.Accordion("Presets", open=False):
+            with gr.Row(elem_classes="style-rows"):
+                preset_choice = gr.Dropdown(
+                    label="Mapping Presets",
+                    value=None,
+                    choices=PresetManager.list_preset(),
+                    scale=3,
+                )
+                apply_btn = gr.Button(value="Apply Preset", scale=2)
+                refresh_btn = gr.Button(value="Refresh Presets", scale=2)
+
+            with gr.Row(elem_classes="style-rows"):
+                preset_name = gr.Textbox(label="Preset Name", max_lines=1, scale=3)
+                save_btn = gr.Button(value="Save Preset", scale=2)
+                delete_btn = gr.Button(value="Delete Preset", scale=2)
+
+        comps = (
+            preset_choice,
+            apply_btn,
+            refresh_btn,
+            preset_name,
+            save_btn,
+            delete_btn,
+        )
+
+        for comp in comps:
+            comp.do_not_save_to_config = True
+
+        return comps
 
 
 def advanced_ui(
     is_img2img: bool, m: str, mode: gr.Radio
 ) -> tuple[gr.components.Component]:
-
     with gr.Row(elem_classes="fc_mapping_btns"):
         gr.Button("Default Mapping", elem_classes="fc_reset_btn")
 
@@ -36,35 +71,35 @@ def advanced_ui(
         with gr.Row():
             with gr.Column():
                 ToolButton(
-                    value="\U0001F195",
+                    value="\U0001f195",
                     elem_id="fc_up_btn",
                     tooltip="Add a New Row above the Selected Row",
                 )
                 ToolButton(
-                    value="\U0001F195",
+                    value="\U0001f195",
                     elem_id="fc_dn_btn",
                     tooltip="Add a New Row below the Selected Row",
                 )
             ToolButton(
-                value="\U0000274C",
+                value="\U0000274c",
                 elem_id="fc_del_btn",
                 tooltip="Delete the Selected Row",
             )
 
     with gr.Column(elem_classes="fc_bg_btns"):
         ToolButton(
-            value="\U0001F4C2",
+            value="\U0001f4c2",
             elem_id="fc_load_img_btn",
             tooltip="Load a background image for the mapping visualization",
         )
         if is_img2img:
             ToolButton(
-                value="\U000023CF",
+                value="\U000023cf",
                 elem_id="fc_load_i2i_img_btn",
                 tooltip="Load the img2img image as the background image",
             )
         ToolButton(
-            value="\U0001F5D1",
+            value="\U0001f5d1",
             elem_id="fc_clear_img_btn",
             tooltip="Remove the background image",
         )
@@ -84,22 +119,6 @@ def advanced_ui(
     msk_btn_pull = gr.Button(
         f"Pull from {'txt2img' if is_img2img else 'img2img'}", elem_classes="round-btn"
     )
-
-    with gr.Accordion("Presets", open=False):
-        with gr.Row(elem_classes="style-rows"):
-            preset_choice = gr.Dropdown(
-                label="Mapping Presets",
-                value=None,
-                choices=PresetManager.list_preset(),
-                scale=3,
-            )
-            apply_btn = gr.Button(value="Apply Preset", scale=2)
-            refresh_btn = gr.Button(value="Refresh Presets", scale=2)
-
-        with gr.Row(elem_classes="style-rows"):
-            preset_name = gr.Textbox(label="Preset Name", lines=1, max_lines=1, scale=3)
-            save_btn = gr.Button(value="Save Preset", scale=2)
-            delete_btn = gr.Button(value="Delete Preset", scale=2)
 
     preview_res = gr.Textbox(
         lines=1,
@@ -121,6 +140,28 @@ def advanced_ui(
         preview_img,
         show_progress="hidden",
     ).success(None, **js(f'() => {{ ForgeCouple.updateColors("{m}"); }}'))
+
+    for comp in (
+        mapping,
+        mapping_entry_field,
+        preview_img,
+        preview_res,
+        preview_btn,
+        msk_btn_pull,
+    ):
+        comp.do_not_save_to_config = True
+
+    if not show_presets:
+        return preview_btn, preview_res, mapping_paste_field, mapping, msk_btn_pull
+
+    (
+        preset_choice,
+        apply_btn,
+        refresh_btn,
+        preset_name,
+        save_btn,
+        delete_btn,
+    ) = __presets_ui()
 
     def _apply(name: str) -> dict:
         preset: dict = PresetManager.get_preset(name)
@@ -149,21 +190,5 @@ def advanced_ui(
         inputs=[preset_name],
         outputs=[preset_choice],
     )
-
-    for comp in (
-        mapping,
-        mapping_entry_field,
-        preview_img,
-        preview_res,
-        preview_btn,
-        msk_btn_pull,
-        preset_choice,
-        apply_btn,
-        refresh_btn,
-        preset_name,
-        save_btn,
-        delete_btn,
-    ):
-        comp.do_not_save_to_config = True
 
     return preview_btn, preview_res, mapping_paste_field, mapping, msk_btn_pull

@@ -16,7 +16,7 @@ from lib_couple.mapping import (
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
 
-VERSION = "3.5.1"
+VERSION = "3.5.2"
 
 
 class ForgeCouple(scripts.Script):
@@ -29,8 +29,8 @@ class ForgeCouple(scripts.Script):
 
         self.valid: bool
         """
-        Since raising error within `after_extra_networks_activate` does NOT interrupt the generation,
-        the only way is to forcefully interrupt during `process_before_every_sampling`...
+        Since raising error within Extensions does NOT cancel the generation,
+        the only way is to forcefully interrupt during generation...
         """
 
     def title(self):
@@ -191,7 +191,6 @@ class ForgeCouple(scripts.Script):
         *args,
         **kwargs,
     ):
-
         if (not enable) or (self.couples is None) or (not self.valid):
             return
 

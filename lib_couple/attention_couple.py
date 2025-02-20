@@ -21,10 +21,8 @@ else:
 
 
 class AttentionCouple:
-
     @torch.inference_mode()
     def patch_unet(self, model, base_mask, kwargs: dict):
-
         new_model = model.clone()
 
         if is_classic:

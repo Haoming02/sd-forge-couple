@@ -12,7 +12,6 @@ except ImportError:
 
 
 class CoupleMaskData:
-
     def __init__(self, is_img2img: bool):
         self.mode: str = "i2i" if is_img2img else "t2i"
         self.masks: list[Image.Image] = []
@@ -43,7 +42,6 @@ class CoupleMaskData:
         ]
 
     def mask_ui(self, btn, res, mode) -> list[gr.components.Component]:
-
         # ===== Components ===== #
         msk_btn_empty = gr.Button("Create Empty Canvas", elem_classes="round-btn")
 
@@ -51,8 +49,9 @@ class CoupleMaskData:
             f"""
             <h2 align="center"><ins>Mask Canvas</ins></h2>
             {
-                '' if is_gradio_4 else
-                '<p align="center"><b>[Important]</b> Do <b>NOT</b> upload / paste an image to here...</p>'
+                ""
+                if is_gradio_4
+                else '<p align="center"><b>[Important]</b> Do <b>NOT</b> upload / paste an image to here...</p>'
             }
             """
         )
@@ -183,9 +182,7 @@ class CoupleMaskData:
                 if is_gradio_4
                 else [msk_canvas, dummy]
             ),
-        ).then(
-            fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
-        )
+        ).then(fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}'))
 
         msk_btn_override.click(
             self._override_mask,

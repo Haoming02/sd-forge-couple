@@ -28,11 +28,8 @@ This is an Extension for the Forge Webui, which allows you to ~~generate couples
 
 ## How to Use
 
-> [!NOTE]
-> The effect of this Extension is dependent on the prompt-adherence capability of each Checkpoint. If the checkpoint does not understand the composition, it still cannot generate the result properly.
-
-> [!NOTE]
-> Consider this Extension as a really advanced LLM: The regions are still only "suggestions," don't expect the results to absolutely follow the regions, and the masks are not pixel-perfect either.
+> [!IMPORTANT]
+> Think of this Extension as a LLM for prompts: the defined regions are more like "suggestions" rather than strict boundaries. Don't expect the results to follow the regions with pixel-perfect precision. Additionally, the effectiveness of this Extension depends on how well the Checkpoint follows to the prompt. If the Checkpoint doesn't understand the composition, it won't generate the desired result accurately.
 
 > [!TIP]
 > As shown in the various examples, even if a region only contains 1 subject, it's usually still better to prompt for the total amount of subjects first.
@@ -119,6 +116,9 @@ Were these automated and equally-sized tiles not sufficient for your needs? Now 
         - If holding `Shift`, it will also **delete** the corresponding line of prompt
     - Click the `Default Mapping` button to reset the mappings
 
+- **Presets:**
+    - You can save the current mapping data, and load them again in the future
+
 - **Draggable Region:**
     - When a bounding box is highlighted, simply drag the box around to reposition the region; drag the edges / corners to resize the region
 
@@ -180,8 +180,8 @@ Were these bounding boxes still too rigid for you...? Now you can also manually 
     - Use the `Upload Mask` to upload an image as a mask that can directly be saved
         - Mainly for when you prepare the masks in external programs
 
-> [!TIP]
-> Do not draw a mask that is too small, having just a dot of conditioning wouldn't do much...
+> [!NOTE]
+> Do not draw a mask that is too small, having just a dot of conditioning doesn't do much...
 
 > [!WARNING]
 > For Forge Classic (`Gradio 3`) users, avoid pasting images. Instead manually upload or simply drag & drop the images. Using `Ctrl + V` might send the image to the Canvas, thus breaking the Extension...
@@ -205,7 +205,7 @@ treasure chest
 <br>
 
 ## Other Parameters
-> These options are shared across all 3 modes
+> These options are not limited to a specific mode
 
 ### Global Effect
 
@@ -213,7 +213,7 @@ In **Basic** and **Mask** modes *(only)*, you can set either the **first** line 
 
 ### Compatibility Toggle
 
-When the option is enabled, this Extension will not function during the `Hires. Fix` pass to improve the compatibility with other Extensions. *(Recommended)*
+When this is enabled, this Extension will not function during the `Hires. Fix` pass to improve the compatibility with other Extensions. *(Recommended)*
 
 > [!IMPORTANT]
 > This Extension currently does **not** support `Hires. fix` prompts...
