@@ -222,8 +222,8 @@ When this is enabled, this Extension will not function during the `Hires. Fix` p
 
 By default when the field is left empty, this Extension uses the newline character (`\n`) as the separator to determine "lines" of the prompts. You may also specify other words as the separator instead.
 
-- To keep the custom separator within its own line, you can add `\n` before and after the word
-    - **eg.** `\nMySep\n`
+> [!TIP]
+> To keep the custom separator within its own line, you can add `\n` before and after the word
 
 - <ins>Examples</ins>
     - ` ` *(left empty)*
@@ -278,6 +278,7 @@ For usages with API, please refer to the [Wiki](https://github.com/Haoming02/sd-
 
 - **Generation gets interrupted at 1st step**
     - In `Forge`, when raising an Error from an Extension, it only gets caught while the generation continues, leading to `ForgeCouple` failing "silently." To work around this, `ForgeCouple` now interrupts the generation when an error occurs. Check the Console logs to see what went wrong...
+    - *(you could disable this behavior in the settings)*
 
 - **Not Enough Lines in Prompt**
     - In **Basic** mode, you need at least **2** lines of prompts for it to tile; **3** in case you enable **Global Effect**

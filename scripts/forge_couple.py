@@ -16,7 +16,7 @@ from lib_couple.mapping import (
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
 
-VERSION = "3.5.2"
+VERSION = "3.5.3"
 
 
 class ForgeCouple(scripts.Script):
@@ -80,7 +80,8 @@ class ForgeCouple(scripts.Script):
     def invalidate(self, p):
         self.valid = False
         p.extra_generation_params.update({"forge_couple": "ERROR"})
-        shared.state.interrupt()
+        if shared.opts.fc_do_interrupt:
+            shared.state.interrupt()
 
     def after_extra_networks_activate(
         self,

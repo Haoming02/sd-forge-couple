@@ -1,3 +1,6 @@
+### v3.5.3 - 2025 Mar.13
+- Implement **Setting** for **Interrupt**
+
 ### v3.5.2 - 2025 Feb.20
 - Implement **Setting** to hide **Presets**
 
