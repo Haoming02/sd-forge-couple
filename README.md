@@ -47,6 +47,7 @@ This is an Extension for the Forge Webui, which allows you to ~~generate couples
     - [Separator](#couple-separator)
     - [Common Prompts](#common-prompts)
     - [LoRA](#lora-support)
+- [Tile Mode](#tile-mode)
 - [API](https://github.com/Haoming02/sd-forge-couple/wiki/API)
 - [FAQ](#troubleshooting)
 
@@ -265,6 +266,85 @@ score_9, score_8_up, score_7_up, source_anime, high quality, best quality, maste
 ### LoRA Support
 
 LoRA that contains multiple subjects is easier to generate multiple characters. Using different LoRAs in different regions is also possible, though it depends on how well the LoRAs' concepts work together...
+
+<br>
+
+## Tile Mode
+
+<p align="right"><b><i>experimental</i></b></p>
+
+#### Example / How to Use
+
+1. Generate an image
+    ```
+    masterpiece, best quality, high quality,
+    2girls, hatsune miku, back-to-back,
+    2girls, kagamine rin, back-to-back
+    ```
+
+<p align="center">
+<img src="example/tile_before.jpg" width=384><br>
+(<code>Basic</code> mode; <code>First Line</code> background; <code>1024x1024</code>)
+</p>
+
+2. Send to **img2img**
+3. Switch to `Mask` mode
+4. Set up the regions
+
+<p align="center">
+<img src="example/tile_masks.png" width=512>
+</p>
+
+5. Enable the `SD Upscale` script
+6. Set up the resolutions
+    - Scale Factor: `1`
+    - Upscaler: `Nearest`
+    - Tile Overlap: `32`
+    - Width: `576`
+    - Height: `1024`
+7. Enable the `Tile` mode
+
+<p align="center">
+<img src="example/tile.png" width=512>
+</p>
+
+8. Generate
+9. ...
+10. Profit !
+
+<p align="center">
+<img src="example/tile_after.jpg" width=384>
+</p>
+
+#### Parameters
+
+- **Inclusion Threshold:** How much overlap between the tile and the region is needed for the prompt to be included
+    - Prevents adding the prompts from regions barely touching the tile
+    - The scuffed masks above have a overlap of over `0.95` for each tile
+- **Tile Count:** How many tiles are going be generated
+    - This should be based on `SD Upscale`
+- **Subject Replacement:** Replace the original "total amount of subjects" to prevent generating extra subjects per tile
+    - Each line is a `key: values` pair
+    - The `key` is the prompt to use
+    - The `values` are the tags to be replaced, separated by comma
+
+So, in the example above it would use
+```
+masterpiece, best quality, high quality,
+1girl, hatsune miku
+```
+for the first tile; and use
+```
+masterpiece, best quality, high quality,
+1girl, kagamine rin,
+```
+for the second tile
+
+> [!Important]
+> Currently only supports **Mask** mode
+
+> [!Tip]
+> **Global Effect** and **Common Prompts** still work
 
 <br>
 

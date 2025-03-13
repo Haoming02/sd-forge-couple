@@ -23,3 +23,12 @@ def fc_settings():
         .info('if disabled, Forge Couople will simply "fail silently"')
         .needs_restart(),
     )
+
+    opts.add_option(
+        "fc_tile_mode",
+        OptionInfo(
+            False,
+            "Show the experimental Tile Mode",
+            **args,
+        ).needs_restart(),
+    )
