@@ -123,7 +123,7 @@ Were these automated and equally-sized tiles not sufficient for your needs? Now 
     - When a bounding box is highlighted, simply drag the box around to reposition the region; drag the edges / corners to resize the region
 
 - **Background:**
-    - Click the `📂` button to load a image as the background of the mapping
+    - Click the `📂` button to load an image as the background of the mapping
     - Click the `⏏` button to load the **img2img** input image as the background
     - Click the `🗑` button to clear the background
 
