@@ -92,13 +92,19 @@ def _prepare_mappings_mask(mapping: list[dict[str, "Image.Image"]]) -> list[np.n
 
 def _process_replacements(replace: str) -> dict[str, str]:
     replacements = {}
+    if not replace.strip():
+        return replacements
 
     for line in replace.split("\n"):
-        goal, sauce = line.split(":")
-        tags = sauce.split(",")
+        try:
+            goal, sauce = line.split(":")
+            tags = sauce.split(",")
+            for tag in tags:
+                replacements[tag.strip()] = goal.strip()
 
-        for tag in tags:
-            replacements[tag.strip()] = goal.strip()
+        except ValueError:
+            logger.error(f'Failed to parse Subject Replacement: "{line}"...')
+            continue
 
     return replacements
 
