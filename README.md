@@ -124,7 +124,7 @@ Were these automated and equally-sized tiles not sufficient for your needs? Now 
     - When a bounding box is highlighted, simply drag the box around to reposition the region; drag the edges / corners to resize the region
 
 - **Background:**
-    - Click the `📂` button to load a image as the background of the mapping
+    - Click the `📂` button to load an image as the background of the mapping
     - Click the `⏏` button to load the **img2img** input image as the background
     - Click the `🗑` button to clear the background
 
@@ -250,7 +250,7 @@ If you have multiple characters that share the same outfits, poses, or expressio
 > - You can have more than 1 common prompt at the same time
 > - Each bracket can only contain one key
 
-> [!TIP]
+> [!TIP]total amount of subjects
 > You can enable `Debug` to check if it is working as intended in the console
 
 <p align="center">
@@ -271,11 +271,41 @@ LoRA that contains multiple subjects is easier to generate multiple characters. 
 
 ## Tile Mode
 
-<p align="right"><b><i>experimental</i></b></p>
+Trying a upscale an image to super high resolution using tiled **img2img**, while still keeping the features separated? Now you can prompt each tile based on its overlapping regions!
 
-#### Example / How to Use
+- **Prerequisite**
+    - Some way to break the generation into tiles
+        - **eg.** the built-in `SD Upscale` script
+        - The tile order is assumed to be `top-left` > `top-right` > `bottom-left` > `bottom-right`
+    - The input image does **not** need to have been generated with `ForgeCouple`; you can simply use any image
+    - Set up the `ForgeCouple` regions like you would normally; all 3 modes are supported
+    - Switch to the `Tile` tab and enable the feature
+    - `ControlNet` with the `Tile` Module is highly recommended
 
-1. Generate an image
+- **Parameters**
+    - **Inclusion Threshold** controls how much overlap between the tile and the region is needed for the corresponding prompt to be included
+        - Prevents adding the prompts from regions barely touching the tile
+        - `0.0` means every single line of prompt would be included; `1.0` means the region and the tile have to perfectly match to be counted
+    - **Tile Count** refers to the amount of tiles needed
+        - The values are based on your tiling parameters, not arbitrary
+    - **Subject Replacement** is used to replace the original "total amount of subjects" with singular subject, in order to prevent generating extra characters within a tile
+        - Each line is a `key: values` pair
+        - The `key` is the prompt to use
+        - The `values` are the tags to be replaced, separated by comma
+        - *(Alternatively, you can just modify the original prompts and ignore this field)*
+    - You may enable **Debug Tiles** to check if the prompts are assigned correctly
+
+<p align="center">
+<img src="example/tile_ui.png" width=512><br>
+Tile Mode UI
+</p>
+
+- **Example**
+
+0. Generate an image in **txt2img**
+    - **Forge Couple:** `Basic` mode; `First Line` background
+    - **Resolution:** `1024` x `1024`
+    - **Prompt:**
     ```
     masterpiece, best quality, high quality,
     2girls, hatsune miku, back-to-back,
@@ -283,68 +313,51 @@ LoRA that contains multiple subjects is easier to generate multiple characters. 
     ```
 
 <p align="center">
-<img src="example/tile_before.jpg" width=384><br>
-(<code>Basic</code> mode; <code>First Line</code> background; <code>1024x1024</code>)
+<img src="example/tile_before.jpg" width=384>
 </p>
 
-2. Send to **img2img**
-3. Switch to `Mask` mode
-4. Set up the regions
+1. Send to **img2img**, keeping the same `ForgeCouple` parameters
+2. Enable the `SD Upscale` script
+    - **Scale Factor:** `1`
+    - **Upscaler:** `Nearest`
+    - **Tile Overlap:** `32`
+3. Adjust the resolution
+    - **Width:** `576`
+    - **Height:** `1024`
 
-<p align="center">
-<img src="example/tile_masks.png" width=512>
-</p>
+> Meaning, this will generate **2x1** tiles
 
-5. Enable the `SD Upscale` script
-6. Set up the resolutions
-    - Scale Factor: `1`
-    - Upscaler: `Nearest`
-    - Tile Overlap: `32`
-    - Width: `576`
-    - Height: `1024`
-7. Enable the `Tile` mode
+4. Switch to the `Tile` tab
+5. Enable and set up the `Tile` mode
+    - **Threshold:** `0.75`
+    - **H. Tile:** `2`; **V. Tile:** `1`
+    - **Replacement:**
+    ```
+    1girl: 2girls
+    : back-to-back
+    ```
 
-<p align="center">
-<img src="example/tile.png" width=512>
-</p>
-
-8. Generate
-9. ...
-10. Profit !
+6. Generate
+7. ...
+8. Profit !
 
 <p align="center">
 <img src="example/tile_after.jpg" width=384>
 </p>
 
-#### Parameters
-
-- **Inclusion Threshold:** How much overlap between the tile and the region is needed for the prompt to be included
-    - Prevents adding the prompts from regions barely touching the tile
-    - The scuffed masks above have a overlap of over `0.95` for each tile
-- **Tile Count:** How many tiles are going be generated
-    - This should be based on `SD Upscale`
-- **Subject Replacement:** Replace the original "total amount of subjects" to prevent generating extra subjects per tile
-    - Each line is a `key: values` pair
-    - The `key` is the prompt to use
-    - The `values` are the tags to be replaced, separated by comma
-
-So, in the example above it would use
+In this example, it would generate **2** tiles in total, with the left side using:
 ```
 masterpiece, best quality, high quality,
 1girl, hatsune miku
 ```
-for the first tile; and use
+as the prompt; while the right side uses:
 ```
 masterpiece, best quality, high quality,
-1girl, kagamine rin,
+1girl, kagamine rin
 ```
-for the second tile
-
-> [!Important]
-> Currently only supports **Mask** mode
 
 > [!Tip]
-> **Global Effect** and **Common Prompts** still work
+> Both **Global Effect** and **Common Prompts** also work with `Tile` mode
 
 <br>
 

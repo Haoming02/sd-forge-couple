@@ -17,7 +17,7 @@ def _include(
     h: int,
     y: int,
     v: int,
-    mappings: list["Image.Image"],
+    mappings: list[np.ndarray],
     threshold: float,
 ) -> list[int]:
     include: list[int] = []
@@ -34,10 +34,7 @@ def _include(
     tile_mask = np.zeros((SIZE, SIZE), dtype=np.uint8)
     tile_mask[y1:y2, x1:x2] = 1
 
-    for i, m in enumerate(mappings):
-        m = m.resize((SIZE, SIZE), NEAREST)
-        mask = np.asarray(m, dtype=np.uint8)
-
+    for i, mask in enumerate(mappings):
         overlap = np.sum((tile_mask == 1) & (mask == 1))
         total = np.sum((mask == 1))
 
@@ -45,6 +42,52 @@ def _include(
             include.append(i)
 
     return include
+
+
+def _prepare_mappings_basic(is_vertical: bool, count: int) -> list[np.ndarray]:
+    mappings = []
+
+    for i in range(count):
+        mask = np.zeros((SIZE, SIZE), dtype=np.uint8)
+
+        a = int(SIZE * (i / count))
+        b = int(SIZE * ((i + 1) / count))
+
+        if is_vertical:
+            mask[a:b, 0:SIZE] = 1
+        else:
+            mask[0:SIZE, a:b] = 1
+
+        mappings.append(mask)
+
+    return mappings
+
+
+def _prepare_mappings_adv(mapping: list[list[float]]) -> list[np.ndarray]:
+    mappings = []
+
+    for x1, x2, y1, y2, _ in mapping:
+        x1 = int(x1 * SIZE)
+        x2 = int(x2 * SIZE)
+        y1 = int(y1 * SIZE)
+        y2 = int(y2 * SIZE)
+
+        mask = np.zeros((SIZE, SIZE), dtype=np.uint8)
+        mask[y1:y2, x1:x2] = 1
+
+        mappings.append(mask)
+
+    return mappings
+
+
+def _prepare_mappings_mask(mapping: list[dict[str, "Image.Image"]]) -> list[np.ndarray]:
+    mappings = []
+
+    for m in mapping:
+        m = m["mask"].resize((SIZE, SIZE), NEAREST)
+        mappings.append(np.asarray(m, dtype=np.uint8))
+
+    return mappings
 
 
 def _process_replacements(replace: str) -> dict[str, str]:
@@ -68,16 +111,11 @@ def calculate_tiles(self: "ForgeCouple", args: tuple) -> bool:
     if not (enable and use_tile):
         return False
 
-    mode: str = args[3]
-    if mode != "Mask":
-        logger.error("Tile Mode only supports Mask Regions currently...")
-        return None
-
     tile_h = int(args[12])
     tile_v = int(args[13])
 
-    if tile_h * tile_v == 1:
-        logger.error("Invalid number of Tiles...")
+    if tile_h * tile_v < 2:
+        logger.error(f"Invalid Tile Count: {tile_h * tile_v}...")
         return None
 
     prompt: str = args[0].prompt
@@ -85,18 +123,31 @@ def calculate_tiles(self: "ForgeCouple", args: tuple) -> bool:
     if not self.valid:
         return None
 
+    mode: str = args[3]
     prompts: list[str] = self.couples
     bg: str = None
-    background: str = args[6]
-    if background == "First Line":
-        bg, *prompts = prompts
-    if background == "Last Line":
-        *prompts, bg = prompts
 
-    mapping: list[dict] = self.get_mask()
-    assert len(mapping) == len(prompts)
+    if mode != "Advanced":
+        background: str = args[6]
+        if background == "First Line":
+            bg, *prompts = prompts
+        if background == "Last Line":
+            *prompts, bg = prompts
 
-    mappings: list = [m["mask"] for m in mapping]
+    if mode == "Basic":
+        direction: str = args[5]
+        mappings: list = _prepare_mappings_basic(direction == "Vertical", len(prompts))
+
+    if mode == "Advanced":
+        mapping: list[list[float]] = args[8]
+        assert len(mapping) == len(prompts)
+        mappings: list = _prepare_mappings_adv(mapping)
+
+    if mode == "Mask":
+        mapping: list[dict] = self.get_mask()
+        assert len(mapping) == len(prompts)
+        mappings: list = _prepare_mappings_mask(mapping)
+
     tile_threshold: float = args[14]
     tile_replace: str = args[15]
     replacements = _process_replacements(tile_replace)

@@ -67,7 +67,6 @@ class CoupleDataTransfer:
 
 def couple_ui(script, is_img2img: bool, title: str):
     m: str = "i2i" if is_img2img else "t2i"
-    show_tile: bool = is_img2img and getattr(opts, "fc_tile_mode", False)
 
     with gr.Accordion(
         label=title,
@@ -75,7 +74,7 @@ def couple_ui(script, is_img2img: bool, title: str):
         open=False,
     ):
 
-        if show_tile:
+        if is_img2img:
             tab1 = gr.Tab(label="Regions")
             tab1.__enter__()
 
@@ -215,7 +214,7 @@ def couple_ui(script, is_img2img: bool, title: str):
             comp.do_not_save_to_config = True
             script.paste_field_names.append(name)
 
-        if show_tile:
+        if is_img2img:
             tab1.__exit__()
             with gr.Tab(label="Tiles"):
                 tile_args = tile_ui()

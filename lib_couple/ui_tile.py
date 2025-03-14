@@ -11,10 +11,13 @@ def tile_ui() -> tuple[gr.components.Component]:
     )
 
     with gr.Row():
-        use_tile = gr.Checkbox(value=False, label="Enable Tile Mode")
-        debug = gr.Checkbox(False, label="Debug Tiles")
+        with gr.Column():
+            use_tile = gr.Checkbox(value=False, label="Enable Tile Mode")
+            debug = gr.Checkbox(value=False, label="Debug Tiles")
+
         tile_threshold = gr.Slider(
             label="Inclusion Threshold",
+            info="overlap % needed for region to be included",
             minimum=0.0,
             maximum=1.0,
             value=0.75,
@@ -30,7 +33,7 @@ def tile_ui() -> tuple[gr.components.Component]:
         lines=6,
         max_lines=6,
         label="Subject Replacement",
-        placeholder="1girl: 2girls, 3girls",
+        placeholder="1girl: 2girls, 3girls, 4girls, 5girls, 6+girls",
     )
 
     comps = (use_tile, tile_h, tile_v, tile_threshold, tile_replace, debug)
