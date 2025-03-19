@@ -1,13 +1,12 @@
 from typing import Optional
 
-from modules.shared import opts
 import gradio as gr
 
 from .gr_version import js
 from .ui_adv import advanced_ui
-from .ui_tile import tile_ui
 from .ui_funcs import on_pull
 from .ui_masks import CoupleMaskData
+from .ui_tile import tile_ui
 
 
 class CoupleDataTransfer:
@@ -73,7 +72,6 @@ def couple_ui(script, is_img2img: bool, title: str):
         elem_id=f"forge_couple_{m}",
         open=False,
     ):
-
         if is_img2img:
             tab1 = gr.Tab(label="Regions")
             tab1.__enter__()

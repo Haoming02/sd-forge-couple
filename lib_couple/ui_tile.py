@@ -2,7 +2,6 @@ import gradio as gr
 
 
 def tile_ui() -> tuple[gr.components.Component]:
-
     gr.Markdown(
         """
         <h2 style="float: left;">Tile Mode</h2>

@@ -1,13 +1,14 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from scripts.forge_couple import ForgeCouple
     from PIL import Image
 
-from lib_couple.logging import logger
-from modules.upscaler import NEAREST
-import numpy as np
+    from scripts.forge_couple import ForgeCouple
 
+import numpy as np
+from modules.upscaler import NEAREST
+
+from lib_couple.logging import logger
 
 SIZE = 1024  # image size used for overlap calculation
 

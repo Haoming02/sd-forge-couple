@@ -13,9 +13,9 @@ from lib_couple.mapping import (
     empty_tensor,
     mask_mapping,
 )
+from lib_couple.tile_funcs import calculate_tiles
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
-from lib_couple.tile_funcs import calculate_tiles
 
 VERSION = "3.5.3"
 
