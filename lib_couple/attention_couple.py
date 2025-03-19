@@ -5,37 +5,39 @@ https://github.com/laksjdjf/cgem156-ComfyUI/blob/main/scripts/attention_couple/n
 Modified by. Haoming02 to work with Forge
 """
 
+from functools import wraps
+from typing import Callable
+
 import torch
-from modules.devices import get_optimal_device
+from modules.devices import device, dtype_inference
 
 from lib_couple.logging import logger
 
 from .attention_masks import get_mask, lcm_for_list
 
-try:
-    from backend import memory_management  # noqa
-except ImportError:
-    is_classic = True
-else:
-    is_classic = False
-
 
 class AttentionCouple:
+    def __init__(self):
+        self.batch_size: int
+        self.patches: dict[str, Callable] = {}
+        self.manual: dict[str, list]
+        self.checked: bool
+
     @torch.inference_mode()
-    def patch_unet(self, model, base_mask, kwargs: dict):
-        new_model = model.clone()
-
-        if is_classic:
-            dtype = new_model.model.diffusion_model.dtype
-        else:
-            dtype = new_model.model.computation_dtype
-
-        device = get_optimal_device()
-
+    def patch_unet(
+        self,
+        model: torch.nn.Module,
+        base_mask,
+        kwargs: dict,
+        *,
+        isA1111: bool,
+        width: int,
+        height: int,
+    ):
         num_conds = len(kwargs) // 2 + 1
 
         mask = [base_mask] + [kwargs[f"mask_{i}"] for i in range(1, num_conds)]
-        mask = torch.stack(mask, dim=0).to(device, dtype=dtype)
+        mask = torch.stack(mask, dim=0).to(device, dtype=dtype_inference)
 
         if mask.sum(dim=0).min().item() <= 0.0:
             logger.error("Image must contain weights on all pixels...")
@@ -44,14 +46,29 @@ class AttentionCouple:
         mask = mask / mask.sum(dim=0, keepdim=True)
 
         conds = [
-            kwargs[f"cond_{i}"][0][0].to(device, dtype=dtype)
+            kwargs[f"cond_{i}"][0][0].to(device, dtype=dtype_inference)
             for i in range(1, num_conds)
         ]
         num_tokens = [cond.shape[1] for cond in conds]
 
+        if isA1111:
+            self.manual = {
+                "original_shape": [2, 4, height // 8, width // 8],
+                "cond_or_uncond": [0, 1],
+            }
+            self.checked = False
+
         @torch.inference_mode()
-        def attn2_patch(q, k, v, extra_options):
+        def attn2_patch(q, k, v, extra_options=None):
             assert torch.allclose(k, v), "k and v should be the same"
+            if extra_options is None:
+                if not self.checked:
+                    self.manual["original_shape"][0] = k.size(0)
+                    self.manual["cond_or_uncond"] = list(range(k.size(0)))
+                    self.checked = True
+
+                extra_options = self.manual
+
             cond_or_unconds = extra_options["cond_or_uncond"]
             num_chunks = len(cond_or_unconds)
             self.batch_size = q.shape[0] // num_chunks
@@ -88,7 +105,11 @@ class AttentionCouple:
             return qs, ks, ks
 
         @torch.inference_mode()
-        def attn2_output_patch(out, extra_options):
+        def attn2_output_patch(out, extra_options=None):
+            if extra_options is None:
+                self.checked = False
+                extra_options = self.manual
+
             cond_or_unconds = extra_options["cond_or_uncond"]
             mask_downsample = get_mask(
                 mask, self.batch_size, out.shape[1], extra_options["original_shape"]
@@ -108,7 +129,58 @@ class AttentionCouple:
                     pos += num_conds * self.batch_size
             return torch.cat(outputs, dim=0)
 
-        new_model.set_model_attn2_patch(attn2_patch)
-        new_model.set_model_attn2_output_patch(attn2_output_patch)
+        if isA1111:
 
-        return new_model
+            def patch_attn2(layer: str, module: torch.nn.Module):
+                f: Callable = module.forward
+                self.patches[layer] = f
+
+                @wraps(f)
+                def _f(x, context):
+                    q = x
+                    k = v = context
+                    _q, _k, _v = attn2_patch(q, k, v)
+                    return f(_q, context=_k)
+
+                module.forward = _f
+
+            def patch_attn2_out(layer: str, module: torch.nn.Module):
+                f: Callable = module.forward
+                self.patches[layer] = f
+
+                @wraps(f)
+                def _f(o):
+                    _o = f(o)
+                    return attn2_output_patch(_o)
+
+                module.forward = _f
+
+            for layer_name, module in model.named_modules():
+                if "attn2" not in layer_name:
+                    continue
+
+                if layer_name.endswith("2"):
+                    patch_attn2(layer_name, module)
+
+                elif layer_name.endswith("to_out"):
+                    patch_attn2_out(layer_name, module)
+
+            return True
+
+        else:
+            model.set_model_attn2_patch(attn2_patch)
+            model.set_model_attn2_output_patch(attn2_output_patch)
+
+            return model
+
+    @torch.no_grad()
+    def unpatch(self, model: torch.nn.Module):
+        if not self.patches:
+            return
+
+        for layer_name, module in model.named_modules():
+            if "attn2" not in layer_name:
+                continue
+
+            if layer_name.endswith(("attn2", "to_out")):
+                module.forward = self.patches.pop(layer_name)

@@ -16,6 +16,14 @@ from lib_couple.mapping import (
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
 
+try:
+    from modules_forge import forge_version  # noqa
+except ImportError:
+    isA1111 = True
+else:
+    isA1111 = False
+
+
 VERSION = "3.5.3"
 
 
@@ -202,7 +210,10 @@ class ForgeCouple(scripts.Script):
             return
 
         # ===== Init =====
-        unet = p.sd_model.forge_objects.unet
+        if isA1111:
+            unet = p.sd_model.model.diffusion_model
+        else:
+            unet = p.sd_model.forge_objects.unet.clone()
 
         WIDTH: int = p.width
         HEIGHT: int = p.height
@@ -261,8 +272,21 @@ class ForgeCouple(scripts.Script):
         assert len(fc_args.keys()) // 2 == LINE_COUNT
 
         base_mask = empty_tensor(HEIGHT, WIDTH)
-        patched_unet = self.forgeAttentionCouple.patch_unet(unet, base_mask, fc_args)
+        patched_unet = self.forgeAttentionCouple.patch_unet(
+            unet,
+            base_mask,
+            fc_args,
+            isA1111=isA1111,
+            width=WIDTH,
+            height=HEIGHT,
+        )
         if patched_unet is None:
             self.invalidate(p)
-        else:
+        elif not isA1111:
             p.sd_model.forge_objects.unet = patched_unet
+
+    def postprocess(self, p, *args, **kwargs):
+        if not isA1111:
+            return
+
+        self.forgeAttentionCouple.unpatch(p.sd_model.model.diffusion_model)
