@@ -33,7 +33,7 @@ def tile_ui() -> tuple[gr.components.Component]:
         lines=6,
         max_lines=6,
         label="Subject Replacement",
-        placeholder="1girl: 2girls, 3girls, 4girls, 5girls, 6+girls",
+        placeholder="1boy: 2boys, multiple boys\n1girl: 2girls, multiple girls",
     )
 
     comps = (use_tile, tile_h, tile_v, tile_threshold, tile_replace, debug)

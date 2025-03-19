@@ -250,7 +250,7 @@ If you have multiple characters that share the same outfits, poses, or expressio
 > - You can have more than 1 common prompt at the same time
 > - Each bracket can only contain one key
 
-> [!TIP]total amount of subjects
+> [!TIP]
 > You can enable `Debug` to check if it is working as intended in the console
 
 <p align="center">
