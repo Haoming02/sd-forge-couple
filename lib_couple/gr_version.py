@@ -1,6 +1,6 @@
 from gradio import __version__ as gradio_version
 
-is_gradio_4: bool = int(gradio_version.split(".")[0]) > 3
+is_gradio_4: bool = str(gradio_version).startswith("4")
 
 
 def js(func: str) -> dict:

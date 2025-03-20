@@ -5,7 +5,7 @@ from typing import Callable
 from modules import scripts, shared
 
 from lib_couple.attention_couple import AttentionCouple
-from lib_couple.gr_version import js
+from lib_couple.gr_version import is_gradio_4, js
 from lib_couple.logging import logger
 from lib_couple.mapping import (
     advanced_mapping,
@@ -15,6 +15,12 @@ from lib_couple.mapping import (
 )
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
+
+if is_gradio_4:
+    from lib_couple.regional_flux import ApplyRegionalConds, ConvertConds
+    from lib_flux.layers import inject_blocks
+    from lib_flux.model import inject_flux
+
 
 VERSION = "3.5.3"
 
@@ -261,6 +267,16 @@ class ForgeCouple(scripts.Script):
         assert len(fc_args.keys()) // 2 == LINE_COUNT
 
         base_mask = empty_tensor(HEIGHT, WIDTH)
+
+        if is_gradio_4 and not p.sd_model.is_webui_legacy_model():
+            unet = unet.clone()
+            inject_flux(unet.model.diffusion_model)
+            inject_blocks(unet.model.diffusion_model)
+            conds = ConvertConds(fc_args)
+            patched_unet = ApplyRegionalConds(unet, conds, width=WIDTH, height=HEIGHT)
+            p.sd_model.forge_objects.unet = patched_unet
+            return
+
         patched_unet = self.forgeAttentionCouple.patch_unet(unet, base_mask, fc_args)
         if patched_unet is None:
             self.invalidate(p)
