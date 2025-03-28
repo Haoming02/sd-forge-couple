@@ -25,7 +25,7 @@ else:
     isA1111 = False
 
 
-VERSION = "3.5.3"
+VERSION = "4.0.0"
 
 
 class ForgeCouple(scripts.Script):

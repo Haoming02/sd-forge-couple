@@ -1,3 +1,9 @@
+### v4.0.0 - 2025 Mar.28
+- Implement **Tile** Mode
+- Support **Automatic1111** WebUI
+
+<br>
+
 ### v3.5.3 - 2025 Mar.13
 - Implement **Setting** for **Interrupt**
 
