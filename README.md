@@ -1,7 +1,7 @@
 ﻿# SD Forge Attention Couple
 This is an Extension for the Forge Webui, which allows you to ~~generate couples~~ target conditioning at different regions. No more color bleeds or mixed features!
 
-> Support [Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge), [reForge](https://github.com/Panchovix/stable-diffusion-webui-reForge), and [Forge Classic](https://github.com/Haoming02/sd-webui-forge-classic); but **not** [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
+> Support [Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge), [reForge](https://github.com/Panchovix/stable-diffusion-webui-reForge), [Forge Classic](https://github.com/Haoming02/sd-webui-forge-classic), and [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) !
 
 > Support both `SD1` & `SDXL`; but **not** `SD3` or `Flux`
 
