@@ -13,6 +13,7 @@ from lib_couple.mapping import (
     empty_tensor,
     mask_mapping,
 )
+from lib_couple.tile_funcs import calculate_tiles
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
 
@@ -23,6 +24,7 @@ class ForgeCouple(scripts.Script):
     forgeAttentionCouple = AttentionCouple()
 
     def __init__(self):
+        self.is_img2img: bool
         self.couples: list
         self.get_mask: Callable
         self.is_hr: bool
@@ -33,6 +35,9 @@ class ForgeCouple(scripts.Script):
         the only way is to forcefully interrupt during generation...
         """
 
+        self.tile_idx: int
+        self.tiles: list[str] = []
+
     def title(self):
         return "Forge Couple"
 
@@ -40,6 +45,7 @@ class ForgeCouple(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
+        self.is_img2img = is_img2img
         return couple_ui(self, is_img2img, f"{self.title()} v{VERSION}")
 
     def after_component(self, component, **kwargs):
@@ -49,11 +55,33 @@ class ForgeCouple(scripts.Script):
             elif elem_id in ("img2img_width", "img2img_height"):
                 component.change(None, **js('() => { ForgeCouple.preview("i2i"); }'))
 
-    def setup(self, *args, **kwargs):
+    def setup(self, p, *args, **kwargs):
         self.is_hr = False
+        if not self.is_img2img:
+            return
+
+        if calculate_tiles(self, (p, *args)) is None:
+            self.invalidate(p)
+
+        self.tile_idx = -1
+
+    def before_process(self, p, *args, **kwargs):
+        if self.tiles is None or len(self.tiles) == 0:
+            return
+
+        self.tile_idx += 1
+        p.prompt = self.tiles[self.tile_idx]
+        debug: bool = args[-1]
+
+        if debug:
+            print("")
+            logger.info(f"[Tile Debug]\n{p.prompt}\n")
 
     def before_hr(self, *args, **kwargs):
         self.is_hr = True
+
+    def _is_tile(self) -> bool:
+        return self.is_img2img and len(self.tiles) > 0
 
     @staticmethod
     def parse_common_prompt(prompt: str, brackets: tuple[str]) -> str:
@@ -103,6 +131,9 @@ class ForgeCouple(scripts.Script):
         if not enable:
             return
 
+        if self._is_tile():
+            return
+
         separator = separator.replace("\\n", "\n").replace("\\t", " ")
         if not separator.strip():
             separator = "\n"
@@ -112,6 +143,7 @@ class ForgeCouple(scripts.Script):
         if common_parser in ("{ }", "< >"):
             prompts = self.parse_common_prompt(prompts, common_parser.split(" "))
             if common_debug:
+                print("")
                 logger.info(f"[Common Prompts Debug]\n{prompts}\n")
 
         couples: list[str] = [chunk.strip() for chunk in prompts.split(separator)]
@@ -193,6 +225,9 @@ class ForgeCouple(scripts.Script):
         **kwargs,
     ):
         if (not enable) or (self.couples is None) or (not self.valid):
+            return
+
+        if self._is_tile():
             return
 
         if disable_hr and self.is_hr:

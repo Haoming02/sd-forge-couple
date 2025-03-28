@@ -6,6 +6,7 @@ from .gr_version import js
 from .ui_adv import advanced_ui
 from .ui_funcs import on_pull
 from .ui_masks import CoupleMaskData
+from .ui_tile import tile_ui
 
 
 class CoupleDataTransfer:
@@ -71,6 +72,10 @@ def couple_ui(script, is_img2img: bool, title: str):
         elem_id=f"forge_couple_{m}",
         open=False,
     ):
+        if is_img2img:
+            tab1 = gr.Tab(label="Regions")
+            tab1.__enter__()
+
         with gr.Row():
             with gr.Column(elem_classes="fc-checkbox", scale=2):
                 enable = gr.Checkbox(False, label="Enable")
@@ -207,6 +212,14 @@ def couple_ui(script, is_img2img: bool, title: str):
             comp.do_not_save_to_config = True
             script.paste_field_names.append(name)
 
+        if is_img2img:
+            tab1.__exit__()
+            with gr.Tab(label="Tiles"):
+                tile_args = tile_ui()
+
+        else:
+            tile_args = [gr.State(None)] * 6
+
     return [
         enable,
         disable_hr,
@@ -218,4 +231,5 @@ def couple_ui(script, is_img2img: bool, title: str):
         mapping,
         common_parser,
         common_debug,
+        *tile_args,
     ]

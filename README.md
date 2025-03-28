@@ -47,6 +47,7 @@ This is an Extension for the Forge Webui, which allows you to ~~generate couples
     - [Separator](#couple-separator)
     - [Common Prompts](#common-prompts)
     - [LoRA](#lora-support)
+- [Tile Mode](#tile-mode)
 - [API](https://github.com/Haoming02/sd-forge-couple/wiki/API)
 - [FAQ](#troubleshooting)
 
@@ -123,7 +124,7 @@ Were these automated and equally-sized tiles not sufficient for your needs? Now 
     - When a bounding box is highlighted, simply drag the box around to reposition the region; drag the edges / corners to resize the region
 
 - **Background:**
-    - Click the `📂` button to load a image as the background of the mapping
+    - Click the `📂` button to load an image as the background of the mapping
     - Click the `⏏` button to load the **img2img** input image as the background
     - Click the `🗑` button to clear the background
 
@@ -265,6 +266,98 @@ score_9, score_8_up, score_7_up, source_anime, high quality, best quality, maste
 ### LoRA Support
 
 LoRA that contains multiple subjects is easier to generate multiple characters. Using different LoRAs in different regions is also possible, though it depends on how well the LoRAs' concepts work together...
+
+<br>
+
+## Tile Mode
+
+Trying a upscale an image to super high resolution using tiled **img2img**, while still keeping the features separated? Now you can prompt each tile based on its overlapping regions!
+
+- **Prerequisite**
+    - Some way to break the generation into tiles
+        - **eg.** the built-in `SD Upscale` script
+        - The tile order is assumed to be `top-left` > `top-right` > `bottom-left` > `bottom-right`
+    - The input image does **not** need to have been generated with `ForgeCouple`; you can simply use any image
+    - Set up the `ForgeCouple` regions like you would normally; all 3 modes are supported
+    - Switch to the `Tile` tab and enable the feature
+    - `ControlNet` with the `Tile` Module is highly recommended
+
+- **Parameters**
+    - **Inclusion Threshold** controls how much overlap between the tile and the region is needed for the corresponding prompt to be included
+        - Prevents adding the prompts from regions barely touching the tile
+        - `0.0` means every single line of prompt would be included; `1.0` means the region and the tile have to perfectly match to be counted
+    - **Tile Count** refers to the amount of tiles needed
+        - The values are based on your tiling parameters, not arbitrary
+    - **Subject Replacement** is used to replace the original "total amount of subjects" with singular subject, in order to prevent generating extra characters within a tile
+        - Each line is a `key: values` pair
+        - The `key` is the prompt to use
+        - The `values` are the tags to be replaced, separated by comma
+        - *(Alternatively, you can just modify the original prompts and ignore this field)*
+    - You may enable **Debug Tiles** to check if the prompts are assigned correctly
+
+<p align="center">
+<img src="example/tile_ui.png" width=512><br>
+Tile Mode UI
+</p>
+
+- **Example**
+
+0. Generate an image in **txt2img**
+    - **Forge Couple:** `Basic` mode; `First Line` background
+    - **Resolution:** `1024` x `1024`
+    - **Prompt:**
+    ```
+    masterpiece, best quality, high quality,
+    2girls, hatsune miku, back-to-back,
+    2girls, kagamine rin, back-to-back
+    ```
+
+<p align="center">
+<img src="example/tile_before.jpg" width=384>
+</p>
+
+1. Send to **img2img**, keeping the same `ForgeCouple` parameters
+2. Enable the `SD Upscale` script
+    - **Scale Factor:** `1`
+    - **Upscaler:** `Nearest`
+    - **Tile Overlap:** `32`
+3. Adjust the resolution
+    - **Width:** `576`
+    - **Height:** `1024`
+
+> Meaning, this will generate **2x1** tiles
+
+4. Switch to the `Tile` tab
+5. Enable and set up the `Tile` mode
+    - **Threshold:** `0.75`
+    - **H. Tile:** `2`; **V. Tile:** `1`
+    - **Replacement:**
+    ```
+    1girl: 2girls
+    : back-to-back
+    ```
+
+6. Generate
+7. ...
+8. Profit !
+
+<p align="center">
+<img src="example/tile_after.jpg" width=384>
+</p>
+
+In this example, it would generate **2** tiles in total, with the left side using:
+```
+masterpiece, best quality, high quality,
+1girl, hatsune miku
+```
+as the prompt; while the right side uses:
+```
+masterpiece, best quality, high quality,
+1girl, kagamine rin
+```
+
+> [!Tip]
+> Both **Global Effect** and **Common Prompts** also work with `Tile` mode
 
 <br>
 
