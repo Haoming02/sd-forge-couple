@@ -1,17 +1,22 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from backend.nn.flux import IntegratedFluxTransformer2DModel
+
 import torch
 from backend.attention import attention_function
 from backend.nn.flux import DoubleStreamBlock, SingleStreamBlock, apply_rope
 from backend.utils import fp16_fix
 
 
-def attention(q, k, v, pe):
+def attention(q, k, v, pe, mask=None):
     q, k = apply_rope(q, k, pe)
-    x = attention_function(q, k, v, q.shape[1], skip_reshape=True)
+    x = attention_function(q, k, v, q.shape[1], skip_reshape=True, mask=mask)
     return x
 
 
 class DoubleBlock(DoubleStreamBlock):
-    def forward(self, img, txt, vec, pe):
+    def forward(self, img, txt, vec, pe, transformer_options={}):
         img_mod1_shift, img_mod1_scale, img_mod1_gate, img_mod2_shift, img_mod2_scale, img_mod2_gate = self.img_mod(vec)
 
         img_modulated = self.img_norm1(img)
@@ -50,7 +55,12 @@ class DoubleBlock(DoubleStreamBlock):
         v = torch.cat((txt_v, img_v), dim=2)
         del txt_v, img_v
 
-        attn = attention(q, k, v, pe=pe)
+        mask_fn = transformer_options.get("patches_replace", {}).get(f"double", {}).get(("mask_fn", self.idx), None)
+        mask = None
+        if mask_fn is not None:
+            mask = mask_fn(q, transformer_options, txt.shape[1])
+
+        attn = attention(q, k, v, pe=pe, mask=mask)
         del pe, q, k, v
         txt_attn, img_attn = attn[:, : txt.shape[1]], attn[:, txt.shape[1] :]
         del attn
@@ -71,7 +81,7 @@ class DoubleBlock(DoubleStreamBlock):
 
 
 class SingleBlock(SingleStreamBlock):
-    def forward(self, x, vec, pe):
+    def forward(self, x, vec, pe, transformer_options={}):
         mod_shift, mod_scale, mod_gate = self.modulation(vec)
         del vec
         x_mod = (1 + mod_scale) * self.pre_norm(x) + mod_shift
@@ -83,8 +93,13 @@ class SingleBlock(SingleStreamBlock):
         q, k, v = qkv.permute(2, 0, 3, 1, 4)
         del qkv
 
+        mask_fn = transformer_options.get("patches_replace", {}).get(f"single", {}).get(("mask_fn", self.idx), None)
+        mask = None
+        if mask_fn is not None:
+            mask = mask_fn(q, transformer_options, transformer_options["txt_size"])
+
         q, k = self.norm(q, k, v)
-        attn = attention(q, k, v, pe=pe)
+        attn = attention(q, k, v, pe=pe, mask=mask)
         del q, k, v, pe
         output = self.linear2(torch.cat((attn, self.mlp_act(mlp)), dim=2))
         del attn, mlp
@@ -95,3 +110,15 @@ class SingleBlock(SingleStreamBlock):
         x = fp16_fix(x)
 
         return x
+
+
+def inject_blocks(diffusion_model: "IntegratedFluxTransformer2DModel"):
+    for i, block in enumerate(diffusion_model.double_blocks):
+        block.__class__ = DoubleBlock
+        block.idx = i
+
+    for i, block in enumerate(diffusion_model.single_blocks):
+        block.__class__ = SingleBlock
+        block.idx = i
+
+    return diffusion_model
