@@ -136,11 +136,11 @@ class AttentionCouple:
                 self.patches[layer] = f
 
                 @wraps(f)
-                def _f(x, context):
+                def _f(x, context, *args, **kwargs):
                     q = x
                     k = v = context
                     _q, _k, _v = attn2_patch(q, k, v)
-                    return f(_q, context=_k)
+                    return f(_q, context=_k, *args, **kwargs)
 
                 module.forward = _f
 
@@ -149,8 +149,8 @@ class AttentionCouple:
                 self.patches[layer] = f
 
                 @wraps(f)
-                def _f(o):
-                    _o = f(o)
+                def _f(*args, **kwargs):
+                    _o = f(*args, **kwargs)
                     return attn2_output_patch(_o)
 
                 module.forward = _f
@@ -162,7 +162,7 @@ class AttentionCouple:
                 if layer_name.endswith("2"):
                     patch_attn2(layer_name, module)
 
-                elif layer_name.endswith("to_out"):
+                if layer_name.endswith("to_out"):
                     patch_attn2_out(layer_name, module)
 
             return True

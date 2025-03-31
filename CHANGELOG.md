@@ -1,3 +1,6 @@
+### v4.0.2 - 2025 Mar.31
+- Improved **Compatibility** for A1111
+
 ### v4.0.1 - 2025 Mar.31
 - Implement **Unpatch** for A1111
 
