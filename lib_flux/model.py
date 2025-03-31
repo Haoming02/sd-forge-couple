@@ -33,7 +33,7 @@ class Flux(IntegratedFluxTransformer2DModel):
         del vec
         return img
 
-    def forward(self, x, timestep, context, y, guidance=None, transformer_options={}, **kwargs):
+    def forward(self, x: torch.Tensor, timestep, context, y, guidance=None, transformer_options={}, **kwargs):
         bs, c, h, w = x.shape
         input_device = x.device
         input_dtype = x.dtype
@@ -66,7 +66,7 @@ class Flux(IntegratedFluxTransformer2DModel):
         transformer_options["txt_size"] = context.shape[1]
 
         out = self.inner_forward(img, img_ids, context, txt_ids, timestep, y, guidance, transformer_options=transformer_options)
-        del img, img_ids, txt_ids, timestep, context
+        del img, img_ids, txt_ids, timestep, context, transformer_options
 
         out = rearrange(out, "b (h w) (c ph pw) -> b c (h ph) (w pw)", h=h_len, w=w_len, ph=2, pw=2)[:, :, :h, :w]
         del h_len, w_len, bs

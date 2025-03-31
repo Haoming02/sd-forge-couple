@@ -9,7 +9,7 @@ from backend.nn.flux import DoubleStreamBlock, SingleStreamBlock, apply_rope
 from backend.utils import fp16_fix
 
 
-def attention(q, k, v, pe, mask=None):
+def attention(q, k, v, pe, mask=None) -> torch.Tensor:
     q, k = apply_rope(q, k, pe)
     x = attention_function(q, k, v, q.shape[1], skip_reshape=True, mask=mask)
     return x
@@ -61,7 +61,7 @@ class DoubleBlock(DoubleStreamBlock):
             mask = mask_fn(q, transformer_options, txt.shape[1])
 
         attn = attention(q, k, v, pe=pe, mask=mask)
-        del pe, q, k, v
+        del pe, q, k, v, mask
         txt_attn, img_attn = attn[:, : txt.shape[1]], attn[:, txt.shape[1] :]
         del attn
 
@@ -81,7 +81,7 @@ class DoubleBlock(DoubleStreamBlock):
 
 
 class SingleBlock(SingleStreamBlock):
-    def forward(self, x, vec, pe, transformer_options={}):
+    def forward(self, x: torch.Tensor, vec, pe, transformer_options={}):
         mod_shift, mod_scale, mod_gate = self.modulation(vec)
         del vec
         x_mod = (1 + mod_scale) * self.pre_norm(x) + mod_shift
@@ -100,7 +100,7 @@ class SingleBlock(SingleStreamBlock):
 
         q, k = self.norm(q, k, v)
         attn = attention(q, k, v, pe=pe, mask=mask)
-        del q, k, v, pe
+        del q, k, v, pe, mask
         output = self.linear2(torch.cat((attn, self.mlp_act(mlp)), dim=2))
         del attn, mlp
 
