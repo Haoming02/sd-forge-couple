@@ -25,7 +25,7 @@ else:
     isA1111 = False
 
 
-VERSION = "4.0.0"
+VERSION = "4.0.1"
 
 
 class ForgeCouple(scripts.Script):
@@ -54,7 +54,12 @@ class ForgeCouple(scripts.Script):
 
     def ui(self, is_img2img):
         self.is_img2img = is_img2img
-        return couple_ui(self, is_img2img, f"{self.title()} v{VERSION}")
+        return couple_ui(
+            self,
+            is_img2img,
+            f"{self.title()} v{VERSION}",
+            (self._unpatch if isA1111 else None),
+        )
 
     def after_component(self, component, **kwargs):
         if (elem_id := kwargs.get("elem_id", None)) is not None:
@@ -320,8 +325,10 @@ class ForgeCouple(scripts.Script):
         elif not isA1111:
             p.sd_model.forge_objects.unet = patched_unet
 
-    def postprocess(self, p, *args, **kwargs):
-        if not isA1111:
-            return
+    def postprocess(self, *args, **kwargs):
+        if isA1111:
+            self._unpatch()
 
-        self.forgeAttentionCouple.unpatch(p.sd_model.model.diffusion_model)
+    @classmethod
+    def _unpatch(cls):
+        cls.forgeAttentionCouple.unpatch(shared.sd_model.model.diffusion_model)

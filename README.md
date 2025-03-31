@@ -1,13 +1,12 @@
 ﻿# SD Forge Attention Couple
 This is an Extension for the Forge Webui, which allows you to ~~generate couples~~ target conditioning at different regions. No more color bleeds or mixed features!
 
-> Support [Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge), [reForge](https://github.com/Panchovix/stable-diffusion-webui-reForge), [Forge Classic](https://github.com/Haoming02/sd-webui-forge-classic), and [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) !
+> Support [Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge), [reForge](https://github.com/Panchovix/stable-diffusion-webui-reForge), [Forge Classic](https://github.com/Haoming02/sd-webui-forge-classic), and [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) [*](#unpatch) !
 
 > Support both `SD1` & `SDXL`; but **not** `SD3` or `Flux`
 
 ## Showcase
-
-- Trying to generate "jesus christ arguing with santa claus"
+Trying to generate "jesus christ arguing with santa claus"
 
 <table>
     <thead align="center">
@@ -407,6 +406,10 @@ shape '[X, Y, 1]' is invalid for input of size Z
 
 1. Go to **Settings** -> **Optimizations**, and enable `Pad prompt/negative prompt`
 2. Set the `Width` and `Height` to multiple of **64**
+
+### Unpatch
+
+For **Automatic1111**, this Extension adds a patch before the generation starts, then remove the patch once the generation finishes. However, if an error occurred during the generation, the `postprocess` function is not called, causing the patches to be left in and thus affecting all future generations. When this happens, click the `🩹` button to manually remove the old patches.
 
 <hr>
 

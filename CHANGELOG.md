@@ -1,3 +1,6 @@
+### v4.0.1 - 2025 Mar.31
+- Implement **Unpatch** for A1111
+
 ### v4.0.0 - 2025 Mar.28
 - Implement **Tile** Mode
 - Support **Automatic1111** WebUI

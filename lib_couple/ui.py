@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Callable, Optional
 
 import gradio as gr
 
@@ -64,7 +64,7 @@ class CoupleDataTransfer:
         return cls.A_HOOKED and cls.M_HOOKED
 
 
-def couple_ui(script, is_img2img: bool, title: str):
+def couple_ui(script, is_img2img: bool, title: str, unpatch: Callable):
     m: str = "i2i" if is_img2img else "t2i"
 
     with gr.Accordion(
@@ -77,7 +77,21 @@ def couple_ui(script, is_img2img: bool, title: str):
             tab1.__enter__()
 
         with gr.Row():
-            with gr.Column(elem_classes="fc-checkbox", scale=2):
+            if unpatch is not None:
+                btn = gr.Button(
+                    "🩹",
+                    tooltip="Remove the ForgeCouple patches in case of errors",
+                    elem_id=f"fc_{'i2i' if is_img2img else 't2i'}_unpatch",
+                    elem_classes=["tool"],
+                    scale=1,
+                )
+                btn.do_not_save_to_config = True
+                btn.click(fn=unpatch, queue=False)
+
+            with gr.Column(
+                elem_classes="fc-checkbox",
+                scale=(1 if unpatch is None else 2),
+            ):
                 enable = gr.Checkbox(False, label="Enable")
                 disable_hr = gr.Checkbox(True, label="Compatibility")
 
