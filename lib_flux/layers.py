@@ -55,7 +55,7 @@ class DoubleBlock(DoubleStreamBlock):
         v = torch.cat((txt_v, img_v), dim=2)
         del txt_v, img_v
 
-        mask_fn = transformer_options.get("patches_replace", {}).get(f"double", {}).get(("mask_fn", self.idx), None)
+        mask_fn = transformer_options.get("patches_replace", {}).get("double", {}).get(("mask_fn", self.idx), None)
         mask = None
         if mask_fn is not None:
             mask = mask_fn(q, transformer_options, txt.shape[1])
@@ -93,7 +93,7 @@ class SingleBlock(SingleStreamBlock):
         q, k, v = qkv.permute(2, 0, 3, 1, 4)
         del qkv
 
-        mask_fn = transformer_options.get("patches_replace", {}).get(f"single", {}).get(("mask_fn", self.idx), None)
+        mask_fn = transformer_options.get("patches_replace", {}).get("single", {}).get(("mask_fn", self.idx), None)
         mask = None
         if mask_fn is not None:
             mask = mask_fn(q, transformer_options, transformer_options["txt_size"])

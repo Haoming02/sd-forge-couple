@@ -5,7 +5,7 @@ from typing import Callable
 from modules import scripts, shared
 
 from lib_couple.attention_couple import AttentionCouple
-from lib_couple.gr_version import js
+from lib_couple.gr_version import is_gradio_4, js
 from lib_couple.logging import logger
 from lib_couple.mapping import (
     advanced_mapping,
@@ -24,6 +24,9 @@ except ImportError:
 else:
     isA1111 = False
 
+
+if is_gradio_4:
+    from lib_couple.regional_flux import convert_conds, patch_flux
 
 VERSION = "4.0.1"
 
@@ -310,6 +313,12 @@ class ForgeCouple(scripts.Script):
         # ===== Tiles =====
 
         assert len(fc_args.keys()) // 2 == LINE_COUNT
+
+        if is_gradio_4 and not p.sd_model.is_webui_legacy_model():
+            conds = convert_conds(fc_args)
+            patched_unet = patch_flux(unet, conds, HEIGHT, WIDTH)
+            p.sd_model.forge_objects.unet = patched_unet
+            return
 
         base_mask = empty_tensor(HEIGHT, WIDTH)
         patched_unet = self.forgeAttentionCouple.patch_unet(

@@ -1,6 +1,6 @@
-from gradio import __version__ as gradio_version
+from importlib.metadata import version
 
-is_gradio_4: bool = int(gradio_version.split(".")[0]) > 3
+is_gradio_4: bool = not version("gradio").startswith("3")
 
 
 def js(func: str) -> dict:
