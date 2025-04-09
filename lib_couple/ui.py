@@ -90,7 +90,7 @@ def couple_ui(script, is_img2img: bool, title: str, unpatch: Callable):
 
             with gr.Column(
                 elem_classes="fc-checkbox",
-                scale=(1 if unpatch is None else 2),
+                scale=(2 if unpatch is None else 1),
             ):
                 enable = gr.Checkbox(False, label="Enable")
                 disable_hr = gr.Checkbox(True, label="Compatibility")

@@ -28,7 +28,7 @@ else:
 if is_gradio_4:
     from lib_couple.regional_flux import convert_conds, patch_flux
 
-VERSION = "4.0.1"
+VERSION = "4.0.2"
 
 
 class ForgeCouple(scripts.Script):

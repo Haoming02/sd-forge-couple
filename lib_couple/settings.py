@@ -20,6 +20,6 @@ def fc_settings():
             "Interrupt the generation on error",
             **args,
         )
-        .info('if disabled, Forge Couople will simply "fail silently"')
+        .info('if disabled, Forge Couple will simply "fail silently"')
         .needs_restart(),
     )
