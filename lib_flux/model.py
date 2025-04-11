@@ -52,7 +52,10 @@ class Flux(IntegratedFluxTransformer2DModel):
         if regional_conditioning is not None:
             region_cond = regional_conditioning[0](transformer_options)
             if region_cond is not None:
-                context = torch.cat([torch.zeros_like(context), region_cond.to(context.dtype)], dim=1)
+                context = torch.cat(
+                    [torch.zeros((1, 256, 4096), dtype=context.dtype, device=context.device), region_cond.to(context.dtype)],
+                    dim=1,
+                )
 
         h_len = (h + (patch_size // 2)) // patch_size
         w_len = (w + (patch_size // 2)) // patch_size
