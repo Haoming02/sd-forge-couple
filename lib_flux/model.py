@@ -66,7 +66,7 @@ class Flux(IntegratedFluxTransformer2DModel):
         txt_ids = torch.zeros((bs, context.shape[1], 3), device=input_device, dtype=input_dtype)
         del input_device, input_dtype
 
-        transformer_options["txt_size"] = context.shape[1]
+        # transformer_options["txt_size"] = context.shape[1]
 
         out = self.inner_forward(img, img_ids, context, txt_ids, timestep, y, guidance, transformer_options=transformer_options)
         del img, img_ids, txt_ids, timestep, context, transformer_options

@@ -58,7 +58,7 @@ class DoubleBlock(DoubleStreamBlock):
         mask_fn = transformer_options.get("patches_replace", {}).get("double", {}).get(("mask_fn", self.idx), None)
         mask = None
         if mask_fn is not None:
-            mask = mask_fn(q, transformer_options, txt.shape[1])
+            mask = mask_fn()  # q, transformer_options, txt.shape[1])
 
         attn = attention(q, k, v, pe=pe, mask=mask)
         del pe, q, k, v, mask
@@ -96,7 +96,7 @@ class SingleBlock(SingleStreamBlock):
         mask_fn = transformer_options.get("patches_replace", {}).get("single", {}).get(("mask_fn", self.idx), None)
         mask = None
         if mask_fn is not None:
-            mask = mask_fn(q, transformer_options, transformer_options["txt_size"])
+            mask = mask_fn()  # q, transformer_options, transformer_options["txt_size"])
 
         q, k = self.norm(q, k, v)
         attn = attention(q, k, v, pe=pe, mask=mask)
