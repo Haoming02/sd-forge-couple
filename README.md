@@ -270,22 +270,13 @@ LoRA that contains multiple subjects is easier to generate multiple characters. 
 ### Flux
 
 > [!IMPORTANT]
-> Due to the implementation, this Extension works a bit differently for Flux, compared to SD1 or SDXL
+> - Due to the implementation, this Extension works a bit differently for Flux
+> - Negative Prompt is **not** supported
 
-Since Flux already has a significantly better prompt comprehension and adherence capability out of the box, this Extension is **not** as useful for Flux compared to SD1 and SDXL. For composition, you can usually simply use prompts like "on the left," "on the right," etc.
+Since Flux already has a significantly better prompt comprehension and adherence capability out of the box, this Extension is **not** as useful for Flux compared to SD1 and SDXL. Take composition for example, you can usually just use prompts like "on the left" or "on the right."
 
 <details>
 <summary>Example</summary>
-
-- **Checkpoint:** `flux1-dev-bnb-nf4-v2.safetensors`
-- **Prompt:**
-```
-Three high-performance sports cars, red, blue, and yellow, are racing side by side on a city street.
-A sleek red sports car in the lead position, with aggressive aerodynamic styling and gleaming paint that catches the light. The car appears to be moving at high speed with motion blur effects.
-A powerful blue sports car in the middle position, neck-and-neck with its competitors. Its metallic paint shimmers as it races forward, with visible speed lines and dynamic movement.
-A striking yellow sports car in the third position, its bold color standing out against the street. The car's aggressive stance and aerodynamic profile emphasize its racing performance.
-Steps: 24, Sampler: DPM++ 2M, Schedule type: SGM Uniform, CFG scale: 1, Distilled CFG Scale: 3, Seed: 8756, Size: 1152x896
-```
 
 <table>
     <thead align="center">
@@ -301,6 +292,15 @@ Steps: 24, Sampler: DPM++ 2M, Schedule type: SGM Uniform, CFG scale: 1, Distille
         </tr>
     </tbody>
 </table>
+
+- **Infotext:**
+    ```
+    Three high-performance sports cars, red, blue, and yellow, are racing side by side on a city street.
+    A sleek red sports car in the lead position, with aggressive aerodynamic styling and gleaming paint that catches the light. The car appears to be moving at high speed with motion blur effects.
+    A powerful blue sports car in the middle position, neck-and-neck with its competitors. Its metallic paint shimmers as it races forward, with visible speed lines and dynamic movement.
+    A striking yellow sports car in the third position, its bold color standing out against the street. The car's aggressive stance and aerodynamic profile emphasize its racing performance.
+    Steps: 24, Sampler: DPM++ 2M, Schedule type: SGM Uniform, CFG scale: 1, Distilled CFG Scale: 3, Seed: 8756, Size: 1152x896, Model: flux1-dev-bnb-nf4-v2, RNG: CPU, forge_couple: True, forge_couple_compatibility: True, forge_couple_mode: Basic, forge_couple_separator: \n, forge_couple_direction: Horizontal, forge_couple_background: First Line, forge_couple_background_weight: 0.5, forge_couple_common_parser: { }
+    ```
 
 </details>
 
