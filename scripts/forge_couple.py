@@ -33,6 +33,7 @@ VERSION = "4.0.2"
 
 class ForgeCouple(scripts.Script):
     forgeAttentionCouple = AttentionCouple()
+    sorting_priority = 8192
 
     def __init__(self):
         self.is_img2img: bool
@@ -48,6 +49,8 @@ class ForgeCouple(scripts.Script):
 
         self.tile_idx: int
         self.tiles: list[str] = []
+
+        self.cached_prompt: str
 
     def title(self):
         return "Forge Couple"
@@ -73,6 +76,7 @@ class ForgeCouple(scripts.Script):
 
     def setup(self, p, *args, **kwargs):
         self.is_hr = False
+        self.cached_prompt = None
         if not self.is_img2img:
             return
 
@@ -81,17 +85,25 @@ class ForgeCouple(scripts.Script):
 
         self.tile_idx = -1
 
-    def before_process(self, p, *args, **kwargs):
-        if self.tiles is None or len(self.tiles) == 0:
+    def before_process(self, p, enable: bool, *args, **kwargs):
+        if not enable:
             return
 
-        self.tile_idx += 1
-        p.prompt = self.tiles[self.tile_idx]
-        debug: bool = args[-1]
+        if self._is_tile():
+            self.tile_idx += 1
+            p.prompt = self.tiles[self.tile_idx]
+            debug: bool = args[-1]
 
-        if debug:
-            print("")
-            logger.info(f"[Tile Debug]\n{p.prompt}\n")
+            if debug:
+                print("")
+                logger.info(f"[Tile Debug]\n{p.prompt}\n")
+        else:
+            if len(p.prompt) > 1024:
+                self.cached_prompt = p.prompt
+                p.prompt = ""
+                print("")
+                logger.warning("Prompt is too long! Using cached-patching...")
+                print("")
 
     def before_hr(self, *args, **kwargs):
         self.is_hr = True
@@ -154,7 +166,7 @@ class ForgeCouple(scripts.Script):
         if not separator.strip():
             separator = "\n"
 
-        prompts: str = kwargs["prompts"][0]
+        prompts: str = self.cached_prompt or kwargs["prompts"][0]
 
         if common_parser in ("{ }", "< >"):
             prompts = self.parse_common_prompt(prompts, common_parser.split(" "))
@@ -334,7 +346,10 @@ class ForgeCouple(scripts.Script):
         elif not isA1111:
             p.sd_model.forge_objects.unet = patched_unet
 
-    def postprocess(self, *args, **kwargs):
+    def postprocess(self, p, *args, **kwargs):
+        if self.cached_prompt:
+            p.prompt = self.cached_prompt
+
         if isA1111:
             self._unpatch()
 

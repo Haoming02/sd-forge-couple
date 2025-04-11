@@ -427,6 +427,12 @@ For usages with API, please refer to the [Wiki](https://github.com/Haoming02/sd-
 - **Incompatible Extension**
     - Certain Extensions, such as [sd-dynamic-prompts](https://github.com/adieyal/sd-dynamic-prompts), will also process the prompts before/during generation. These may break the **Couple Separator** and/or **Common Prompts** as a result.
 
+- **Prompt is too long! Using cached-patching...**
+    - In certain conditions, when the prompt is too long *(more than `~200` **tokens**)*, it will cause errors during generation. In such cases, Forge Couple will cache the main prompt and replace it with blank. All features will still function normally.
+
+> [!IMPORTANT]
+> This may break other Extensions that also access the original prompt
+
 ### TypeError: 'NoneType'
 
 For users that get the following error:
