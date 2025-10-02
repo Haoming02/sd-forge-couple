@@ -97,7 +97,7 @@ class ForgeCouple(scripts.Script):
         return self.is_img2img and len(self.tiles) > 0
 
     @staticmethod
-    def parse_common_prompt(prompt: str, brackets: tuple[str]) -> str:
+    def parse_common_prompt(prompt: str, brackets: tuple[str], common_definitions_in_prompt: bool = True) -> str:
         common_prompts: dict[str, str] = {}
         op, cs = brackets
 
@@ -106,7 +106,7 @@ class ForgeCouple(scripts.Script):
         for m in matches:
             key: str = m.group(1).strip()
             val: str = m.group(2).strip()
-            prompt = prompt.replace(m.group(0), val)
+            prompt = prompt.replace(m.group(0), val if common_definitions_in_prompt else "")
             common_prompts.update({key: val})
 
         pattern = rf"{op}([^{op}{cs}]+?){cs}"
@@ -137,6 +137,7 @@ class ForgeCouple(scripts.Script):
         mapping: list,
         common_parser: str,
         common_debug: bool,
+        common_definitions_in_prompt: bool,
         *args,
         **kwargs,
     ):
@@ -154,7 +155,7 @@ class ForgeCouple(scripts.Script):
         prompts: str = kwargs["prompts"][0]
 
         if common_parser in ("{ }", "< >"):
-            prompts = self.parse_common_prompt(prompts, common_parser.split(" "))
+            prompts = self.parse_common_prompt(prompts, common_parser.split(" "), common_definitions_in_prompt)
             if common_debug:
                 print("")
                 logger.info(f"[Common Prompts Debug]\n{prompts}\n")
