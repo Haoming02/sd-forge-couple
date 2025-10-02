@@ -25,7 +25,7 @@ else:
     isA1111 = False
 
 
-VERSION = "4.0.2"
+VERSION = "4.0.3"
 
 
 class ForgeCouple(scripts.Script):
@@ -97,7 +97,11 @@ class ForgeCouple(scripts.Script):
         return self.is_img2img and len(self.tiles) > 0
 
     @staticmethod
-    def parse_common_prompt(prompt: str, brackets: tuple[str], common_definitions_in_prompt: bool = True) -> str:
+    def parse_common_prompt(
+        prompt: str,
+        brackets: tuple[str],
+        def_in_prompt: bool,
+    ) -> str:
         common_prompts: dict[str, str] = {}
         op, cs = brackets
 
@@ -106,7 +110,7 @@ class ForgeCouple(scripts.Script):
         for m in matches:
             key: str = m.group(1).strip()
             val: str = m.group(2).strip()
-            prompt = prompt.replace(m.group(0), val if common_definitions_in_prompt else "")
+            prompt = prompt.replace(m.group(0), val if def_in_prompt else "")
             common_prompts.update({key: val})
 
         pattern = rf"{op}([^{op}{cs}]+?){cs}"
@@ -137,7 +141,7 @@ class ForgeCouple(scripts.Script):
         mapping: list,
         common_parser: str,
         common_debug: bool,
-        common_definitions_in_prompt: bool,
+        def_in_prompt: bool,
         *args,
         **kwargs,
     ):
@@ -155,7 +159,11 @@ class ForgeCouple(scripts.Script):
         prompts: str = kwargs["prompts"][0]
 
         if common_parser in ("{ }", "< >"):
-            prompts = self.parse_common_prompt(prompts, common_parser.split(" "), common_definitions_in_prompt)
+            prompts = self.parse_common_prompt(
+                prompts,
+                common_parser.split(" "),
+                def_in_prompt,
+            )
             if common_debug:
                 print("")
                 logger.info(f"[Common Prompts Debug]\n{prompts}\n")
@@ -217,6 +225,7 @@ class ForgeCouple(scripts.Script):
             fc_param["forge_couple_background"] = background
             fc_param["forge_couple_background_weight"] = background_weight
         fc_param["forge_couple_common_parser"] = common_parser
+        fc_param["forge_couple_def_in_prompt"] = def_in_prompt
 
         p.extra_generation_params.update(fc_param)
         # ===== Infotext =====

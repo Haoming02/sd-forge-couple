@@ -1,3 +1,6 @@
+### v4.0.3 - 2025 Oct.02
+- Implement **Include Definitions in Prompt** by. <ins>Waseem9287</ins>
+
 ### v4.0.2 - 2025 Mar.31
 - Improved **Compatibility** for A1111
 

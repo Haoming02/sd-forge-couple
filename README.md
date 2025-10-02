@@ -242,9 +242,8 @@ If you have multiple characters that share the same outfits, poses, or expressio
 4. Then, surround the whole thing with your chosen brackets *(**eg.** `{cloth:t-shirt, jacket, jeans}`)*
 5. Finally, you can now use the key to recall the common prompts in other lines *(**ie.** `{cloth}`)*
 
-- **TL;DR:** If you have `{foo:bar}` in your prompt, every occurrence of `{foo}` 
-  (and optionally the original `{foo:bar}` if *Include Definitions to Prompt* is enabled) 
-  will be replaced with `bar` during the generation.
+- **TL;DR:** If you have `{foo:bar}` in your prompt, every occurrence of `{foo}` *(and the original `{foo:bar}`)* will be replaced with `bar` during the generation
+    - You can also omit the original `{foo:bar}` by disabling the `Include Definitions in Prompt` option
 
 > [!IMPORTANT]
 > - The key has to be unique
