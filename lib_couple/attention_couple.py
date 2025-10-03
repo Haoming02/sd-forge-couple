@@ -9,7 +9,7 @@ from functools import wraps
 from typing import Callable
 
 import torch
-from modules.devices import device, dtype_inference
+from modules.devices import device, dtype
 
 from lib_couple.logging import logger
 
@@ -37,7 +37,7 @@ class AttentionCouple:
         num_conds = len(kwargs) // 2 + 1
 
         mask = [base_mask] + [kwargs[f"mask_{i}"] for i in range(1, num_conds)]
-        mask = torch.stack(mask, dim=0).to(device, dtype=dtype_inference)
+        mask = torch.stack(mask, dim=0).to(device=device, dtype=dtype)
 
         if mask.sum(dim=0).min().item() <= 0.0:
             logger.error("Image must contain weights on all pixels...")
@@ -46,7 +46,7 @@ class AttentionCouple:
         mask = mask / mask.sum(dim=0, keepdim=True)
 
         conds = [
-            kwargs[f"cond_{i}"][0][0].to(device, dtype=dtype_inference)
+            kwargs[f"cond_{i}"][0][0].to(device=device, dtype=dtype)
             for i in range(1, num_conds)
         ]
         num_tokens = [cond.shape[1] for cond in conds]
