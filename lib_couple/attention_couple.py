@@ -9,9 +9,9 @@ from functools import wraps
 from typing import Callable
 
 import torch
-from modules.devices import device, dtype
 
 from lib_couple.logging import logger
+from modules.devices import device, dtype
 
 from .attention_masks import get_mask, lcm_for_list
 

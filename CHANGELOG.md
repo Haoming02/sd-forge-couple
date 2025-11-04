@@ -1,3 +1,11 @@
+### v5.0.1 - 2025 Nov.04
+- Linting
+
+### v5.0.0 - 2025 Nov.04
+- **Flux** Support
+
+<br>
+
 ### v4.0.4 - 2025 Oct.03
 - Fix Mask **dtype**
 

@@ -1,9 +1,10 @@
 from json import dumps
 
 import gradio as gr
+from PIL import Image
+
 from modules.shared import opts
 from modules.ui_components import ToolButton
-from PIL import Image
 
 from .gr_version import js
 from .ui_funcs import DEFAULT_MAPPING, on_entry, visualize_mapping

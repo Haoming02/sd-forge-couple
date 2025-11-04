@@ -2,8 +2,6 @@ import re
 from json import dumps
 from typing import Callable
 
-from modules import scripts, shared
-
 from lib_couple.attention_couple import AttentionCouple
 from lib_couple.gr_version import is_gradio_4, js
 from lib_couple.logging import logger
@@ -17,6 +15,8 @@ from lib_couple.tile_funcs import calculate_tiles
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
 
+from modules import scripts, shared
+
 try:
     from modules_forge import forge_version  # noqa
 except ImportError:
@@ -28,7 +28,7 @@ else:
 if is_gradio_4:
     from lib_couple.regional_flux import convert_conds, patch_flux
 
-VERSION = "5.0.0"
+VERSION = "5.0.1"
 
 
 class ForgeCouple(scripts.Script):

@@ -11,7 +11,6 @@ if TYPE_CHECKING:
     from backend.patcher.unet import UnetPatcher
 
 import torch
-
 from lib_flux.layers import inject_blocks
 from lib_flux.model import inject_model
 

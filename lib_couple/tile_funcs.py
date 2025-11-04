@@ -6,9 +6,9 @@ if TYPE_CHECKING:
     from scripts.forge_couple import ForgeCouple
 
 import numpy as np
-from modules.upscaler import NEAREST
 
 from lib_couple.logging import logger
+from modules.upscaler import NEAREST
 
 SIZE = 1024  # image size used for overlap calculation
 

@@ -3,8 +3,9 @@ from io import BytesIO as bIO
 
 import numpy as np
 import torch
-from modules.prompt_parser import SdConditioning
 from PIL import Image
+
+from modules.prompt_parser import SdConditioning
 
 from .gr_version import is_gradio_4
 

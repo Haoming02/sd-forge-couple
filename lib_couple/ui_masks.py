@@ -182,7 +182,9 @@ class CoupleMaskData:
                 if is_gradio_4
                 else [msk_canvas, dummy]
             ),
-        ).then(fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}'))
+        ).then(
+            fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
+        )
 
         msk_btn_override.click(
             self._override_mask,

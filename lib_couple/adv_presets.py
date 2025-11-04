@@ -2,9 +2,9 @@ import os
 from json import dump, load
 
 import gradio as gr
-from modules import scripts
 
 from lib_couple.logging import logger
+from modules import scripts
 
 PRESET_FILE = os.path.join(scripts.basedir(), "presets.json")
 

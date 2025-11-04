@@ -1,16 +1,16 @@
 class ForgeCoupleDataframe {
 
-    static #default_mapping = [
+    static #default_mapping = Object.freeze([
         [0.0, 0.5, 0.0, 1.0, 1.0],
         [0.5, 1.0, 0.0, 1.0, 1.0]
-    ];
+    ]);
 
     static get #columns() { return this.#tableHeader.length; }
 
-    static #tableHeader = ["x1", "x2", "y1", "y2", "w", "prompt"];
-    static #tableWidth = ["6%", "6%", "6%", "6%", "6%", "70%"];
+    static #tableHeader = Object.freeze(["x1", "x2", "y1", "y2", "w", "prompt"]);
+    static #tableWidth = Object.freeze(["6%", "6%", "6%", "6%", "6%", "70%"]);
 
-    static #colors = [0, 30, 60, 120, 240, 280, 320];
+    static #colors = Object.freeze([0, 30, 60, 120, 240, 280, 320]);
     static #color(i) { return `hsl(${ForgeCoupleDataframe.#colors[i % 7]}, 36%, 36%)` }
 
     /** "t2i" | "i2i" */
