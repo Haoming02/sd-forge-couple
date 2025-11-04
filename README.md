@@ -3,7 +3,7 @@ This is an Extension for the Forge Webui, which allows you to ~~generate couples
 
 > Support [Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge), [reForge](https://github.com/Panchovix/stable-diffusion-webui-reForge), [Forge Classic](https://github.com/Haoming02/sd-webui-forge-classic), and [Automatic1111 Webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) [*](#unpatch) !
 
-> Support both `SD1` & `SDXL`; but **not** `SD3` or `Flux`
+> Support `SD1`, `SDXL`, and `Flux` [*](#flux)
 
 ## Showcase
 Trying to generate "jesus christ arguing with santa claus"
@@ -46,6 +46,7 @@ Trying to generate "jesus christ arguing with santa claus"
     - [Separator](#couple-separator)
     - [Common Prompts](#common-prompts)
     - [LoRA](#lora-support)
+    - [Flux](#flux)
 - [Tile Mode](#tile-mode)
 - [API](https://github.com/Haoming02/sd-forge-couple/wiki/API)
 - [FAQ](#troubleshooting)
@@ -267,6 +268,43 @@ score_9, score_8_up, score_7_up, source_anime, high quality, best quality, maste
 
 LoRA that contains multiple subjects is easier to generate multiple characters. Using different LoRAs in different regions is also possible, though it depends on how well the LoRAs' concepts work together...
 
+### Flux
+
+> [!IMPORTANT]
+> - Due to the implementation, this Extension works a bit differently for Flux
+> - Negative Prompt is **not** supported
+
+Since Flux already has a significantly better prompt comprehension and adherence capability out of the box, this Extension is **not** as useful for Flux compared to SD1 and SDXL. Take composition for example, you can usually just use prompts like "on the left" or "on the right."
+
+<details>
+<summary>Example</summary>
+
+<table>
+    <thead align="center">
+        <tr>
+            <th><b>with</b> Forge Couple</th>
+            <th><b>without</b> Forge Couple</th>
+        </tr>
+    </thead>
+    <tbody align="center">
+        <tr>
+            <td><img src="example/f_on.jpg" width=384></td>
+            <td><img src="example/f_off.jpg" width=384></td>
+        </tr>
+    </tbody>
+</table>
+
+- **Infotext:**
+    ```
+    Three high-performance sports cars, red, blue, and yellow, are racing side by side on a city street.
+    A sleek red sports car in the lead position, with aggressive aerodynamic styling and gleaming paint that catches the light. The car appears to be moving at high speed with motion blur effects.
+    A powerful blue sports car in the middle position, neck-and-neck with its competitors. Its metallic paint shimmers as it races forward, with visible speed lines and dynamic movement.
+    A striking yellow sports car in the third position, its bold color standing out against the street. The car's aggressive stance and aerodynamic profile emphasize its racing performance.
+    Steps: 24, Sampler: DPM++ 2M, Schedule type: SGM Uniform, CFG scale: 1, Distilled CFG Scale: 3, Seed: 8756, Size: 1152x896, Model: flux1-dev-bnb-nf4-v2, RNG: CPU, forge_couple: True, forge_couple_compatibility: True, forge_couple_mode: Basic, forge_couple_separator: \n, forge_couple_direction: Horizontal, forge_couple_background: First Line, forge_couple_background_weight: 0.5, forge_couple_common_parser: { }
+    ```
+
+</details>
+
 <br>
 
 ## Tile Mode
@@ -416,3 +454,4 @@ For **Automatic1111**, this Extension adds a patch before the generation starts,
 
 ## Special Thanks
 - Credits to the original author, **[laksjdjf](https://github.com/laksjdjf)**, whose [ComfyUI Node](https://github.com/laksjdjf/cgem156-ComfyUI/tree/main/scripts/attention_couple) I referenced to port into Forge
+- Credits to the original author, **[logtd](https://github.com/logtd)**, whose [ComfyUI Node](https://github.com/logtd/ComfyUI-Fluxtapoz/blob/main/nodes/regional_cond_nodes.py) *(based on [Regional-Prompting-FLUX](https://github.com/instantX-research/Regional-Prompting-FLUX))* I referenced to port into Forge
