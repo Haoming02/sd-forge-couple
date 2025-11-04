@@ -188,7 +188,10 @@ def couple_ui(script, is_img2img: bool, title: str, unpatch: Callable):
         ):
             with gr.Row():
                 common_parser = gr.Radio(
-                    ("off", "{ }", "< >"), label="Syntax", value="{ }", scale=4
+                    ("off", "{ }", "< >"), label="Syntax", value="{ }", scale=3
+                )
+                def_in_prompt = gr.Checkbox(
+                    True, label="Include Definitions in Prompt", scale=3
                 )
                 common_debug = gr.Checkbox(False, label="Debug", scale=1)
                 common_debug.do_not_save_to_config = True
@@ -245,5 +248,6 @@ def couple_ui(script, is_img2img: bool, title: str, unpatch: Callable):
         mapping,
         common_parser,
         common_debug,
+        def_in_prompt,
         *tile_args,
     ]

@@ -244,6 +244,7 @@ If you have multiple characters that share the same outfits, poses, or expressio
 5. Finally, you can now use the key to recall the common prompts in other lines *(**ie.** `{cloth}`)*
 
 - **TL;DR:** If you have `{foo:bar}` in your prompt, every occurrence of `{foo}` *(and the original `{foo:bar}`)* will be replaced with `bar` during the generation
+    - You can also omit the original `{foo:bar}` by disabling the `Include Definitions in Prompt` option
 
 > [!IMPORTANT]
 > - The key has to be unique
