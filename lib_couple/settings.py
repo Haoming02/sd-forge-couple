@@ -23,3 +23,12 @@ def fc_settings():
         .info('if disabled, Forge Couple will simply "fail silently"')
         .needs_restart(),
     )
+
+    opts.add_option(
+        "fc_adv_newline",
+        OptionInfo(
+            False,
+            "Keep newline characters when using Advanced Mode",
+            **args,
+        ).info('newlines would be shown as "\\n" literals'),
+    )

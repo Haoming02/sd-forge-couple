@@ -98,7 +98,7 @@ class ForgeCoupleDataframe {
             const rows = this.#body.querySelectorAll("tr");
             rows.forEach((row) => {
                 const prompt = row.querySelector("td:last-child").textContent.trim();
-                prompts.push(prompt);
+                prompts.push(opts.fc_adv_newline ? prompt.replaceAll("\\n", "\n") : prompt);
             });
 
             const oldPrompts = this.#promptField.value.split(this.#sep).map(line => line.trim());
@@ -352,7 +352,7 @@ class ForgeCoupleDataframe {
     syncPrompts() {
         const prompt = this.#promptField.value;
 
-        const prompts = prompt.split(this.#sep).map(line => line.trim());
+        const prompts = prompt.split(this.#sep);
         const rows = this.#body.querySelectorAll("tr");
 
         const active = document.activeElement;
@@ -364,7 +364,10 @@ class ForgeCoupleDataframe {
                 return;
 
             if (i < prompts.length)
-                promptCell.textContent = prompts[i].replace(/\n+/g, ", ").replace(/,+/g, ",");
+                if (opts.fc_adv_newline)
+                    promptCell.textContent = prompts[i].replaceAll("\n", "\\n");
+                else
+                    promptCell.textContent = prompts[i].replace(/\n+/g, ", ").replace(/,+/g, ",").trim();
             else
                 promptCell.textContent = "";
         });

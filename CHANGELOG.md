@@ -1,3 +1,6 @@
+### v5.1.0 - 2025 Nov.06
+- Keep `newlines` in `Advanced` Mode
+
 ### v5.0.1 - 2025 Nov.04
 - Linting
 
