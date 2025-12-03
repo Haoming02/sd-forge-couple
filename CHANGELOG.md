@@ -1,3 +1,6 @@
+### v5.1.1 - 2025 Dec.03
+- Fix `Tile` Mode
+
 ### v5.1.0 - 2025 Nov.06
 - Keep `newlines` in `Advanced` Mode
 

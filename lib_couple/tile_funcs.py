@@ -114,12 +114,12 @@ def calculate_tiles(self: "ForgeCouple", args: tuple) -> bool:
     self.tiles.clear()
 
     enable: bool = args[1]
-    use_tile: bool = args[11]
+    use_tile: bool = args[12]
     if not (enable and use_tile):
         return False
 
-    tile_h = int(args[12])
-    tile_v = int(args[13])
+    tile_h = int(args[13])
+    tile_v = int(args[14])
 
     if tile_h * tile_v < 2:
         logger.error(f"Invalid Tile Count: {tile_h * tile_v}...")
@@ -155,8 +155,8 @@ def calculate_tiles(self: "ForgeCouple", args: tuple) -> bool:
         assert len(mapping) == len(prompts)
         mappings: list = _prepare_mappings_mask(mapping)
 
-    tile_threshold: float = args[14]
-    tile_replace: str = args[15]
+    tile_threshold: float = args[15]
+    tile_replace: str = args[16]
     replacements = _process_replacements(tile_replace)
 
     for y in range(tile_v):
