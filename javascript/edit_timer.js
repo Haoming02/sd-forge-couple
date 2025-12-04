@@ -1,6 +1,4 @@
 class ForgeCoupleObserver {
-
-    static get #delay() { return 500; } // 500 ms
     static #editTimers = {};
 
     /**
@@ -14,7 +12,7 @@ class ForgeCoupleObserver {
             const existingTimer = this.#editTimers[id];
             if (existingTimer) clearTimeout(existingTimer);
 
-            this.#editTimers[id] = setTimeout(callback, this.#delay);
+            this.#editTimers[id] = setTimeout(callback, 500); // 500 ms
         };
 
         field.addEventListener("input", onInput);
