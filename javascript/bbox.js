@@ -1,131 +1,128 @@
 class ForgeCoupleBox {
-
-    /** "t2i" | "i2i" */
+    /** @type {string} "t2i" | "i2i" */
     #mode = undefined;
 
-    /** The background image */
+    /** @type {HTMLElement} The background image */
     #img = undefined;
+
+    /** @type {HTMLDivElement} The bounding box currently selected */
+    #box = undefined;
 
     /** The bounding of the image */
     get #imgBound() { return this.#img.getBoundingClientRect(); }
-
-    /** The bounding box currently selected */
-    #box = undefined;
 
     /** The bounding of the container */
     get #boxBound() { return this.#box.getBoundingClientRect(); }
 
     /** Booleans representing whether each edge is used for resizing */
-    #resize = {};
+    #resize = { L: false, T: false, R: false, B: false };
     /** Delta between the image and the container, when the image is not a square */
-    #padding = {};
+    #padding = { left: 0.0, top: 0.0 };
     /** The pixel distance to the window edge */
-    #margin = {};
+    #margin = { left: 0.0, top: 0.0 };
     /** The step size (1%) for moving and resizing */
-    #step = {};
+    #step = { w: 0.0, h: 0.0 };
 
-    /** Currently selected row */
+    /** @type {HTMLDivElement} Currently selected row */
     #cachedRow = null;
 
-    /** @param {Element} image @param {string} mode */
     constructor(image, mode) {
-        const box = document.createElement("div");
-        box.classList.add(`fc_bbox`);
-        box.style.display = "none";
-
         this.#mode = mode;
         this.#img = image;
-        this.#box = box;
 
-        const tab = document.getElementById((mode === "t2i") ? "tab_txt2img" : "tab_img2img");
+        const tab = document.getElementById(mode === "t2i" ? "tab_txt2img" : "tab_img2img");
         this.#registerClick(tab);
         this.#registerHover(tab);
         this.#registerUp(tab);
 
-        image.parentElement.appendChild(box);
+        const box = document.createElement("div");
+        box.classList.add(`fc_bbox`);
+        box.style.display = "none";
+
+        this.#img.parentElement.appendChild(box);
+        this.#box = box;
     }
 
+    /** @param {HTMLDivElement} tab */
     #registerClick(tab) {
         this.#img.addEventListener("mousedown", (e) => {
-            if (e.button !== 0)
-                return;
+            if (e.button !== 0) return;
 
-            this.isValid = (this.#img.style.cursor != "default");
-            this.isResize = (this.#resize.L || this.#resize.R || this.#resize.T || this.#resize.B);
+            this.isValid = this.#img.style.cursor != "default";
+            this.isResize = this.#resize.L || this.#resize.R || this.#resize.T || this.#resize.B;
 
-            if (this.isValid) {
-                this.#initCoord();
+            if (!this.isValid) return;
 
-                this.init = {
-                    X: e.clientX,
-                    Y: e.clientY,
-                    left: this.#style2value(this.#box.style.left),
-                    top: this.#style2value(this.#box.style.top)
-                };
+            this.#initCoord();
 
-                tab.style.cursor = this.#img.style.cursor;
-            }
+            this.init = {
+                X: e.clientX,
+                Y: e.clientY,
+                left: this.#style2value(this.#box.style.left),
+                top: this.#style2value(this.#box.style.top),
+            };
+
+            tab.style.cursor = this.#img.style.cursor;
         });
     }
 
+    /** @param {HTMLDivElement} tab */
     #registerHover(tab) {
         tab.addEventListener("mousemove", (e) => {
-
             if (!this.isValid) {
                 this.#checkMouse(e.clientX, e.clientY);
                 return;
             }
 
-            if (this.isResize)
-                this.#resizeLogic(e.clientX, e.clientY)
-            else
-                this.#offsetLogic(e.clientX, e.clientY)
-
+            if (this.isResize) this.#resizeLogic(e.clientX, e.clientY);
+            else this.#offsetLogic(e.clientX, e.clientY);
         });
     }
 
+    /** @param {HTMLDivElement} tab */
     #registerUp(tab) {
-        ["mouseup", "mouseleave"].forEach((ev) => {
+        for (const ev of ["mouseup", "mouseleave"]) {
             tab.addEventListener(ev, (e) => {
-                if (!this.isValid || (ev === "mouseup" && e.button !== 0))
-                    return;
+                if (!this.isValid || (ev === "mouseup" && e.button !== 0)) return;
 
                 const vals = this.#styleToMapping();
                 const cells = this.#cachedRow.querySelectorAll("td");
 
-                for (let i = 0; i < vals.length; i++)
-                    cells[i].textContent = Number(Math.max(0.0, vals[i])).toFixed(2);
+                for (let i = 0; i < vals.length; i++) cells[i].textContent = Number(Math.max(0.0, vals[i])).toFixed(2);
 
                 this.isValid = false;
                 tab.style.cursor = "unset";
 
                 ForgeCouple.onEntry(this.#mode);
             });
-        });
+        }
     }
-
 
     /** @param {number} mouseX @param {number} mouseY */
     #resizeLogic(mouseX, mouseY) {
         const FC_minimumSize = 32;
 
         if (this.#resize.R) {
-            const W = this.#clampMinMax(mouseX - this.#boxBound.left, FC_minimumSize,
-                this.#imgBound.right + this.#padding.left - this.#margin.left - this.init.left
+            const W = this.#clampMinMax(
+                mouseX - this.#boxBound.left,
+                FC_minimumSize,
+                this.#imgBound.right + this.#padding.left - this.#margin.left - this.init.left,
             );
 
             this.#box.style.width = `${this.#step.w * Math.round(W / this.#step.w)}px`;
         } else if (this.#resize.L) {
             const rightEdge = this.#style2value(this.#box.style.left) + this.#style2value(this.#box.style.width);
-            const W = this.#clampMinMax(this.#boxBound.right - mouseX, FC_minimumSize, rightEdge - this.#padding.left)
+            const W = this.#clampMinMax(this.#boxBound.right - mouseX, FC_minimumSize, rightEdge - this.#padding.left);
 
             this.#box.style.left = `${rightEdge - this.#step.w * Math.round(W / this.#step.w)}px`;
             this.#box.style.width = `${this.#step.w * Math.round(W / this.#step.w)}px`;
         }
 
         if (this.#resize.B) {
-            const H = this.#clampMinMax(mouseY - this.#boxBound.top, FC_minimumSize,
-                this.#imgBound.bottom + this.#padding.top - this.#margin.top - this.init.top
+            const H = this.#clampMinMax(
+                mouseY - this.#boxBound.top,
+                FC_minimumSize,
+                this.#imgBound.bottom + this.#padding.top - this.#margin.top - this.init.top,
             );
 
             this.#box.style.height = `${this.#step.h * Math.round(H / this.#step.h)}px`;
@@ -143,11 +140,17 @@ class ForgeCoupleBox {
         const deltaX = mouseX - this.init.X;
         const deltaY = mouseY - this.init.Y;
 
-        const newLeft = this.#clampMinMax(this.init.left + deltaX,
-            this.#padding.left, this.#imgBound.width - this.#boxBound.width + this.#padding.left);
+        const newLeft = this.#clampMinMax(
+            this.init.left + deltaX,
+            this.#padding.left,
+            this.#imgBound.width - this.#boxBound.width + this.#padding.left,
+        );
 
-        const newTop = this.#clampMinMax(this.init.top + deltaY,
-            this.#padding.top, this.#imgBound.height - this.#boxBound.height + this.#padding.top);
+        const newTop = this.#clampMinMax(
+            this.init.top + deltaY,
+            this.#padding.top,
+            this.#imgBound.height - this.#boxBound.height + this.#padding.top,
+        );
 
         this.#box.style.left = `${this.#step.w * Math.round(newLeft / this.#step.w)}px`;
         this.#box.style.top = `${this.#step.h * Math.round(newTop / this.#step.h)}px`;
@@ -156,7 +159,7 @@ class ForgeCoupleBox {
     /**
      * When a row is selected, display its corresponding bounding box, as well as initialize the coordinates
      * @param {string} color
-     * @param {Element} row
+     * @param {HTMLDivElement} row
      */
     showBox(color, row) {
         this.#cachedRow = row;
@@ -174,8 +177,7 @@ class ForgeCoupleBox {
     }
 
     #initCoord() {
-        if (this.#cachedRow == null)
-            return;
+        if (this.#cachedRow == null) return;
 
         const [from_x, delta_x, from_y, delta_y] = this.#mappingToStyle(this.#cachedRow);
         const { width, height } = this.#imgBound;
@@ -206,7 +208,6 @@ class ForgeCoupleBox {
         this.#box.style.top = `${this.#padding.top + height * from_y}px`;
     }
 
-
     /** @param {number} mouseX @param {number} mouseY */
     #checkMouse(mouseX, mouseY) {
         const FC_resizeBorder = 8;
@@ -218,7 +219,12 @@ class ForgeCoupleBox {
 
         const { left, right, top, bottom } = this.#boxBound;
 
-        if (mouseX < left - FC_resizeBorder || mouseX > right + FC_resizeBorder || mouseY < top - FC_resizeBorder || mouseY > bottom + FC_resizeBorder) {
+        if (
+            mouseX < left - FC_resizeBorder ||
+            mouseX > right + FC_resizeBorder ||
+            mouseY < top - FC_resizeBorder ||
+            mouseY > bottom + FC_resizeBorder
+        ) {
             this.#img.style.cursor = "default";
             return;
         }
@@ -233,24 +239,17 @@ class ForgeCoupleBox {
             return;
         }
 
-        if (this.#resize.R && this.#resize.B)
-            this.#img.style.cursor = "nwse-resize";
-        else if (this.#resize.R && this.#resize.T)
-            this.#img.style.cursor = "nesw-resize";
-        else if (this.#resize.L && this.#resize.B)
-            this.#img.style.cursor = "nesw-resize";
-        else if (this.#resize.L && this.#resize.T)
-            this.#img.style.cursor = "nwse-resize";
-        else if (this.#resize.R || this.#resize.L)
-            this.#img.style.cursor = "ew-resize";
-        else if (this.#resize.B || this.#resize.T)
-            this.#img.style.cursor = "ns-resize";
+        if (this.#resize.R && this.#resize.B) this.#img.style.cursor = "nwse-resize";
+        else if (this.#resize.R && this.#resize.T) this.#img.style.cursor = "nesw-resize";
+        else if (this.#resize.L && this.#resize.B) this.#img.style.cursor = "nesw-resize";
+        else if (this.#resize.L && this.#resize.T) this.#img.style.cursor = "nwse-resize";
+        else if (this.#resize.R || this.#resize.L) this.#img.style.cursor = "ew-resize";
+        else if (this.#resize.B || this.#resize.T) this.#img.style.cursor = "ns-resize";
     }
-
 
     /**
      * Convert the table row into coordinate ranges
-     * @param {Element} row
+     * @param {HTMLDivElement} row
      * @returns {number[]}
      */
     #mappingToStyle(row) {
@@ -261,7 +260,7 @@ class ForgeCoupleBox {
         const from_y = parseFloat(cells[2].textContent);
         const to_y = parseFloat(cells[3].textContent);
 
-        return [from_x, to_x - from_x, from_y, to_y - from_y]
+        return [from_x, to_x - from_x, from_y, to_y - from_y];
     }
 
     /**
@@ -289,7 +288,7 @@ class ForgeCoupleBox {
     /** @param {string} style @returns {number} */
     #style2value(style) {
         try {
-            const re = /calc\((-?\d+(?:\.\d+)?)px\)/;
+            const re = /calc\((.+?)px\)/;
             return parseFloat(style.match(re)[1]);
         } catch {
             return parseFloat(style);

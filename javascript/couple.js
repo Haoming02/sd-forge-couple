@@ -1,30 +1,29 @@
 class ForgeCouple {
+    /** @type {Map<string, HTMLDivElement>} */
+    static container = { t2i: undefined, i2i: undefined };
+    /** @type {Map<string, HTMLTableElement>} */
+    static mappingTable = { t2i: undefined, i2i: undefined };
 
-    /** The fc_mapping \<div\> */
-    static container = { "t2i": undefined, "i2i": undefined };
-    /** The actual \<tbody\> */
-    static mappingTable = { "t2i": undefined, "i2i": undefined };
+    /** @type {Map<string, HTMLButtonElement>} The floating `<button>` for row controls */
+    static rowButtons = { t2i: undefined, i2i: undefined };
 
-    /** The floating \<button\>s for row controls */
-    static rowButtons = { "t2i": undefined, "i2i": undefined };
+    /** @type {Map<string, HTMLButtonElement>} */
+    static previewResolution = { t2i: undefined, i2i: undefined };
+    /** @type {Map<string, HTMLButtonElement>} */
+    static previewButton = { t2i: undefined, i2i: undefined };
 
-    /** The \<input\> for preview resolution */
-    static previewResolution = { "t2i": undefined, "i2i": undefined };
-    /** The \<button\> to trigger preview */
-    static previewButton = { "t2i": undefined, "i2i": undefined };
+    /** @type {Map<string, Object>} The `ForgeCoupleDataframe` class */
+    static dataframe = { t2i: undefined, i2i: undefined };
+    /** @type {Map<string, Object>} The `ForgeCoupleBox` class */
+    static bbox = { t2i: undefined, i2i: undefined };
 
-    /** The ForgeCoupleDataframe class */
-    static dataframe = { "t2i": undefined, "i2i": undefined };
-    /** The ForgeCoupleBox class */
-    static bbox = { "t2i": undefined, "i2i": undefined };
+    /** @type {Map<string, HTMLInputElement>} */
+    static pasteField = { t2i: undefined, i2i: undefined };
+    /** @type {Map<string, HTMLInputElement>} */
+    static entryField = { t2i: undefined, i2i: undefined };
 
-    /** The \<input\> for SendTo buttons */
-    static pasteField = { "t2i": undefined, "i2i": undefined };
-    /** The \<input\> for internal updates */
-    static entryField = { "t2i": undefined, "i2i": undefined };
-
-    /** The ForgeCoupleMaskHandler class */
-    static maskHandler = { "t2i": undefined, "i2i": undefined };
+    /** @type {Map<string, Object>} The `ForgeCoupleMaskHandler` class */
+    static maskHandler = { t2i: undefined, i2i: undefined };
 
     /**
      * After updating the mappings, trigger a preview
@@ -52,11 +51,9 @@ class ForgeCouple {
                 }
             }
 
-            if (w > 100 && h > 100)
-                res = `${w}x${h}`;
+            if (w > 100 && h > 100) res = `${w}x${h}`;
 
-            if (!res)
-                return;
+            if (!res) return;
 
             this.previewResolution[mode].value = res;
             updateInput(this.previewResolution[mode]);
@@ -75,8 +72,7 @@ class ForgeCouple {
         if (color) {
             this.bbox[mode].showBox(color, row);
             return row;
-        }
-        else {
+        } else {
             this.bbox[mode].hideBox();
             this.rowButtons[mode].style.display = "none";
             return null;
@@ -89,8 +85,7 @@ class ForgeCouple {
      */
     static onPaste(mode) {
         const infotext = this.pasteField[mode].value;
-        if (!infotext.trim())
-            return;
+        if (!infotext.trim()) return;
 
         const vals = JSON.parse(infotext);
         this.dataframe[mode].onPaste(vals);
@@ -112,8 +107,7 @@ class ForgeCouple {
             const bounding_container = this.container[mode].getBoundingClientRect();
             this.rowButtons[mode].style.top = `calc(${bounding.top - bounding_container.top}px - 1.5em)`;
             this.rowButtons[mode].style.display = "block";
-        } else
-            this.rowButtons[mode].style.display = "none";
+        } else this.rowButtons[mode].style.display = "none";
     }
 
     /**
@@ -123,9 +117,10 @@ class ForgeCouple {
     static onEntry(mode) {
         const rows = this.mappingTable[mode].querySelectorAll("tr");
 
-        const vals = Array.from(rows, row => {
+        const vals = Array.from(rows, (row) => {
             return Array.from(row.querySelectorAll("td"))
-                .slice(0, -1).map(cell => parseFloat(cell.textContent));
+                .slice(0, -1)
+                .map((cell) => parseFloat(cell.textContent));
         });
 
         const json = JSON.stringify(vals);
@@ -139,32 +134,45 @@ class ForgeCouple {
      * @param {string} mode "t2i" | "i2i"
      */
     static #registerButtons(ex, mode) {
-        ex.querySelector(".fc_reset_btn").onclick = () => { this.dataframe[mode].reset(); };
-        ex.querySelector("#fc_up_btn").onclick = (e) => { this.dataframe[mode].newRowAbove(e.shiftKey); };
-        ex.querySelector("#fc_dn_btn").onclick = (e) => { this.dataframe[mode].newRowBelow(e.shiftKey); };
-        ex.querySelector("#fc_del_btn").onclick = (e) => { this.dataframe[mode].deleteRow(e.shiftKey); };
+        ex.querySelector(".fc_reset_btn").onclick = () => {
+            this.dataframe[mode].reset();
+        };
+        ex.querySelector("#fc_up_btn").onclick = (e) => {
+            this.dataframe[mode].newRowAbove(e.shiftKey);
+        };
+        ex.querySelector("#fc_dn_btn").onclick = (e) => {
+            this.dataframe[mode].newRowBelow(e.shiftKey);
+        };
+        ex.querySelector("#fc_del_btn").onclick = (e) => {
+            this.dataframe[mode].deleteRow(e.shiftKey);
+        };
     }
 
     /** Hook some elements to automatically refresh the resolution */
     static #registerResolutionHandles() {
-
-        [["txt2img", "t2i"], ["img2img", "i2i"]].forEach(([tab, mode]) => {
+        for (const [tab, mode] of [
+            ["txt2img", "t2i"],
+            ["img2img", "i2i"],
+        ]) {
             const btns = document.getElementById(`${tab}_dimensions_row`)?.querySelectorAll("button");
             if (btns != null)
-                btns.forEach((btn) => { btn.onclick = () => { this.preview(mode); } });
-        });
+                btns.forEach((btn) => {
+                    btn.onclick = () => {
+                        this.preview(mode);
+                    };
+                });
+        }
 
         const i2i_size_btns = document.getElementById("img2img_column_size").querySelector(".tab-nav");
-        i2i_size_btns.addEventListener("click", () => { this.preview("i2i"); });
-
-        const tabs = document.getElementById('tabs').querySelector('.tab-nav');
-        tabs.addEventListener("click", () => {
-            if (tabs.children[0].classList.contains("selected"))
-                this.preview("t2i");
-            if (tabs.children[1].classList.contains("selected"))
-                this.preview("i2i");
+        i2i_size_btns.addEventListener("click", () => {
+            this.preview("i2i");
         });
 
+        const tabs = document.getElementById("tabs").querySelector(".tab-nav");
+        tabs.addEventListener("click", () => {
+            if (tabs.children[0].classList.contains("selected")) this.preview("t2i");
+            if (tabs.children[1].classList.contains("selected")) this.preview("i2i");
+        });
     }
 
     /**
@@ -192,7 +200,7 @@ class ForgeCouple {
     }
 
     static setup() {
-        ["t2i", "i2i"].forEach((mode) => {
+        for (const mode of ["t2i", "i2i"]) {
             const ex = document.getElementById(`forge_couple_${mode}`);
             const mapping_btns = ex.querySelector(".fc_mapping_btns");
 
@@ -200,7 +208,9 @@ class ForgeCouple {
             this.container[mode].appendChild(mapping_btns);
 
             const separator = ex.querySelector(".fc_separator").querySelector("input");
-            const promptField = document.getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`).querySelector("textarea");
+            const promptField = document
+                .getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`)
+                .querySelector("textarea");
 
             this.dataframe[mode] = new ForgeCoupleDataframe(this.container[mode], mode, separator);
 
@@ -210,7 +220,7 @@ class ForgeCouple {
             this.rowButtons[mode].style.display = "none";
 
             this.rowButtons[mode].querySelectorAll("button").forEach((btn) => {
-                btn.setAttribute('style', 'margin: auto !important');
+                btn.setAttribute("style", "margin: auto !important");
             });
 
             this.container[mode].appendChild(this.rowButtons[mode]);
@@ -219,7 +229,10 @@ class ForgeCouple {
             this.previewButton[mode] = ex.querySelector(".fc_preview");
 
             const preview_img = ex.querySelector("img");
-            preview_img.ondragstart = (e) => { e.preventDefault(); return false; };
+            preview_img.ondragstart = (e) => {
+                e.preventDefault();
+                return false;
+            };
             preview_img.parentElement.style.overflow = "visible";
 
             this.bbox[mode] = new ForgeCoupleBox(preview_img, mode);
@@ -227,7 +240,7 @@ class ForgeCouple {
             const bg_btns = ex.querySelector(".fc_bg_btns");
             preview_img.parentElement.appendChild(bg_btns);
 
-            ForgeCoupleImageLoader.setup(preview_img, bg_btns.querySelectorAll("button"))
+            ForgeCoupleImageLoader.setup(preview_img, bg_btns.querySelectorAll("button"));
 
             this.pasteField[mode] = ex.querySelector(".fc_paste_field").querySelector("textarea");
             this.entryField[mode] = ex.querySelector(".fc_entry_field").querySelector("textarea");
@@ -242,23 +255,18 @@ class ForgeCouple {
                 ex.querySelector(".fc_msk_weights").querySelector("textarea"),
                 ex.querySelector(".fc_msk_op").querySelector("textarea"),
                 ex.querySelector(".fc_msk_op_btn"),
-                ex.querySelector(".fc_msk_io").querySelectorAll("button")[1]
+                ex.querySelector(".fc_msk_io").querySelectorAll("button")[1],
             );
 
             this.#registerButtons(ex, mode);
-            ForgeCoupleObserver.observe(
-                mode,
-                promptField,
-                () => {
-                    this.dataframe[mode].syncPrompts();
-                    this.maskHandler[mode].syncPrompts();
-                }
-            );
-        });
+            ForgeCoupleObserver.observe(mode, promptField, () => {
+                this.dataframe[mode].syncPrompts();
+                this.maskHandler[mode].syncPrompts();
+            });
+        }
 
         this.#registerResolutionHandles();
     }
-
 }
 
-onUiLoaded(() => { ForgeCouple.setup(); })
+onUiLoaded(() => { ForgeCouple.setup(); });
