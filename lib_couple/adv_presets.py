@@ -1,5 +1,5 @@
 import os
-from json import dump, load
+from json import dump, dumps, load
 
 import gradio as gr
 
@@ -35,15 +35,15 @@ class PresetManager:
     def get_preset(cls, preset_name: str) -> None | dict:
         if (preset := cls.presets.get(preset_name, None)) is None:
             logger.error(f'Preset "{preset_name}" was not found...')
-            return None
+            return gr.skip()
 
-        return preset
+        return gr.update(value=dumps(preset))
 
     @classmethod
     def save_preset(cls, preset_name: str, mapping: dict) -> list[str]:
         if not preset_name.strip():
             logger.error("Invalid Preset Name...")
-            return cls.list_preset()
+            return gr.skip()
 
         cls.presets.update({preset_name: mapping})
 
@@ -51,7 +51,7 @@ class PresetManager:
             dump(cls.presets, json_file)
 
         logger.info(f'Preset "{preset_name}" Saved!')
-        return cls.list_preset()
+        return gr.update(choices=cls.list_preset())
 
     @classmethod
     def delete_preset(cls, preset_name: str) -> dict:

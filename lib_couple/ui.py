@@ -2,6 +2,8 @@ from typing import Callable, Optional
 
 import gradio as gr
 
+from modules.shared import opts
+
 from .gr_version import js
 from .ui_adv import advanced_ui
 from .ui_funcs import on_pull
@@ -72,7 +74,7 @@ def couple_ui(script, is_img2img: bool, title: str, unpatch: Callable):
         elem_id=f"forge_couple_{m}",
         open=False,
     ):
-        if is_img2img:
+        if is_img2img and not getattr(opts, "fc_no_tile", False):
             tab1 = gr.Tab(label="Regions")
             tab1.__enter__()
 
@@ -229,7 +231,7 @@ def couple_ui(script, is_img2img: bool, title: str, unpatch: Callable):
             comp.do_not_save_to_config = True
             script.paste_field_names.append(name)
 
-        if is_img2img:
+        if is_img2img and not getattr(opts, "fc_no_tile", False):
             tab1.__exit__()
             with gr.Tab(label="Tiles"):
                 tile_args = tile_ui()

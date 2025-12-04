@@ -2,6 +2,7 @@ import re
 from json import dumps
 from typing import Callable
 
+from lib_couple import settings  # noqa
 from lib_couple.attention_couple import AttentionCouple
 from lib_couple.gr_version import is_gradio_4, js
 from lib_couple.logging import logger
@@ -73,7 +74,7 @@ class ForgeCouple(scripts.Script):
 
     def setup(self, p, *args, **kwargs):
         self.is_hr = False
-        if not self.is_img2img:
+        if not self.is_img2img or getattr(shared.opts, "fc_no_tile", False):
             return
 
         if calculate_tiles(self, (p, *args)) is None:
@@ -82,7 +83,7 @@ class ForgeCouple(scripts.Script):
         self.tile_idx = -1
 
     def before_process(self, p, *args, **kwargs):
-        if self.tiles is None or len(self.tiles) == 0:
+        if not self.tiles:
             return
 
         self.tile_idx += 1
