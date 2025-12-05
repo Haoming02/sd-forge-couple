@@ -1,7 +1,6 @@
-from typing import Final
-
 from json import dumps, loads
 from json.decoder import JSONDecodeError
+from typing import Final
 
 import gradio as gr
 from PIL import Image, ImageDraw

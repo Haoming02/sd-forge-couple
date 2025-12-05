@@ -8,18 +8,12 @@ if TYPE_CHECKING:
 import numpy as np
 
 from lib_couple.logging import logger
-from modules.upscaler import NEAREST
 
 SIZE = 1024  # image size used for overlap calculation
 
 
 def _include(
-    x: int,
-    h: int,
-    y: int,
-    v: int,
-    mappings: list[np.ndarray],
-    threshold: float,
+    x: int, h: int, y: int, v: int, mappings: list[np.ndarray], threshold: float
 ) -> list[int]:
     include: list[int] = []
 
@@ -85,7 +79,7 @@ def _prepare_mappings_mask(mapping: list[dict[str, "Image.Image"]]) -> list[np.n
     mappings = []
 
     for m in mapping:
-        m = m["mask"].resize((SIZE, SIZE), NEAREST)
+        m = m["mask"].resize((SIZE, SIZE), Image.Resampling.NEAREST)
         mappings.append(np.asarray(m, dtype=np.uint8))
 
     return mappings
