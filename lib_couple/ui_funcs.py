@@ -1,3 +1,5 @@
+from typing import Final
+
 from json import dumps, loads
 from json.decoder import JSONDecodeError
 
@@ -6,8 +8,20 @@ from PIL import Image, ImageDraw
 
 from lib_couple.logging import logger
 
-DEFAULT_MAPPING = [[0.0, 0.5, 0.0, 1.0, 1.0], [0.5, 1.0, 0.0, 1.0, 1.0]]
-COLORS = ("red", "orange", "yellow", "green", "blue", "indigo", "violet")
+DEFAULT_MAPPING: Final[list[list[float]]] = [
+    [0.0, 0.5, 0.0, 1.0, 1.0],
+    [0.5, 1.0, 0.0, 1.0, 1.0],
+]
+
+COLORS: Final[tuple[str]] = (
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "blue",
+    "indigo",
+    "violet",
+)
 
 
 def validate_mapping(data: list, log: bool = False) -> bool:

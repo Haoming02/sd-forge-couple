@@ -5,6 +5,7 @@ https://github.com/laksjdjf/cgem156-ComfyUI/blob/main/scripts/attention_couple/n
 
 import math
 
+import torch
 from torch.nn.functional import interpolate
 
 
@@ -15,7 +16,7 @@ def repeat_div(value: int, iterations: int) -> int:
     return value
 
 
-def get_mask(mask, batch_size, num_tokens, original_shape):
+def get_mask(mask: torch.Tensor, batch_size: int, num_tokens: int, shape: tuple[int]):
     """
     Credit: hako-mikan
     https://github.com/hako-mikan/sd-webui-regional-prompter/blob/main/scripts/attention.py
@@ -24,11 +25,10 @@ def get_mask(mask, batch_size, num_tokens, original_shape):
     https://github.com/arcusmaximus/sd-forge-couple/tree/draggable-box-ui
     """
 
-    image_width: int = original_shape[3]
-    image_height: int = original_shape[2]
+    width, height = shape[3], shape[2]
 
-    scale = math.ceil(math.log2(math.sqrt(image_height * image_width / num_tokens)))
-    size = (repeat_div(image_height, scale), repeat_div(image_width, scale))
+    scale = math.ceil(math.log2(math.sqrt(height * width / num_tokens)))
+    size = (repeat_div(height, scale), repeat_div(width, scale))
 
     num_conds = mask.shape[0]
     mask_downsample = interpolate(mask, size=size, mode="nearest")
@@ -39,11 +39,11 @@ def get_mask(mask, batch_size, num_tokens, original_shape):
     return mask_downsample
 
 
-def lcm(a, b):
+def lcm(a: int, b: int) -> int:
     return a * b // math.gcd(a, b)
 
 
-def lcm_for_list(numbers):
+def lcm_for_list(numbers: list[int]) -> int:
     current_lcm = numbers[0]
     for number in numbers[1:]:
         current_lcm = lcm(current_lcm, number)

@@ -4,7 +4,7 @@ from typing import Callable
 
 from lib_couple import settings  # noqa
 from lib_couple.attention_couple import AttentionCouple
-from lib_couple.gr_version import is_gradio_4, js
+from lib_couple.gr_version import js
 from lib_couple.logging import logger
 from lib_couple.mapping import (
     advanced_mapping,
@@ -18,22 +18,11 @@ from lib_couple.ui_funcs import validate_mapping
 
 from modules import scripts, shared
 
-try:
-    from modules_forge import forge_version  # noqa
-except ImportError:
-    isA1111 = True
-else:
-    isA1111 = False
-
-
-if is_gradio_4:
-    from lib_couple.regional_flux import convert_conds, patch_flux
 
 VERSION = "5.1.1"
 
 
 class ForgeCouple(scripts.Script):
-    forgeAttentionCouple = AttentionCouple()
 
     def __init__(self):
         self.is_img2img: bool
@@ -58,12 +47,7 @@ class ForgeCouple(scripts.Script):
 
     def ui(self, is_img2img):
         self.is_img2img = is_img2img
-        return couple_ui(
-            self,
-            is_img2img,
-            f"{self.title()} v{VERSION}",
-            (self._unpatch if isA1111 else None),
-        )
+        return couple_ui(self, is_img2img, f"{self.title()} v{VERSION}")
 
     def after_component(self, component, **kwargs):
         if (elem_id := kwargs.get("elem_id", None)) is not None:
@@ -264,11 +248,6 @@ class ForgeCouple(scripts.Script):
             return
 
         # ===== Init =====
-        if isA1111:
-            unet = p.sd_model.model.diffusion_model
-        else:
-            unet = p.sd_model.forge_objects.unet.clone()
-
         WIDTH: int = p.width
         HEIGHT: int = p.height
         IS_HORIZONTAL: bool = direction == "Horizontal"
@@ -325,30 +304,11 @@ class ForgeCouple(scripts.Script):
 
         assert len(fc_args.keys()) // 2 == LINE_COUNT
 
-        if is_gradio_4 and not p.sd_model.is_webui_legacy_model():
-            conds = convert_conds(fc_args)
-            patched_unet = patch_flux(unet, conds, HEIGHT, WIDTH)
-            p.sd_model.forge_objects.unet = patched_unet
-            return
-
+        unet = p.sd_model.forge_objects.unet
         base_mask = empty_tensor(HEIGHT, WIDTH)
-        patched_unet = self.forgeAttentionCouple.patch_unet(
-            unet,
-            base_mask,
-            fc_args,
-            isA1111=isA1111,
-            width=WIDTH,
-            height=HEIGHT,
-        )
+
+        patched_unet = AttentionCouple.patch_unet(unet, base_mask, fc_args)
         if patched_unet is None:
             self.invalidate(p)
-        elif not isA1111:
+        else:
             p.sd_model.forge_objects.unet = patched_unet
-
-    def postprocess(self, *args, **kwargs):
-        if isA1111:
-            self._unpatch()
-
-    @classmethod
-    def _unpatch(cls):
-        cls.forgeAttentionCouple.unpatch(shared.sd_model.model.diffusion_model)
