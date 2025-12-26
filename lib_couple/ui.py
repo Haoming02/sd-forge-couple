@@ -163,7 +163,6 @@ def couple_ui(script, is_img2img: bool, title: str):
             couple_mask.mask_ui(preview_btn, preview_res, mode)
 
             if not CoupleDataTransfer.webui_setup_done():
-                script.get_mask = couple_mask.get_masks
                 if is_img2img:
                     CoupleDataTransfer.I2I_MASK = couple_mask
                     CoupleDataTransfer.hook_mask()  # img2img always happens after txt2img
@@ -239,4 +238,4 @@ def couple_ui(script, is_img2img: bool, title: str):
         common_debug,
         def_in_prompt,
         *tile_args,
-    ]
+    ], couple_mask.get_masks

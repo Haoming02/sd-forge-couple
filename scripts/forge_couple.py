@@ -21,6 +21,8 @@ from modules import scripts, shared
 
 VERSION = "5.1.1"
 
+UI_CACHES: dict[bool, tuple[list, Callable]] = {}
+
 
 class ForgeCouple(scripts.Script):
 
@@ -47,7 +49,13 @@ class ForgeCouple(scripts.Script):
 
     def ui(self, is_img2img):
         self.is_img2img = is_img2img
-        return couple_ui(self, is_img2img, f"{self.title()} v{VERSION}")
+        if is_img2img in UI_CACHES:
+            comps, func = UI_CACHES[is_img2img]
+        else:
+            comps, func = couple_ui(self, is_img2img, f"{self.title()} v{VERSION}")
+            UI_CACHES[is_img2img] = (comps, func)
+        self.get_mask = func
+        return comps
 
     def after_component(self, component, **kwargs):
         if (elem_id := kwargs.get("elem_id", None)) is not None:
