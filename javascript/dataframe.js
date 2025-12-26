@@ -110,7 +110,7 @@ class ForgeCoupleDataframe {
         } else {
             const val = this.#clamp01(
                 cell.textContent,
-                Array.from(cell.parentElement.children).indexOf(cell) === ForgeCoupleDataframe.#columnCount - 1,
+                Array.from(cell.parentElement.children).indexOf(cell) === ForgeCoupleDataframe.#columnCount - 2,
             ).toFixed(2);
             cell.textContent = val;
             ForgeCouple.onSelect(this.#mode);
