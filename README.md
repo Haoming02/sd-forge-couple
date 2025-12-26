@@ -455,3 +455,23 @@ For **Automatic1111**, this Extension adds a patch before the generation starts,
 ## Special Thanks
 - Credits to the original author, **[laksjdjf](https://github.com/laksjdjf)**, whose [ComfyUI Node](https://github.com/laksjdjf/cgem156-ComfyUI/tree/main/scripts/attention_couple) I referenced to port into Forge
 - Credits to the original author, **[logtd](https://github.com/logtd)**, whose [ComfyUI Node](https://github.com/logtd/ComfyUI-Fluxtapoz/blob/main/nodes/regional_cond_nodes.py) *(based on [Regional-Prompting-FLUX](https://github.com/instantX-research/Regional-Prompting-FLUX))* I referenced to port into Forge
+
+<hr>
+
+```
+Copyright (C) 2023 laksjdjf
+Copyright (C) 2025 Haoming02
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+```
