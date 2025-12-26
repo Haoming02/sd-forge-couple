@@ -1,6 +1,6 @@
-from typing import Callable, Optional
-
 import gradio as gr
+
+from modules.shared import opts
 
 from .gr_version import js
 from .ui_adv import advanced_ui
@@ -12,16 +12,16 @@ from .ui_tile import tile_ui
 class CoupleDataTransfer:
     """Handle sending data from t2i/i2i to i2i/t2i"""
 
-    T2I_MASK: Optional[CoupleMaskData] = None
-    I2I_MASK: Optional[CoupleMaskData] = None
+    T2I_MASK: CoupleMaskData = None
+    I2I_MASK: CoupleMaskData = None
 
-    T2I_ADV_DATA: Optional[gr.JSON] = None
-    T2I_ADV_PASTE: Optional[gr.Textbox] = None
-    T2I_ADV_PULL: Optional[gr.Button] = None
+    T2I_ADV_DATA: gr.JSON = None
+    T2I_ADV_PASTE: gr.Textbox = None
+    T2I_ADV_PULL: gr.Button = None
 
-    I2I_ADV_DATA: Optional[gr.JSON] = None
-    I2I_ADV_PASTE: Optional[gr.Textbox] = None
-    I2I_ADV_PULL: Optional[gr.Button] = None
+    I2I_ADV_DATA: gr.JSON = None
+    I2I_ADV_PASTE: gr.Textbox = None
+    I2I_ADV_PULL: gr.Button = None
 
     A_HOOKED: bool = False
     M_HOOKED: bool = False
@@ -64,7 +64,7 @@ class CoupleDataTransfer:
         return cls.A_HOOKED and cls.M_HOOKED
 
 
-def couple_ui(script, is_img2img: bool, title: str, unpatch: Callable):
+def couple_ui(script, is_img2img: bool, title: str):
     m: str = "i2i" if is_img2img else "t2i"
 
     with gr.Accordion(
@@ -72,25 +72,14 @@ def couple_ui(script, is_img2img: bool, title: str, unpatch: Callable):
         elem_id=f"forge_couple_{m}",
         open=False,
     ):
-        if is_img2img:
+        if is_img2img and not getattr(opts, "fc_no_tile", False):
             tab1 = gr.Tab(label="Regions")
             tab1.__enter__()
 
         with gr.Row():
-            if unpatch is not None:
-                btn = gr.Button(
-                    "🩹",
-                    tooltip="Remove the ForgeCouple patches in case of errors",
-                    elem_id=f"fc_{'i2i' if is_img2img else 't2i'}_unpatch",
-                    elem_classes=["tool"],
-                    scale=1,
-                )
-                btn.do_not_save_to_config = True
-                btn.click(fn=unpatch, queue=False)
-
             with gr.Column(
                 elem_classes="fc-checkbox",
-                scale=(2 if unpatch is None else 1),
+                scale=2,
             ):
                 enable = gr.Checkbox(False, label="Enable")
                 disable_hr = gr.Checkbox(True, label="Compatibility")
@@ -174,7 +163,6 @@ def couple_ui(script, is_img2img: bool, title: str, unpatch: Callable):
             couple_mask.mask_ui(preview_btn, preview_res, mode)
 
             if not CoupleDataTransfer.webui_setup_done():
-                script.get_mask = couple_mask.get_masks
                 if is_img2img:
                     CoupleDataTransfer.I2I_MASK = couple_mask
                     CoupleDataTransfer.hook_mask()  # img2img always happens after txt2img
@@ -229,7 +217,7 @@ def couple_ui(script, is_img2img: bool, title: str, unpatch: Callable):
             comp.do_not_save_to_config = True
             script.paste_field_names.append(name)
 
-        if is_img2img:
+        if is_img2img and not getattr(opts, "fc_no_tile", False):
             tab1.__exit__()
             with gr.Tab(label="Tiles"):
                 tile_args = tile_ui()
@@ -250,4 +238,4 @@ def couple_ui(script, is_img2img: bool, title: str, unpatch: Callable):
         common_debug,
         def_in_prompt,
         *tile_args,
-    ]
+    ], couple_mask.get_masks

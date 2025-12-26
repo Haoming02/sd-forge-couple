@@ -25,12 +25,12 @@ class ColoredFormatter(logging.Formatter):
         return super().format(colored_record)
 
 
-logger = logging.getLogger("ForgeCouple")
+logger = logging.getLogger("Forge Couple")
 logger.propagate = False
 
 if not logger.handlers:
     handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(ColoredFormatter("[%(name)s] - %(levelname)s - %(message)s"))
+    handler.setFormatter(ColoredFormatter("[%(name)s] %(levelname)s - %(message)s"))
     logger.addHandler(handler)
 
 logger.setLevel(logging.INFO)

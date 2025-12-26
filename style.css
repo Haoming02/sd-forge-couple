@@ -231,3 +231,16 @@
 .fc_msk .fc_msk_uploads .gradio-image div.image-container {
     margin: auto;
 }
+
+.dim_calc div.gradio-column {
+    min-width: unset !important;
+}
+
+.dim_calc button {
+    margin: auto;
+    padding: 1em 0em !important
+}
+
+.dim_calc div.gradio-column:nth-child(2) div.form {
+    padding-top: 1.5em;
+}

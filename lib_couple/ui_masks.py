@@ -2,13 +2,11 @@ import gradio as gr
 import numpy as np
 from PIL import Image
 
-from .gr_version import is_gradio_4, js
+from .gr_version import is_neo, js
 from .ui_funcs import COLORS
 
-try:
+if is_neo:
     from modules_forge.forge_canvas.canvas import ForgeCanvas
-except ImportError:
-    pass
 
 
 class CoupleMaskData:
@@ -50,7 +48,7 @@ class CoupleMaskData:
             <h2 align="center"><ins>Mask Canvas</ins></h2>
             {
                 ""
-                if is_gradio_4
+                if is_neo
                 else '<p align="center"><b>[Important]</b> Do <b>NOT</b> upload / paste an image to here...</p>'
             }
             """
@@ -58,7 +56,7 @@ class CoupleMaskData:
 
         msk_canvas = (
             ForgeCanvas(scribble_color="#FFFFFF", no_upload=True)
-            if is_gradio_4
+            if is_neo
             else gr.Image(
                 show_label=False,
                 source="upload",
@@ -119,7 +117,7 @@ class CoupleMaskData:
 
         weights_field = gr.Textbox(visible=False, elem_classes="fc_msk_weights")
 
-        dummy = None if is_gradio_4 else gr.State()
+        dummy = None if is_neo else gr.State()
 
         with gr.Row(elem_classes="fc_msk_uploads"):
             upload_background = gr.Image(
@@ -147,7 +145,7 @@ class CoupleMaskData:
         # ===== Components ===== #
 
         # ===== Events ===== #
-        if not is_gradio_4:
+        if not is_neo:
             msk_canvas.change(
                 fn=None, **js(f'() => {{ ForgeCouple.hideButtons("{self.mode}"); }}')
             )
@@ -157,7 +155,7 @@ class CoupleMaskData:
             inputs=[res],
             outputs=(
                 [msk_canvas.background, msk_canvas.foreground]
-                if is_gradio_4
+                if is_neo
                 else [msk_canvas, dummy]
             ),
         )
@@ -172,14 +170,14 @@ class CoupleMaskData:
 
         msk_btn_save.click(
             self._write_mask,
-            msk_canvas.foreground if is_gradio_4 else msk_canvas,
+            msk_canvas.foreground if is_neo else msk_canvas,
             [msk_gallery, msk_preview, msk_btn_load, msk_btn_override],
         ).success(
             fn=self._create_empty,
             inputs=[res],
             outputs=(
                 [msk_canvas.background, msk_canvas.foreground]
-                if is_gradio_4
+                if is_neo
                 else [msk_canvas, dummy]
             ),
         ).then(
@@ -188,14 +186,14 @@ class CoupleMaskData:
 
         msk_btn_override.click(
             self._override_mask,
-            msk_canvas.foreground if is_gradio_4 else msk_canvas,
+            msk_canvas.foreground if is_neo else msk_canvas,
             [msk_gallery, msk_preview, msk_btn_load, msk_btn_override],
         ).success(
             fn=None, **js(f'() => {{ ForgeCouple.populateMasks("{self.mode}"); }}')
         )
 
         msk_btn_load.click(
-            self._load_mask, None, msk_canvas.foreground if is_gradio_4 else msk_canvas
+            self._load_mask, None, msk_canvas.foreground if is_neo else msk_canvas
         )
 
         msk_btn_reset.click(
@@ -221,7 +219,7 @@ class CoupleMaskData:
             inputs=[res, mode],
             outputs=(
                 [msk_gallery, msk_preview, msk_canvas.background, msk_canvas.foreground]
-                if is_gradio_4
+                if is_neo
                 else [msk_gallery, msk_preview, msk_canvas, dummy]
             ),
         ).success(
@@ -232,7 +230,7 @@ class CoupleMaskData:
             fn=self._on_up_bg,
             inputs=[res, upload_background],
             outputs=[
-                msk_canvas.background if is_gradio_4 else msk_canvas,
+                msk_canvas.background if is_neo else msk_canvas,
                 upload_background,
             ],
         )
@@ -241,34 +239,32 @@ class CoupleMaskData:
             fn=self._on_up_mask,
             inputs=[res, upload_mask],
             outputs=[
-                msk_canvas.foreground if is_gradio_4 else msk_canvas,
+                msk_canvas.foreground if is_neo else msk_canvas,
                 upload_mask,
             ],
         )
         # ===== Events ===== #
 
         # ===== Pain ===== #
-        [
-            setattr(comp, "do_not_save_to_config", True)
-            for comp in (
-                msk_btn_empty,
-                msk_btn_pull,
-                msk_canvas,
-                msk_btn_save,
-                msk_btn_load,
-                msk_btn_override,
-                operation,
-                operation_btn,
-                msk_preview,
-                msk_gallery,
-                msk_btn_reset,
-                weights_field,
-                upload_background,
-                upload_mask,
-            )
-        ]
+        for comp in (
+            msk_btn_empty,
+            msk_btn_pull,
+            msk_canvas,
+            msk_btn_save,
+            msk_btn_load,
+            msk_btn_override,
+            operation,
+            operation_btn,
+            msk_preview,
+            msk_gallery,
+            msk_btn_reset,
+            weights_field,
+            upload_background,
+            upload_mask,
+        ):
+            comp.do_not_save_to_config = True
 
-        if is_gradio_4:
+        if is_neo:
             msk_canvas.foreground.do_not_save_to_config = True
             msk_canvas.background.do_not_save_to_config = True
         else:
@@ -312,7 +308,7 @@ class CoupleMaskData:
         w, h = CoupleMaskData._parse_resolution(resolution)
         image = image.resize((w, h))
 
-        if is_gradio_4:  # Only keep the pure white Mask
+        if is_neo:  # Only keep the pure white Mask
             image_array = np.array(image, dtype=np.uint8)
             white_mask = (image_array[..., :3] == [255, 255, 255]).all(axis=-1)
             image_array[~white_mask] = [0, 0, 0, 0]

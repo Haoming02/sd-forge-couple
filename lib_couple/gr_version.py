@@ -1,7 +1,7 @@
 from importlib.metadata import version
 
-is_gradio_4: bool = not version("gradio").startswith("3")
+is_neo: bool = not version("gradio").startswith("3")
 
 
 def js(func: str) -> dict:
-    return {("js" if is_gradio_4 else "_js"): func}
+    return {("js" if is_neo else "_js"): func}

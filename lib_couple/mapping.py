@@ -7,18 +7,14 @@ from PIL import Image
 
 from modules.prompt_parser import SdConditioning
 
-from .gr_version import is_gradio_4
 
-
-def empty_tensor(h: int, w: int):
+def empty_tensor(h: int, w: int) -> torch.Tensor:
     return torch.zeros((h, w)).unsqueeze(0)
 
 
-def text2cond(sd_model, texts: str) -> torch.Tensor:
+def text2cond(sd_model, texts: str) -> list[torch.Tensor]:
     cond = sd_model.get_learned_conditioning(texts)
 
-    if is_gradio_4 and not sd_model.is_webui_legacy_model():
-        return cond["crossattn"]
     if sd_model.is_sdxl:
         return [[cond["crossattn"]]]
     if sd_model.is_sd1:
@@ -76,7 +72,11 @@ def basic_mapping(
 
 
 def advanced_mapping(
-    sd_model, couples: list, width: int, height: int, mapping: list
+    sd_model,
+    couples: list,
+    width: int,
+    height: int,
+    mapping: list,
 ) -> dict:
     fc_args: dict = {}
     assert len(couples) == len(mapping)

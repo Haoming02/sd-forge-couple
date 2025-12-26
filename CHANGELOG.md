@@ -1,3 +1,11 @@
+### v6.0.0 - 2025 Dec.26
+- **Refactor**
+    - Improve `Tile` Mode
+    - Yeet `Flux` Support
+    - Yeet `Automatic1111` Support
+
+<br>
+
 ### v5.1.1 - 2025 Dec.03
 - Fix `Tile` Mode
 
