@@ -92,8 +92,8 @@ def tile_ui() -> tuple[gr.components.Component]:
 
     tile_replace = gr.Textbox(
         value=None,
-        lines=6,
-        max_lines=6,
+        lines=2,
+        max_lines=4,
         label="Subject Replacement",
         placeholder="1boy: 2boys, multiple boys\n1girl: 2girls, multiple girls",
     )

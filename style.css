@@ -240,3 +240,7 @@
     margin: auto;
     padding: 1em 0em !important
 }
+
+.dim_calc div.gradio-column:nth-child(2) div.form {
+    padding-top: 1.5em;
+}
