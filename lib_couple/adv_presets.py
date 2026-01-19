@@ -1,12 +1,11 @@
-import os
+import os.path
 from json import dump, dumps, load
 
 import gradio as gr
 
 from lib_couple.logging import logger
-from modules import scripts
 
-PRESET_FILE = os.path.join(scripts.basedir(), "presets.json")
+PRESET_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "presets.json")
 
 
 class PresetManager:

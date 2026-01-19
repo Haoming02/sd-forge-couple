@@ -18,7 +18,7 @@ from lib_couple.ui_funcs import validate_mapping
 
 from modules import scripts, shared
 
-VERSION = "6.0.0"
+VERSION = "6.0.1"
 
 UI_CACHES: dict[bool, tuple[list, Callable]] = {}
 

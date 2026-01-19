@@ -1,3 +1,6 @@
+### v6.0.1 - 2026 Jan.19
+- Fix `presets.json`
+
 ### v6.0.0 - 2025 Dec.26
 - **Refactor**
     - Improve `Tile` Mode
