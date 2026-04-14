@@ -32,11 +32,30 @@ def get_mask(mask: torch.Tensor, batch_size: int, num_tokens: int, shape: tuple[
 
     num_conds = mask.shape[0]
     mask_downsample = interpolate(mask, size=size, mode="nearest")
-    mask_downsample = mask_downsample.view(num_conds, num_tokens, 1).repeat_interleave(
-        batch_size, dim=0
+    mask_downsample = mask_downsample.view(num_conds, num_tokens, 1)
+
+    return mask_downsample.repeat_interleave(batch_size, dim=0)
+
+
+def get_dit_mask(mask: torch.Tensor, seq_len: int, w: int, h: int, patch_size: int = 2):
+    """Dynamically resizes and flattens the 2D mask to match the DiT's sequence length"""
+
+    num_conds = mask.shape[0]
+
+    h_p = h // (8 * patch_size)
+    w_p = w // (8 * patch_size)
+    t_p = max(seq_len // (h_p * w_p), 1)
+
+    mask_for_interp = mask.view(num_conds, 1, mask.shape[-2], mask.shape[-1])
+
+    mask_resized = interpolate(
+        mask_for_interp, size=(h_p, w_p), mode="bilinear", align_corners=False
     )
 
-    return mask_downsample
+    mask_flattened = mask_resized.view(num_conds, 1, h_p * w_p)
+    mask_flattened = mask_flattened.repeat(1, t_p, 1)
+
+    return mask_flattened.view(num_conds, 1, seq_len, 1)
 
 
 def lcm(a: int, b: int) -> int:

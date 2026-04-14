@@ -4,7 +4,7 @@ from typing import Callable
 
 from lib_couple import settings  # noqa
 from lib_couple.attention_couple import AttentionCouple
-from lib_couple.gr_version import js
+from lib_couple.gr_version import is_neo, js
 from lib_couple.logging import logger
 from lib_couple.mapping import (
     advanced_mapping,
@@ -16,9 +16,12 @@ from lib_couple.tile_funcs import calculate_tiles
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
 
+if is_neo:
+    from lib_couple.anima import AttentionCoupleAnima
+
 from modules import scripts, shared
 
-VERSION = "6.0.1"
+VERSION = "7.0.0"
 
 UI_CACHES: dict[bool, tuple[list, Callable]] = {}
 
@@ -314,8 +317,18 @@ class ForgeCouple(scripts.Script):
         unet = p.sd_model.forge_objects.unet
         base_mask = empty_tensor(HEIGHT, WIDTH)
 
-        patched_unet = AttentionCouple.patch_unet(unet, base_mask, fc_args)
+        if is_neo and p.sd_model.model_config.huggingface_repo.endswith("Anima"):
+            patched_unet = AttentionCoupleAnima.patch_dit(
+                unet, base_mask, WIDTH, HEIGHT, fc_args
+            )
+        else:
+            patched_unet = AttentionCouple.patch_unet(unet, base_mask, fc_args)
+
         if patched_unet is None:
             self.invalidate(p)
         else:
             p.sd_model.forge_objects.unet = patched_unet
+
+    def postprocess(self, p, *args, **kwargs):
+        if is_neo and p.sd_model.model_config.huggingface_repo.endswith("Anima"):
+            AttentionCoupleAnima.unpatch()

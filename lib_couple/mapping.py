@@ -19,8 +19,10 @@ def text2cond(sd_model, texts: str) -> list[torch.Tensor]:
         return [[cond["crossattn"]]]
     if sd_model.is_sd1:
         return [[cond]]
+    elif sd_model.__class__.__name__ == "Anima":
+        return cond
 
-    raise NotImplementedError
+    raise NotImplementedError("Only SD1 / SDXL / Anima are Supported...")
 
 
 def basic_mapping(

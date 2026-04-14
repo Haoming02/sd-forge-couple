@@ -1,3 +1,8 @@
+### v7.0.0 - 2026 Apr.14
+- **Anima** Support
+
+<br>
+
 ### v6.0.1 - 2026 Jan.19
 - Fix `presets.json`
 

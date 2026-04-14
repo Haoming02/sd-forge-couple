@@ -29,6 +29,7 @@ This is an Extension for the Forge Webui, which allows you to ~~generate couples
 
 > [!IMPORTANT]
 > Only **SD1** and **SDXL** are supported
+> 🔥 **New:** Now supports **Anima**
 
 > [!CAUTION]
 > The effectiveness of this Extension depends on how well the Checkpoint follows the prompts<br>
@@ -174,7 +175,7 @@ The **Mask** mode allows you to manually draw each region
         - Click **Override Mask** to save the image and override the selected layer of mask
     - Click the **Reset All Masks** button to clear all the data
 
-> [!NOTE]
+> [!TIP]
 > The masks are not sent when using the `Send to img2img` function, click the `Pull from txt2img` to manually transfer the masks *(the `weights` are not sent...)*
 
 - **Entries:**
@@ -255,6 +256,25 @@ If you have multiple characters that share the same outfits, poses, or expressio
 
 > [!TIP]
 > You can enable **Debug** to check if it is working as intended in the console
+
+<p align="center">
+<img src="example/common.jpg" width=512><br>
+<b>Anima</b> X <code>Common Prompt</code>
+</p>
+
+<details>
+<summary>Infotext</summary>
+
+```
+masterpiece, best quality, good quality, absurdres, newest. 3girls standing side-by-side, each holding a sign.
+3girls, hatsune miku, {common:vocaloid, casual, clothed, looking at viewer, smile}, holding a sign that says "Forge".
+3girls, kagamine rin, {common}, holding a sign that says "Couple".
+3girls, kasane teto, {common}, holding a sign that says "Anima".
+Negative prompt: monochrome, greyscale, loli, score_1, score_2, score_3, blurry, jpeg artifacts, sepia, watermark, worst quality, low quality, large breasts, muscular, deformed hands, bad anatomy, extra limbs, poorly drawn face, mutated, extra eyes, bad proportions, character doll, chibi, old, early, censored, 3d, high contrast, ai-generated
+Steps: 32, Sampler: Euler a, Schedule type: Normal, CFG scale: 5, Shift: 3, Seed: 2984220975, Size: 1344x1024, Model hash: 14fffe8ad5, Model: anima-preview3-base, Clip skip: 2, RNG: CPU, forge_couple: True, forge_couple_compatibility: True, forge_couple_mode: Basic, forge_couple_separator: \n, forge_couple_direction: Horizontal, forge_couple_background: First Line, forge_couple_background_weight: 0.5, forge_couple_common_parser: { }, forge_couple_def_in_prompt: True, Version: neo, Module 1: qwen_3_06b, Module 2: qwen_image_vae
+```
+
+</details>
 
 ### LoRA Support
 
@@ -350,7 +370,7 @@ For usages with API, please refer to the [Wiki](https://github.com/Haoming02/sd-
 
 <pre align="center">
 Copyright (C) 2023 laksjdjf
-Copyright (C) 2025 Haoming02
+Copyright (C) 2026 Haoming02
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
