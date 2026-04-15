@@ -91,7 +91,7 @@ class AttentionCoupleAnima:
                     new_context.append(torch.cat([c_target, conds_tensor], dim=0))
 
             x_in = torch.cat(new_x, dim=0)
-            ctx_in = torch.cat(new_context, dim=0).unsqueeze(1)
+            ctx_in = torch.cat(new_context, dim=0).unsqueeze(1).to(dtype=x_in.dtype)
 
             out = self.orig_forward(
                 x_in,

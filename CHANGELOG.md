@@ -1,3 +1,6 @@
+### v7.0.1 - 2026 Apr.15
+- Fix `dtype`
+
 ### v7.0.0 - 2026 Apr.14
 - **Anima** Support
 

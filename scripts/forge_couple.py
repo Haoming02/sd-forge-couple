@@ -21,7 +21,7 @@ if is_neo:
 
 from modules import scripts, shared
 
-VERSION = "7.0.0"
+VERSION = "7.0.1"
 
 UI_CACHES: dict[bool, tuple[list, Callable]] = {}
 
