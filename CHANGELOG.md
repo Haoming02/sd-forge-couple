@@ -1,3 +1,6 @@
+### v7.0.2 - 2026 Apr.16
+- Fix `import`
+
 ### v7.0.1 - 2026 Apr.15
 - Fix `dtype`
 

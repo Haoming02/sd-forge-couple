@@ -4,7 +4,7 @@ from typing import Callable
 
 from lib_couple import settings  # noqa
 from lib_couple.attention_couple import AttentionCouple
-from lib_couple.gr_version import is_neo, js
+from lib_couple.gr_version import js
 from lib_couple.logging import logger
 from lib_couple.mapping import (
     advanced_mapping,
@@ -16,12 +16,16 @@ from lib_couple.tile_funcs import calculate_tiles
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
 
-if is_neo:
+try:
     from lib_couple.anima import AttentionCoupleAnima
+except ImportError:
+    is_neo = False
+else:
+    is_neo = True
 
 from modules import scripts, shared
 
-VERSION = "7.0.1"
+VERSION = "7.0.2"
 
 UI_CACHES: dict[bool, tuple[list, Callable]] = {}
 
