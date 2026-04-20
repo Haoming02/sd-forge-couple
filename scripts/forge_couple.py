@@ -25,7 +25,7 @@ else:
 
 from modules import scripts, shared
 
-VERSION = "7.0.2"
+VERSION = "7.0.3"
 
 UI_CACHES: dict[bool, tuple[list, Callable]] = {}
 
@@ -235,6 +235,10 @@ class ForgeCouple(scripts.Script):
         self.couples = couples
         self.valid = True
 
+    def before_process_batch(self, p, *args, **kwargs):
+        if is_neo and p.sd_model.model_config.huggingface_repo.endswith("Anima"):
+            AttentionCoupleAnima.unpatch()
+
     def process_before_every_sampling(
         self,
         p,
@@ -332,7 +336,3 @@ class ForgeCouple(scripts.Script):
             self.invalidate(p)
         else:
             p.sd_model.forge_objects.unet = patched_unet
-
-    def postprocess(self, p, *args, **kwargs):
-        if is_neo and p.sd_model.model_config.huggingface_repo.endswith("Anima"):
-            AttentionCoupleAnima.unpatch()
