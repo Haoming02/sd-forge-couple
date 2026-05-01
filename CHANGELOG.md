@@ -1,3 +1,6 @@
+### v7.0.4 - 2026 May.01
+- Load `preset` once
+
 ### v7.0.3 - 2026 Apr.20
 - Fix `unpatch`
 

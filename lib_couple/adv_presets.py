@@ -9,22 +9,29 @@ PRESET_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "presets.
 
 
 class PresetManager:
-    presets: dict[str, dict] = {}
+    presets: dict[str, dict] = None
 
     @classmethod
     def load_presets(cls):
-        if os.path.isfile(PRESET_FILE):
-            try:
-                with open(PRESET_FILE, "r", encoding="utf-8") as json_file:
-                    cls.presets = load(json_file)
-            except Exception:
-                logger.error("Failed to load Adv. Presets...")
-            else:
-                logger.info("Loaded Adv. Presets...")
-        else:
+        if cls.presets is not None:
+            return
+
+        if not os.path.isfile(PRESET_FILE):
             with open(PRESET_FILE, "w+", encoding="utf-8") as json_file:
                 dump({}, json_file)
+
             logger.info("Creating new empty Adv. Presets...")
+            cls.presets = {}
+            return
+
+        try:
+            with open(PRESET_FILE, "r", encoding="utf-8") as json_file:
+                cls.presets = load(json_file)
+        except Exception:
+            logger.error("Failed to load Adv. Presets...")
+            cls.presets = {}
+        else:
+            logger.info("Loaded Adv. Presets...")
 
     @classmethod
     def list_preset(cls) -> list[str]:

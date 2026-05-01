@@ -25,7 +25,7 @@ else:
 
 from modules import scripts, shared
 
-VERSION = "7.0.3"
+VERSION = "7.0.4"
 
 UI_CACHES: dict[bool, tuple[list, Callable]] = {}
 
