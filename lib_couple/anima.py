@@ -26,16 +26,21 @@ class AttentionCoupleAnima:
             return None
 
         mask = mask / mask.sum(dim=0, keepdim=True)
+        conds: list[torch.Tensor] = []
 
-        conds = [
-            kwargs[f"cond_{i}"][0][0].to(device=device, dtype=dtype).squeeze(1)
-            for i in range(1, num_conds)
-        ]
+        for i in range(1, num_conds):
+            c = kwargs[f"cond_{i}"]
+            if isinstance(c, dict):
+                c = c["crossattn"][0]
+            else:
+                c = c[0][0]
+            conds.append(c.to(device=device, dtype=dtype).squeeze(1))
+
         num_tokens = [cond.shape[1] for cond in conds]
 
-        SelfCrossAttention.orig_forward = SelfCrossAttention.forward
+        SelfCrossAttention.couple_orig_forward = SelfCrossAttention.forward
 
-        @wraps(SelfCrossAttention.orig_forward)
+        @wraps(SelfCrossAttention.couple_orig_forward)
         @torch.inference_mode()
         def custom_forward(
             self, x, context=None, rope_emb=None, transformer_options=None
@@ -46,7 +51,7 @@ class AttentionCoupleAnima:
             cond_or_unconds = transformer_options.get("cond_or_uncond", [])
 
             if context is None or not cond_or_unconds:
-                return self.orig_forward(
+                return self.couple_orig_forward(
                     x=x,
                     context=context,
                     rope_emb=rope_emb,
@@ -93,7 +98,7 @@ class AttentionCoupleAnima:
             x_in = torch.cat(new_x, dim=0)
             ctx_in = torch.cat(new_context, dim=0).unsqueeze(1).to(dtype=x_in.dtype)
 
-            out = self.orig_forward(
+            out = self.couple_orig_forward(
                 x_in,
                 context=ctx_in,
                 rope_emb=rope_emb,
@@ -129,6 +134,6 @@ class AttentionCoupleAnima:
 
     @staticmethod
     def unpatch():
-        if hasattr(SelfCrossAttention, "orig_forward"):
-            SelfCrossAttention.forward = SelfCrossAttention.orig_forward
-            del SelfCrossAttention.orig_forward
+        if hasattr(SelfCrossAttention, "couple_orig_forward"):
+            SelfCrossAttention.forward = SelfCrossAttention.couple_orig_forward
+            del SelfCrossAttention.couple_orig_forward

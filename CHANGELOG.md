@@ -1,3 +1,6 @@
+### v7.0.5 - 2026 May.06
+- Improve `compatibility`
+
 ### v7.0.4 - 2026 May.01
 - Load `preset` once
 
