@@ -1,3 +1,6 @@
+### v7.0.6 - 2026 May.08
+- Linting
+
 ### v7.0.5 - 2026 May.06
 - Improve `compatibility`
 

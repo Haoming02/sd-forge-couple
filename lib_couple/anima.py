@@ -34,7 +34,7 @@ class AttentionCoupleAnima:
                 c = c["crossattn"][0]
             else:
                 c = c[0][0]
-            conds.append(c.to(device=device, dtype=dtype).squeeze(1))
+            conds.append(c.to(device=device, dtype=dtype))
 
         num_tokens = [cond.shape[1] for cond in conds]
 
@@ -42,13 +42,22 @@ class AttentionCoupleAnima:
 
         @wraps(SelfCrossAttention.couple_orig_forward)
         @torch.inference_mode()
-        def custom_forward(
-            self, x, context=None, rope_emb=None, transformer_options=None
+        def couple_forward(
+            self: "SelfCrossAttention",
+            x: torch.Tensor,
+            context: torch.Tensor,
+            rope_emb: torch.Tensor,
+            transformer_options: dict = {},
         ):
-            if transformer_options is None:
-                transformer_options = {}
+            if self.is_SelfAttn:
+                return self.couple_orig_forward(
+                    x=x,
+                    context=context,
+                    rope_emb=rope_emb,
+                    transformer_options=transformer_options,
+                )
 
-            cond_or_unconds = transformer_options.get("cond_or_uncond", [])
+            cond_or_unconds = transformer_options.get("cond_or_uncond", None)
 
             if context is None or not cond_or_unconds:
                 return self.couple_orig_forward(
@@ -63,7 +72,6 @@ class AttentionCoupleAnima:
 
             x_chunks = x.chunk(num_chunks, dim=0)
 
-            assert context is not None
             context_3d = context.squeeze(1)
             ctx_seq_len = context_3d.shape[-2]
             context_chunks = context_3d.chunk(num_chunks, dim=0)
@@ -82,21 +90,16 @@ class AttentionCoupleAnima:
             new_context = []
 
             for idx, cond_or_uncond in enumerate(cond_or_unconds):
+                c_target = context_chunks[idx].repeat(1, lcm_tokens // ctx_seq_len, 1)
                 if cond_or_uncond == 1:
                     new_x.append(x_chunks[idx])
-                    c_target = context_chunks[idx].repeat(
-                        1, lcm_tokens // ctx_seq_len, 1
-                    )
                     new_context.append(c_target)
                 else:
                     new_x.append(x_chunks[idx].repeat(num_conds, 1, 1))
-                    c_target = context_chunks[idx].repeat(
-                        1, lcm_tokens // ctx_seq_len, 1
-                    )
                     new_context.append(torch.cat([c_target, conds_tensor], dim=0))
 
             x_in = torch.cat(new_x, dim=0)
-            ctx_in = torch.cat(new_context, dim=0).unsqueeze(1).to(dtype=x_in.dtype)
+            ctx_in = torch.cat(new_context, dim=0).to(dtype=x_in.dtype)
 
             out = self.couple_orig_forward(
                 x_in,
@@ -105,7 +108,7 @@ class AttentionCoupleAnima:
                 transformer_options=transformer_options,
             )
 
-            seq_len = out.shape[1]
+            seq_len: int = out.shape[1]
 
             mask_downsample = get_dit_mask(
                 mask, seq_len, width, height, patch_size=dit.patch_spatial
@@ -128,12 +131,14 @@ class AttentionCoupleAnima:
 
             return torch.cat(outputs, dim=0)
 
-        SelfCrossAttention.forward = custom_forward
+        couple_forward._couple = True
+        SelfCrossAttention.forward = couple_forward
 
         return model
 
     @staticmethod
     def unpatch():
         if hasattr(SelfCrossAttention, "couple_orig_forward"):
-            SelfCrossAttention.forward = SelfCrossAttention.couple_orig_forward
+            if getattr(SelfCrossAttention.forward, "_couple", False):
+                SelfCrossAttention.forward = SelfCrossAttention.couple_orig_forward
             del SelfCrossAttention.couple_orig_forward
