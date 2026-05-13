@@ -28,7 +28,7 @@ This is an Extension for the Forge Webui, which allows you to ~~generate couples
 ## How to Use
 
 > [!IMPORTANT]
-> Only **SD1** and **SDXL** are supported
+> Only **SD1** and **SDXL** are supported<br>
 > 🔥 **New:** Now supports **Anima**
 
 > [!CAUTION]
