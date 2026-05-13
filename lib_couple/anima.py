@@ -1,3 +1,4 @@
+import math
 from functools import wraps
 
 import torch
@@ -29,12 +30,10 @@ class AttentionCoupleAnima:
         conds: list[torch.Tensor] = []
 
         for i in range(1, num_conds):
-            c = kwargs[f"cond_{i}"]
-            if isinstance(c, dict):
-                c = c["crossattn"][0]
-            else:
-                c = c[0][0]
-            conds.append(c.to(device=device, dtype=dtype))
+            c = kwargs[f"cond_{i}"][0][0].to(device=device, dtype=dtype)
+            if (dim := math.ceil(c.shape[0] / 512) * 512) > 512:
+                c = torch.nn.functional.pad(c, (0, 0, 0, dim - c.shape[0]))
+            conds.append(c)
 
         num_tokens = [cond.shape[1] for cond in conds]
 
@@ -73,10 +72,17 @@ class AttentionCoupleAnima:
             x_chunks = x.chunk(num_chunks, dim=0)
 
             context_3d = context.squeeze(1)
+            if (dim := math.ceil(context_3d.shape[1] / 512) * 512) > 512:
+                context_3d = torch.nn.functional.pad(
+                    context_3d,
+                    (0, 0, 0, dim - context_3d.shape[1]),
+                )
+
             ctx_seq_len = context_3d.shape[-2]
             context_chunks = context_3d.chunk(num_chunks, dim=0)
 
             lcm_tokens = lcm_for_list(num_tokens + [ctx_seq_len])
+            assert lcm_tokens in (512, 1024), "Your prompt is way too long..."
 
             conds_tensor = torch.cat(
                 [

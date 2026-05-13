@@ -1,3 +1,6 @@
+### v7.0.7 - 2026 May.13
+- Fix `shape`
+
 ### v7.0.6 - 2026 May.08
 - Linting
 
