@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Callable
 if TYPE_CHECKING:
     from modules.processing import StableDiffusionProcessing as P
 
-from lib_couple import settings  # noqa
 from lib_couple.attention_couple import AttentionCouple
 from lib_couple.gr_version import js
 from lib_couple.logging import logger
@@ -15,6 +14,7 @@ from lib_couple.mapping import (
     empty_tensor,
     mask_mapping,
 )
+from lib_couple.settings import fc_anima_settings, fc_settings
 from lib_couple.tile_funcs import calculate_tiles
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
@@ -25,6 +25,13 @@ except ImportError:
     is_neo = False
 else:
     is_neo = True
+
+from modules.script_callbacks import on_ui_settings
+
+on_ui_settings(fc_settings)
+
+if is_neo:
+    on_ui_settings(fc_anima_settings)
 
 from modules import scripts, shared
 
@@ -98,7 +105,7 @@ class ForgeCouple(scripts.Script):
     def before_hr(self, p: "P", *args, **kwargs):
         self.is_hr = True
         if is_neo and p.sd_model.model_config.huggingface_repo.endswith("Anima"):
-            AttentionCoupleAnima.unpatch()
+            AttentionCoupleAnima.unpatch(p)
 
     def _is_tile(self) -> bool:
         return self.is_img2img and len(self.tiles) > 0
@@ -242,7 +249,7 @@ class ForgeCouple(scripts.Script):
 
     def before_process_batch(self, p: "P", *args, **kwargs):
         if is_neo and p.sd_model.model_config.huggingface_repo.endswith("Anima"):
-            AttentionCoupleAnima.unpatch()
+            AttentionCoupleAnima.unpatch(p)
 
     def process_before_every_sampling(
         self,

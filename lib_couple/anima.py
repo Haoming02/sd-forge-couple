@@ -1,13 +1,83 @@
 import math
-from functools import wraps
+from functools import partial, wraps
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from backend.nn.anima import Anima
+    from modules.processing import StableDiffusionProcessing
 
 import torch
 
 from backend.nn.anima import SelfCrossAttention
+from backend.operations import scaled_dot_product_attention
 from lib_couple.logging import logger
 from modules.devices import device, dtype
+from modules.shared import opts
 
 from .attention_masks import get_dit_mask, lcm_for_list
+
+orig_attention = SelfCrossAttention.torch_attention_op
+
+
+def _use_bias(sigmas: torch.Tensor, sigma: torch.Tensor) -> bool:
+    threshold: float = getattr(opts, "fc_anima_steps", 0.0)
+    steps: int = sigmas.size(0)
+    step: int = (sigmas == sigma).int().argmax()
+    return (step / steps) < threshold
+
+
+@wraps(orig_attention)
+def masked_attn_op(
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    transformer_options: dict,
+    *,
+    attn_bias: torch.Tensor = None,
+):
+    if not _use_bias(
+        sigmas=transformer_options["sampling_sigmas"],
+        sigma=transformer_options["sigmas"],
+    ):
+        return orig_attention(q, k, v, transformer_options)
+
+    B, S, H, D = q.shape
+
+    q_b = q.permute(0, 2, 1, 3)
+    k_b = k.permute(0, 2, 1, 3)
+    v_b = v.permute(0, 2, 1, 3)
+    bias = attn_bias.to(device=q.device, dtype=q.dtype)
+
+    out = scaled_dot_product_attention(q_b, k_b, v_b, attn_mask=bias)
+
+    return out.permute(0, 2, 1, 3).reshape(B, S, H * D)
+
+
+def get_attn_bias(mask: torch.Tensor, w: int, h: int, patch_size: int, _str: float):
+    seq_len = (w // 8) * (h // 8) // (patch_size * patch_size)
+    penalty = -12.0 * _str
+
+    mask_downsample = get_dit_mask(mask, seq_len, w, h, patch_size)
+    mask_bool = mask_downsample.squeeze(1).squeeze(-1) > 0.5
+
+    allowed = torch.zeros((seq_len, seq_len), device=mask.device, dtype=torch.bool)
+    for i in range(mask_bool.shape[0]):
+        m = mask_bool[i]
+        allowed |= m[:, None] & m[None, :]
+
+    allowed |= torch.eye(seq_len, device=mask.device, dtype=torch.bool)
+    dd = dict(device=mask.device, dtype=mask.dtype)
+
+    bias = torch.where(
+        allowed,
+        torch.zeros((seq_len, seq_len), **dd),
+        torch.full((seq_len, seq_len), penalty, **dd),
+    )
+
+    if _str >= 1.0:
+        bias[~allowed] = float("-inf")
+
+    return bias.unsqueeze(0).unsqueeze(0)
 
 
 class AttentionCoupleAnima:
@@ -15,7 +85,7 @@ class AttentionCoupleAnima:
     @staticmethod
     @torch.inference_mode()
     def patch_dit(model, base_mask, width: int, height: int, kwargs: dict):
-        dit = model.model.diffusion_model
+        dit: "Anima" = model.model.diffusion_model
 
         num_conds = len(kwargs) // 2 + 1
 
@@ -36,6 +106,25 @@ class AttentionCoupleAnima:
             conds.append(c)
 
         num_tokens = [cond.shape[1] for cond in conds]
+
+        strength = getattr(opts, "fc_anima_strength", 0.0)
+        threshold = getattr(opts, "fc_anima_steps", 0.0)
+
+        if (strength * threshold) > 0.0:
+            self_attn_bias = get_attn_bias(
+                mask,
+                width,
+                height,
+                dit.patch_spatial,
+                strength,
+            )
+
+            func = partial(masked_attn_op, attn_bias=self_attn_bias)
+            func._couple = True
+
+            for block in dit.blocks:
+                attn: "SelfCrossAttention" = block.self_attn
+                attn.torch_attention_op = func
 
         SelfCrossAttention.couple_orig_forward = SelfCrossAttention.forward
 
@@ -143,8 +232,15 @@ class AttentionCoupleAnima:
         return model
 
     @staticmethod
-    def unpatch():
+    def unpatch(p: "StableDiffusionProcessing"):
         if hasattr(SelfCrossAttention, "couple_orig_forward"):
             if getattr(SelfCrossAttention.forward, "_couple", False):
                 SelfCrossAttention.forward = SelfCrossAttention.couple_orig_forward
             del SelfCrossAttention.couple_orig_forward
+
+        dit: "Anima" = p.sd_model.forge_objects.unet.model.diffusion_model
+
+        for block in dit.blocks:
+            attn: "SelfCrossAttention" = block.self_attn
+            if getattr(attn.torch_attention_op, "_couple", False):
+                attn.torch_attention_op = orig_attention
