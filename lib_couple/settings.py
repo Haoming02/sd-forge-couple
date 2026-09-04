@@ -1,3 +1,5 @@
+import gradio as gr
+
 from modules.script_callbacks import on_ui_settings
 from modules.shared import OptionInfo, opts
 
@@ -41,6 +43,20 @@ def fc_settings():
             "Keep newline characters in Advanced mode dataframe",
             **args,
         ).info('newlines would be shown as "\\n" literals'),
+    )
+
+    opts.add_option(
+        "fc_krea_blend",
+        OptionInfo(
+            0.25,
+            "[Krea 2] Region Blend",
+            gr.Slider,
+            {"minimum": 0.0, "maximum": 1.0, "step": 0.05},
+            **args,
+        ).info(
+            "fraction of blocks in which image tokens of unrelated regions cannot read each other; "
+            "above 0.4 tends to cause seams or duplicated subjects"
+        ),
     )
 
 

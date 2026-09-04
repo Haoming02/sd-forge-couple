@@ -26,11 +26,24 @@ except ImportError:
 else:
     is_neo = True
 
+try:
+    from lib_couple.krea import AttentionCoupleKrea
+except ImportError:
+    AttentionCoupleKrea = None
+
 from modules import scripts, shared
 
 VERSION = "7.1.0"
 
 UI_CACHES: dict[bool, tuple[list, Callable]] = {}
+
+
+def _is_anima(p) -> bool:
+    return is_neo and p.sd_model.model_config.huggingface_repo.endswith("Anima")
+
+
+def _is_krea(p) -> bool:
+    return AttentionCoupleKrea is not None and ("Krea-2" in p.sd_model.model_config.huggingface_repo)
 
 
 class ForgeCouple(scripts.Script):
@@ -97,8 +110,10 @@ class ForgeCouple(scripts.Script):
 
     def before_hr(self, p: "P", *args, **kwargs):
         self.is_hr = True
-        if is_neo and p.sd_model.model_config.huggingface_repo.endswith("Anima"):
+        if _is_anima(p):
             AttentionCoupleAnima.unpatch()
+        if _is_krea(p):
+            AttentionCoupleKrea.unpatch()
 
     def _is_tile(self) -> bool:
         return self.is_img2img and len(self.tiles) > 0
@@ -241,8 +256,16 @@ class ForgeCouple(scripts.Script):
         self.valid = True
 
     def before_process_batch(self, p: "P", *args, **kwargs):
-        if is_neo and p.sd_model.model_config.huggingface_repo.endswith("Anima"):
+        if _is_anima(p):
             AttentionCoupleAnima.unpatch()
+        if _is_krea(p):
+            AttentionCoupleKrea.unpatch()
+
+    def postprocess(self, p: "P", processed, *args):
+        if _is_anima(p):
+            AttentionCoupleAnima.unpatch()
+        if _is_krea(p):
+            AttentionCoupleKrea.unpatch()
 
     def process_before_every_sampling(
         self,
@@ -330,8 +353,12 @@ class ForgeCouple(scripts.Script):
         unet = p.sd_model.forge_objects.unet
         base_mask = empty_tensor(HEIGHT, WIDTH)
 
-        if is_neo and p.sd_model.model_config.huggingface_repo.endswith("Anima"):
+        if _is_anima(p):
             patched_unet = AttentionCoupleAnima.patch_dit(
+                unet, base_mask, WIDTH, HEIGHT, fc_args
+            )
+        elif _is_krea(p):
+            patched_unet = AttentionCoupleKrea.patch_dit(
                 unet, base_mask, WIDTH, HEIGHT, fc_args
             )
         else:

@@ -21,8 +21,11 @@ def text2cond(sd_model, texts: str) -> list[torch.Tensor]:
         return [[cond]]
     elif sd_model.__class__.__name__ == "Anima":
         return cond
+    elif sd_model.__class__.__name__ == "Krea2":
+        # one line -> a list of (seq, 12, 2560) chunks; join them into one segment
+        return [[torch.cat(list(cond), dim=0)]]
 
-    raise NotImplementedError("Only SD1 / SDXL / Anima are Supported...")
+    raise NotImplementedError("Only SD1 / SDXL / Anima / Krea 2 are Supported...")
 
 
 def basic_mapping(

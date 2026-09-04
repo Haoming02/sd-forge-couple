@@ -29,7 +29,7 @@ This is an Extension for the Forge Webui, which allows you to ~~generate couples
 
 > [!IMPORTANT]
 > Only **SD1** and **SDXL** are supported<br>
-> 🔥 **New:** Now supports **Anima**
+> 🔥 **New:** Now supports **Anima** and **Krea 2**
 
 > [!CAUTION]
 > The effectiveness of this Extension depends on how well the Checkpoint follows the prompts<br>
@@ -51,6 +51,7 @@ This is an Extension for the Forge Webui, which allows you to ~~generate couples
     - [Separator](#couple-separator)
     - [Common Prompts](#common-prompts)
     - [LoRA](#lora-support)
+    - [Krea 2](#krea-2)
 - [Tile Mode](#tile-mode)
 - [API](https://github.com/Haoming02/sd-forge-couple/wiki/API)
 - [FAQ](#troubleshooting)
@@ -279,6 +280,29 @@ Steps: 32, Sampler: Euler a, Schedule type: Normal, CFG scale: 5, Shift: 3, Seed
 ### LoRA Support
 
 LoRA that contains multiple subjects is easier to generate multiple characters. Using different LoRAs in different regions depends on how well the LoRAs' concepts work together...
+
+### Krea 2
+
+> Forge Neo only
+
+**Krea 2** is a single-stream DiT: text and image tokens share one attention sequence, so the batch-splitting approach used for SD / SDXL / Anima has no cross-attention to hook. For Krea 2, each line is encoded on its own, joined into one long prompt, and an attention bias stops an image token from reading any line whose region does not cover it. All three modes, **Global Effect**, **Common Prompts**, the **Compatibility** toggle and **Tile** mode work as usual.
+
+- Pixels not covered by any region simply read every line, so the *"image must contain weights"* rule does not apply to Krea 2
+- A region weight above `1.0` makes that line pull harder instead of raising an error
+- **Settings** > **Forge Couple** > **[Krea 2] Region Blend** sets the fraction of blocks in which image tokens of unrelated regions cannot read each other *(`0.25` by default)*; values above `0.4` tend to produce seams or duplicated subjects
+- **Edit** / reference images *(ImageStitch)* are not supported; the Extension logs a warning and skips that generation
+- Attention runs through `SDPA` while a regional generation is active, which is somewhat slower than the flash backend
+
+<p align="center">
+<img src="example/krea.jpg" width=512><br>
+<b>Krea 2</b> Basic Mode, <b>First Line</b> Global Effect
+</p>
+
+```
+photograph, two people standing side by side in a sunlit park, 35mm, natural light
+a red-haired woman in a green dress, smiling
+a blond man in a blue suit, arms crossed
+```
 
 <br><hr><br>
 
