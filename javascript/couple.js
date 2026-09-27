@@ -120,7 +120,11 @@ class ForgeCouple {
         const vals = Array.from(rows, (row) => {
             return Array.from(row.querySelectorAll("td"))
                 .slice(0, -1)
-                .map((cell) => parseFloat(cell.textContent));
+                .map((cell) => {
+                    const v = parseFloat(cell.textContent);
+                    // NaN → 0 so JSON never contains null rows/cells
+                    return Number.isFinite(v) ? v : 0.0;
+                });
         });
 
         const json = JSON.stringify(vals);

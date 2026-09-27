@@ -33,7 +33,7 @@ def _include(
         overlap = np.sum((tile_mask == 1) & (mask == 1))
         total = np.sum((mask == 1))
 
-        if (overlap / total) >= threshold:
+        if total > 0 and (overlap / total) >= threshold:
             include.append(i)
 
     return include
@@ -61,7 +61,10 @@ def _prepare_mappings_basic(is_vertical: bool, count: int) -> list[np.ndarray]:
 def _prepare_mappings_adv(mapping: list[list[float]]) -> list[np.ndarray]:
     mappings = []
 
-    for x1, x2, y1, y2, _ in mapping:
+    for row in mapping:
+        if not row or len(row) < 5:
+            continue
+        x1, x2, y1, y2, _ = row[:5]
         x1 = int(x1 * SIZE)
         x2 = int(x2 * SIZE)
         y1 = int(y1 * SIZE)
@@ -79,6 +82,8 @@ def _prepare_mappings_mask(mapping: list[dict[str, "Image.Image"]]) -> list[np.n
     mappings = []
 
     for m in mapping:
+        if not m or "mask" not in m:
+            continue
         m = m["mask"].resize((SIZE, SIZE), Image.Resampling.NEAREST)
         mappings.append(np.asarray(m, dtype=np.uint8))
 
