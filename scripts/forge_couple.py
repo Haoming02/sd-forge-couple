@@ -211,9 +211,13 @@ class ForgeCouple(scripts.Script):
                     self.invalidate(p)
                     return
 
-                if len(couples) != len(mapping):
-                    ratio = f"{len(couples)} / {len(mapping)}"
-                    logger.error(f"Number of Couples and Masks mismatched... [{ratio}]")
+                required: int = len(mapping) + int(background != "None")
+                if len(couples) != required:
+                    ratio = f"{len(couples)} / {required}"
+                    logger.error(
+                        f"Number of Couples and Masks mismatched... [{ratio}]"
+                        "  (one extra line is used as Global Effect when enabled)"
+                    )
                     self.invalidate(p)
                     return
 
@@ -228,9 +232,8 @@ class ForgeCouple(scripts.Script):
             fc_param["forge_couple_direction"] = direction
         if mode == "Advanced":
             fc_param["forge_couple_mapping"] = dumps(mapping)
-        else:
-            fc_param["forge_couple_background"] = background
-            fc_param["forge_couple_background_weight"] = background_weight
+        fc_param["forge_couple_background"] = background
+        fc_param["forge_couple_background_weight"] = background_weight
         fc_param["forge_couple_common_parser"] = common_parser
         fc_param["forge_couple_def_in_prompt"] = def_in_prompt
 
@@ -278,8 +281,7 @@ class ForgeCouple(scripts.Script):
 
         LINE_COUNT: int = len(self.couples)
 
-        if mode != "Advanced":
-            BG_WEIGHT: float = 0.0 if NO_BACKGROUND else max(0.1, background_weight)
+        BG_WEIGHT: float = 0.0 if NO_BACKGROUND else max(0.1, background_weight)
 
         if mode == "Basic":
             TILE_COUNT: int = LINE_COUNT - int(not NO_BACKGROUND)
@@ -321,7 +323,13 @@ class ForgeCouple(scripts.Script):
 
             case "Advanced":
                 fc_args = advanced_mapping(
-                    p.sd_model, self.couples, WIDTH, HEIGHT, mapping
+                    p.sd_model,
+                    self.couples,
+                    WIDTH,
+                    HEIGHT,
+                    mapping,
+                    background,
+                    BG_WEIGHT,
                 )
         # ===== Tiles =====
 

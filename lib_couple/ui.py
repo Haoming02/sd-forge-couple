@@ -186,8 +186,8 @@ def couple_ui(script, is_img2img: bool, title: str):
 
         def on_mode_change(choice: str):
             return [
-                gr.update(visible=(choice in ("Basic", "Mask"))),
-                gr.update(visible=(choice == "Basic")),
+                gr.update(visible=True),  # basic_settings (holds Global Effect)
+                gr.update(visible=(choice == "Basic")),  # direction
                 gr.update(visible=(choice == "Advanced")),
                 gr.update(visible=(choice == "Mask")),
                 gr.update(visible=(choice == "Mask")),
