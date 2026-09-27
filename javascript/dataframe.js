@@ -16,18 +16,21 @@ class ForgeCoupleDataframe {
     #promptField = undefined;
     /** @type {HTMLInputElement} */
     #separatorField = undefined;
+    /** @type {HTMLElement} */
+    #background = undefined;
     /** @type {HTMLTableElement} */
     #body = undefined;
 
     /** @type {number} */
     #selection = -1;
 
-    constructor(div, mode, separatorField) {
+    constructor(div, mode, separatorField, backgroundField) {
         this.#mode = mode;
         this.#promptField = document
             .getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`)
             .querySelector("textarea");
         this.#separatorField = separatorField;
+        this.#background = backgroundField;
 
         this.#separatorField.addEventListener("blur", () => { this.syncPrompts(); });
         const table = document.createElement("table");
@@ -81,6 +84,13 @@ class ForgeCoupleDataframe {
         return !sep ? "\n" : sep.replace(/\\n/g, "\n").split("\n").map((c) => c.trim()).join("\n");
     }
 
+    /** @returns {"None"|"First Line"|"Last Line"} */
+    get #globalEffect() {
+        if (!this.#background) return "None";
+        const radio = this.#background.querySelector("div.wrap>label.selected>span");
+        return radio ? radio.textContent : "None";
+    }
+
     /** @param {number} row */
     #onSelect(row) {
         this.#selection = row === this.#selection ? -1 : row;
@@ -97,14 +107,15 @@ class ForgeCoupleDataframe {
                 prompts.push(opts.fc_adv_newline ? prompt.replaceAll("\\n", "\n") : prompt);
             });
 
-            const oldPrompts = this.#promptField.value.split(this.#separator).map((line) => line.trim());
-            const modified = prompts.length;
-
-            if (modified >= oldPrompts.length) this.#promptField.value = prompts.join(this.#separator);
-            else {
-                const newPrompts = [...prompts, ...oldPrompts.slice(modified)];
-                this.#promptField.value = newPrompts.join(this.#separator);
+            // Keep the Global Effect line outside the mapping table
+            const background = this.#globalEffect;
+            const existingPrompts = this.#promptField.value.split(this.#separator).map((line) => line.trim());
+            if (existingPrompts.length > 0) {
+                if (background === "First Line") prompts.unshift(existingPrompts.shift());
+                else if (background === "Last Line") prompts.push(existingPrompts.pop());
             }
+
+            this.#promptField.value = prompts.join(this.#separator);
 
             updateInput(this.#promptField);
         } else {
@@ -234,7 +245,9 @@ class ForgeCoupleDataframe {
 
         if (newline) {
             const prompts = this.#promptField.value.split(this.#separator).map((line) => line.trim());
-            const newPrompts = [...prompts.slice(0, this.#selection), "", ...prompts.slice(this.#selection)];
+            const offset = this.#globalEffect === "First Line" ? 1 : 0;
+            const at = Math.min(this.#selection + offset, prompts.length);
+            const newPrompts = [...prompts.slice(0, at), "", ...prompts.slice(at)];
             this.#promptField.value = newPrompts.join(this.#separator);
             updateInput(this.#promptField);
         }
@@ -266,7 +279,9 @@ class ForgeCoupleDataframe {
 
         if (newline) {
             const prompts = this.#promptField.value.split(this.#separator).map((line) => line.trim());
-            const newPrompts = [...prompts.slice(0, this.#selection + 1), "", ...prompts.slice(this.#selection + 1)];
+            const offset = this.#globalEffect === "First Line" ? 1 : 0;
+            const at = Math.min(this.#selection + 1 + offset, prompts.length);
+            const newPrompts = [...prompts.slice(0, at), "", ...prompts.slice(at)];
             this.#promptField.value = newPrompts.join(this.#separator);
             updateInput(this.#promptField);
         }
@@ -298,7 +313,8 @@ class ForgeCoupleDataframe {
 
         if (removeText) {
             const prompts = this.#promptField.value.split(this.#separator).map((line) => line.trim());
-            prompts.splice(this.#selection, 1);
+            const offset = this.#globalEffect === "First Line" ? 1 : 0;
+            prompts.splice(this.#selection + offset, 1);
             this.#promptField.value = prompts.join(this.#separator);
             updateInput(this.#promptField);
         }
@@ -330,7 +346,11 @@ class ForgeCoupleDataframe {
     syncPrompts() {
         const prompt = this.#promptField.value;
 
-        const prompts = prompt.split(this.#separator);
+        let prompts = prompt.split(this.#separator);
+        const background = this.#globalEffect;
+        if (background === "First Line") prompts = prompts.slice(1);
+        else if (background === "Last Line") prompts = prompts.slice(0, -1);
+
         const rows = this.#body.querySelectorAll("tr");
 
         const active = document.activeElement;

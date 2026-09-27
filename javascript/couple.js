@@ -197,6 +197,7 @@ class ForgeCouple {
      */
     static onBackgroundChange(mode) {
         this.maskHandler[mode].syncPrompts();
+        if (this.dataframe[mode]) this.dataframe[mode].syncPrompts();
     }
 
     static setup() {
@@ -212,7 +213,12 @@ class ForgeCouple {
                 .getElementById(`${mode === "t2i" ? "txt" : "img"}2img_prompt`)
                 .querySelector("textarea");
 
-            this.dataframe[mode] = new ForgeCoupleDataframe(this.container[mode], mode, separator);
+            this.dataframe[mode] = new ForgeCoupleDataframe(
+                this.container[mode],
+                mode,
+                separator,
+                ex.querySelector(".fc_global_effect"),
+            );
 
             this.mappingTable[mode] = this.container[mode].querySelector("tbody");
 

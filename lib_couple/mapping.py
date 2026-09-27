@@ -79,17 +79,30 @@ def advanced_mapping(
     width: int,
     height: int,
     mapping: list,
+    background: str = "None",
+    bg_weight: float = 1.0,
 ) -> dict:
     fc_args: dict = {}
-    assert len(couples) == len(mapping)
+
+    no_background = background == "None"
+    if no_background:
+        region_couples = list(couples)
+    elif background == "First Line":
+        region_couples = list(couples[1:])
+    else:  # Last Line
+        region_couples = list(couples[:-1])
+
+    assert len(region_couples) == len(mapping)
+
+    # Build (prompt, mask) in the same order as the couple lines
+    entries: list[tuple[str, torch.Tensor]] = []
+
+    bg_mask = torch.ones((height, width)) * float(bg_weight or 1.0)
+
+    if (not no_background) and background == "First Line":
+        entries.append((couples[0], bg_mask))
 
     for tile_index, (x1, x2, y1, y2, w) in enumerate(mapping):
-        # ===== Cond =====
-        texts = SdConditioning([couples[tile_index]], False, width, height, None)
-        fc_args[f"cond_{tile_index + 1}"] = text2cond(sd_model, texts)
-        # ===== Cond =====
-
-        # ===== Mask =====
         x_from = int(width * x1)
         x_to = int(width * x2)
         y_from = int(height * y1)
@@ -97,8 +110,15 @@ def advanced_mapping(
 
         mask = torch.zeros((height, width))
         mask[y_from:y_to, x_from:x_to] = w
-        fc_args[f"mask_{tile_index + 1}"] = mask.unsqueeze(0)
-        # ===== Mask =====
+        entries.append((region_couples[tile_index], mask))
+
+    if (not no_background) and background == "Last Line":
+        entries.append((couples[-1], bg_mask))
+
+    for i, (text, mask) in enumerate(entries):
+        texts = SdConditioning([text], False, width, height, None)
+        fc_args[f"cond_{i + 1}"] = text2cond(sd_model, texts)
+        fc_args[f"mask_{i + 1}"] = mask.unsqueeze(0)
 
     return fc_args
 

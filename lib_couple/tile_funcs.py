@@ -128,12 +128,11 @@ def calculate_tiles(self: "ForgeCouple", args: tuple) -> bool:
     prompts: list[str] = self.couples
     bg: str = None
 
-    if mode != "Advanced":
-        background: str = args[6]
-        if background == "First Line":
-            bg, *prompts = prompts
-        if background == "Last Line":
-            *prompts, bg = prompts
+    background: str = args[6]
+    if background == "First Line":
+        bg, *prompts = prompts
+    if background == "Last Line":
+        *prompts, bg = prompts
 
     if mode == "Basic":
         direction: str = args[5]
