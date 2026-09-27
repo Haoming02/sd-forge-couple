@@ -129,10 +129,14 @@ class ForgeCouple(scripts.Script):
 
         return prompt
 
-    def invalidate(self, p):
+    def invalidate(self, p, interrupt: bool = True):
         self.valid = False
+        self.couples = None
         p.extra_generation_params.update({"forge_couple": "ERROR"})
-        if shared.opts.fc_do_interrupt:
+        # Only interrupt when we are already inside sampling. Interrupting during
+        # pre-flight validation makes Forge Neo's `p.sample()` return None, which
+        # then crashes with `TypeError: 'NoneType' object is not iterable`.
+        if interrupt and shared.opts.fc_do_interrupt:
             shared.state.interrupt()
 
     def after_extra_networks_activate(
@@ -176,45 +180,64 @@ class ForgeCouple(scripts.Script):
                 logger.info(f"[Common Prompts Debug]\n{prompts}\n")
 
         couples: list[str] = [chunk.strip() for chunk in prompts.split(separator)]
+        # A trailing newline is extremely common ("a\nb\nc\nd\n" → 5 chunks).
+        # Do not count those as an extra region.
+        while couples and couples[-1] == "":
+            couples.pop()
 
         match mode:
             case "Basic":
                 if len(couples) < (3 - int(background == "None")):
                     ratio = f"{len(couples)} / {3 - int(background == 'None')}"
                     logger.error(f"Not Enough Lines in Prompt... [{ratio}]")
-                    self.invalidate(p)
+                    self.invalidate(p, interrupt=False)
                     return
 
             case "Mask":
                 mapping: list = self.get_mask() or mapping
-                assert isinstance(mapping[0], dict)
                 if not mapping:
                     logger.error("No Mapping...?")
-                    self.invalidate(p)
+                    self.invalidate(p, interrupt=False)
+                    return
+
+                if not isinstance(mapping[0], dict):
+                    logger.error("Invalid Mask Mapping...")
+                    self.invalidate(p, interrupt=False)
                     return
 
                 required: int = len(mapping) + int(background != "None")
                 if len(couples) != required:
                     ratio = f"{len(couples)} / {required}"
-                    logger.error(f"Number of Couples and Masks mismatched... [{ratio}]")
-                    self.invalidate(p)
+                    logger.error(
+                        f"Number of Couples and Masks mismatched... [{ratio}]"
+                        "  (empty lines count as a region; trailing blank lines are ignored)"
+                    )
+                    self.invalidate(p, interrupt=False)
                     return
 
             case "Advanced":
-                assert isinstance(mapping[0], list)
                 if not mapping:
                     logger.error("No Mapping...?")
-                    self.invalidate(p)
+                    self.invalidate(p, interrupt=False)
+                    return
+
+                if not isinstance(mapping[0], list):
+                    logger.error("Invalid Advanced Mapping...")
+                    self.invalidate(p, interrupt=False)
                     return
 
                 if not validate_mapping(mapping, True):
-                    self.invalidate(p)
+                    self.invalidate(p, interrupt=False)
                     return
 
                 if len(couples) != len(mapping):
                     ratio = f"{len(couples)} / {len(mapping)}"
-                    logger.error(f"Number of Couples and Masks mismatched... [{ratio}]")
-                    self.invalidate(p)
+                    logger.error(
+                        f"Number of Couples and Masks mismatched... [{ratio}]"
+                        "  (each Advanced mapping row needs one prompt line;"
+                        " empty lines count as a region; trailing blank lines are ignored)"
+                    )
+                    self.invalidate(p, interrupt=False)
                     return
 
         # ===== Infotext =====

@@ -24,7 +24,17 @@ COLORS: Final[tuple[str]] = (
 
 
 def validate_mapping(data: list, log: bool = False) -> bool:
-    for x1, x2, y1, y2, w in data:
+    if not data:
+        return False
+
+    for row in data:
+        # A row can arrive as None (e.g. JSON `null` from an unfinished UI row)
+        if not isinstance(row, (list, tuple)) or len(row) < 5:
+            if log:
+                logger.error("Each mapping row must be [x1, x2, y1, y2, w]...")
+            return False
+
+        x1, x2, y1, y2, w = row[:5]
         for v in (x1, x2, y1, y2, w):
             if not (isinstance(v, float) or isinstance(v, int)):
                 if log:
@@ -82,14 +92,21 @@ def visualize_mapping(mode: str, res: str, mapping: list) -> Image.Image:
 
 
 def on_entry(data: str) -> list[list]:
-    if not data.strip():
+    if not data or not data.strip():
         return gr.skip()
 
     try:
-        return loads(data)
+        result = loads(data)
     except JSONDecodeError:
         logger.error("Something went wrong while parsing advanced mapping...")
         return DEFAULT_MAPPING
+
+    # `loads("null")` → None; also reject non-list payloads
+    if not isinstance(result, list):
+        logger.error("Advanced mapping must be a list of rows...")
+        return DEFAULT_MAPPING
+
+    return result
 
 
 def on_pull(data: dict) -> str:
@@ -98,6 +115,6 @@ def on_pull(data: dict) -> str:
 
     try:
         return dumps(data)
-    except JSONDecodeError:
+    except (TypeError, ValueError):
         logger.error("Something went wrong while parsing advanced mapping...")
         return ""

@@ -10,6 +10,16 @@ from modules.devices import device, dtype
 from .attention_masks import get_dit_mask, lcm_for_list
 
 
+def _pad_seq_to_512(t: torch.Tensor) -> torch.Tensor:
+    """Pad the sequence dimension (dim 0 of a 2D ``(seq, hidden)``) up to a multiple of 512."""
+    seq = t.shape[-2]
+    target = math.ceil(seq / 512) * 512
+    if target > seq:
+        # pad only the seq dim on the right: (0, 0) for hidden, (0, target-seq) for seq
+        t = torch.nn.functional.pad(t, (0, 0, 0, target - seq))
+    return t
+
+
 class AttentionCoupleAnima:
 
     @staticmethod
@@ -31,11 +41,16 @@ class AttentionCoupleAnima:
 
         for i in range(1, num_conds):
             c = kwargs[f"cond_{i}"][0][0].to(device=device, dtype=dtype)
-            if (dim := math.ceil(c.shape[0] / 512) * 512) > 512:
-                c = torch.nn.functional.pad(c, (0, 0, 0, dim - c.shape[0]))
+            # Normalize to (seq, hidden)
+            if c.dim() == 3 and c.shape[1] == 1:
+                c = c.squeeze(1)
+            elif c.dim() == 3 and c.shape[0] == 1:
+                c = c.squeeze(0)
+            c = _pad_seq_to_512(c)
             conds.append(c)
 
-        num_tokens = [cond.shape[1] for cond in conds]
+        # Sequence length lives on dim -2 after normalization
+        num_tokens = [cond.shape[-2] for cond in conds]
 
         SelfCrossAttention.couple_orig_forward = SelfCrossAttention.forward
 
@@ -72,17 +87,24 @@ class AttentionCoupleAnima:
             x_chunks = x.chunk(num_chunks, dim=0)
 
             context_3d = context.squeeze(1)
-            if (dim := math.ceil(context_3d.shape[1] / 512) * 512) > 512:
-                context_3d = torch.nn.functional.pad(
-                    context_3d,
-                    (0, 0, 0, dim - context_3d.shape[1]),
-                )
-
+            if context_3d.dim() == 3:
+                # (batch, seq, hidden) — pad seq on each sample
+                seq = context_3d.shape[-2]
+                target = math.ceil(seq / 512) * 512
+                if target > seq:
+                    context_3d = torch.nn.functional.pad(
+                        context_3d, (0, 0, 0, target - seq)
+                    )
             ctx_seq_len = context_3d.shape[-2]
             context_chunks = context_3d.chunk(num_chunks, dim=0)
 
             lcm_tokens = lcm_for_list(num_tokens + [ctx_seq_len])
-            assert lcm_tokens in (512, 1024), "Your prompt is way too long..."
+            if lcm_tokens > 1024:
+                raise RuntimeError(
+                    f"Forge Couple (Anima): combined prompt token length "
+                    f"LCM={lcm_tokens} exceeds 1024. Shorten region prompts "
+                    f"(or reduce the number of regions)."
+                )
 
             conds_tensor = torch.cat(
                 [

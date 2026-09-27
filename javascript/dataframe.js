@@ -97,14 +97,9 @@ class ForgeCoupleDataframe {
                 prompts.push(opts.fc_adv_newline ? prompt.replaceAll("\\n", "\n") : prompt);
             });
 
-            const oldPrompts = this.#promptField.value.split(this.#separator).map((line) => line.trim());
-            const modified = prompts.length;
-
-            if (modified >= oldPrompts.length) this.#promptField.value = prompts.join(this.#separator);
-            else {
-                const newPrompts = [...prompts, ...oldPrompts.slice(modified)];
-                this.#promptField.value = newPrompts.join(this.#separator);
-            }
+            // The Advanced table is authoritative: do not keep leftover prompt
+            // lines (a trailing newline becomes a 5th region and breaks 4-way maps).
+            this.#promptField.value = prompts.join(this.#separator);
 
             updateInput(this.#promptField);
         } else {
@@ -181,7 +176,7 @@ class ForgeCoupleDataframe {
     }
 
     /** @returns {number[][]} */
-    #newRow() {
+    #newRow(defaults) {
         const rows = this.#body.querySelectorAll("tr");
         const count = rows.length;
 
@@ -192,11 +187,12 @@ class ForgeCoupleDataframe {
         });
 
         const tr = this.#body.insertRow();
+        const rowDefaults = defaults ?? [0.0, 1.0, 0.0, 1.0, 1.0];
 
         for (let c = 0; c < ForgeCoupleDataframe.#columnCount; c++) {
             const td = tr.insertCell();
             td.contentEditable = true;
-            td.textContent = "";
+            td.textContent = c < rowDefaults.length ? Number(rowDefaults[c]).toFixed(2) : "";
 
             td.addEventListener("keydown", (e) => {
                 if (e.key === "Enter") {
@@ -215,7 +211,7 @@ class ForgeCoupleDataframe {
 
     /** @param {boolean} newline */
     newRowAbove(newline) {
-        const vals = this.#newRow();
+        const vals = this.#newRow([0.0, 1.0, 0.0, 1.0, 1.0]);
 
         const newVals = [
             ...vals.slice(0, this.#selection),
@@ -247,7 +243,7 @@ class ForgeCoupleDataframe {
 
     /** @param {boolean} newline */
     newRowBelow(newline) {
-        const vals = this.#newRow();
+        const vals = this.#newRow([0.25, 0.75, 0.25, 0.75, 1.0]);
 
         const newVals = [
             ...vals.slice(0, this.#selection + 1),
