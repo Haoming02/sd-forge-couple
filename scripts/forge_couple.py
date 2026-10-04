@@ -15,6 +15,7 @@ from lib_couple.mapping import (
     empty_tensor,
     mask_mapping,
 )
+from lib_couple.regional_lora import apply_region_loras, isolate_prompt
 from lib_couple.tile_funcs import calculate_tiles
 from lib_couple.ui import couple_ui
 from lib_couple.ui_funcs import validate_mapping
@@ -28,7 +29,7 @@ else:
 
 from modules import scripts, shared
 
-VERSION = "7.1.0"
+VERSION = "7.1.0-regional-lora"
 
 UI_CACHES: dict[bool, tuple[list, Callable]] = {}
 
@@ -84,6 +85,9 @@ class ForgeCouple(scripts.Script):
         self.tile_idx = -1
 
     def before_process(self, p, *args, **kwargs):
+        if args and args[0]:
+            isolate_prompt(p)
+
         if not self.tiles:
             return
 
@@ -233,6 +237,7 @@ class ForgeCouple(scripts.Script):
             fc_param["forge_couple_background_weight"] = background_weight
         fc_param["forge_couple_common_parser"] = common_parser
         fc_param["forge_couple_def_in_prompt"] = def_in_prompt
+        fc_param["forge_couple_regional_lora"] = True
 
         p.extra_generation_params.update(fc_param)
         # ===== Infotext =====
@@ -339,5 +344,7 @@ class ForgeCouple(scripts.Script):
 
         if patched_unet is None:
             self.invalidate(p)
-        else:
-            p.sd_model.forge_objects.unet = patched_unet
+            return
+
+        p.sd_model.forge_objects.unet = patched_unet
+        apply_region_loras(p, self.couples)
